@@ -317,8 +317,15 @@
           <p class="hint" id="cf-hint">What the business/brand does, what the site needs to accomplish, and when you'd like it live. If you already have a site, include the URL here.</p>
         </div>
         <div class="form-actions">
-          <button class="btn btn-solid" type="submit"><span>Open email draft</span></button>
-          <p class="hint" id="formStatus" role="status">Nothing is sent from this page. Prefer to write it yourself? <a href="mailto:thespacewize@gmail.com">thespacewize@gmail.com</a></p>
+          <button class="btn btn-solid" type="submit"><span>Open in Mail app</span></button>
+          <div class="mail-alt">
+            <span class="mail-alt-label">or open with</span>
+            <button class="btn btn-ghost btn-compact" type="button" data-provider="gmail"><span>Gmail</span></button>
+            <button class="btn btn-ghost btn-compact" type="button" data-provider="outlook"><span>Outlook</span></button>
+            <button class="btn btn-ghost btn-compact" type="button" data-provider="yahoo"><span>Yahoo</span></button>
+          </div>
+          <button class="btn-text" type="button" id="copyBtn">Copy the details instead</button>
+          <p class="hint" id="formStatus" role="status">Nothing sends from this page — every option above only opens a draft for you to review and send yourself.</p>
         </div>
       </form>
 

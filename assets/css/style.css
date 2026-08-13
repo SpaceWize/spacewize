@@ -614,8 +614,28 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
   display:flex;flex-wrap:wrap;align-items:center;gap:16px;
   margin-top:.4rem;
 }
-.form-actions .hint{font-size:.83rem;color:var(--ink-faint);max-width:40ch}
+.form-actions .hint{font-size:.83rem;color:var(--ink-faint);max-width:40ch;flex-basis:100%}
 .form-actions a{color:var(--teal)}
+
+/* provider shortcuts: mailto: only hands off to whatever's registered as the
+   OS default, which is often nothing — these open web compose in a new tab,
+   so they work regardless of what's installed. Visually one notch quieter
+   than the primary button since any one of them completes the task. */
+.mail-alt{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem}
+.mail-alt-label{font-size:.78rem;color:var(--ink-faint)}
+.btn-compact{min-height:40px;padding:.55rem 1.05rem;font-size:.83rem}
+
+/* the guaranteed-to-work fallback: no mail app, no browser sign-in, nothing
+   to configure. Styled as a text link, not a button, since it's the last
+   resort rather than a peer of the options above it. */
+.btn-text{
+  background:none;border:none;padding:0;
+  font-family:var(--body);font-size:.83rem;font-weight:500;
+  color:var(--teal);text-decoration:underline;text-underline-offset:2px;
+  cursor:pointer;
+}
+.btn-text:hover{color:var(--magenta)}
+html[data-tone="dark"] .btn-text:hover{color:var(--teal);opacity:.75}
 
 .colophon{
   max-width:var(--shell);margin:52px auto 0;

@@ -109,15 +109,13 @@
     if (e.key === 'Escape' && sheet.dataset.open === 'true'){ closeSheet(); btn.focus(); }
   });
 
-  /* ---------- 6. contact form -> mailto draft ---------- */
+  /* ---------- 6. contact form -> mailto draft, web compose, or clipboard ---------- */
   var form = document.getElementById('contactForm');
   var status = document.getElementById('formStatus');
-  /* keep in sync with the two mailto: links in #contact */
+  /* keep in sync with the plain mailto: links in #contact */
   var TO = 'thespacewize@gmail.com';
 
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-
+  function readForm(){
     var f = {
       name:    form.name.value.trim(),
       email:   form.email.value.trim(),
@@ -125,29 +123,106 @@
       budget:  form.budget.value,
       message: form.message.value.trim()
     };
-
     var missing = [];
     if (!f.name) missing.push('cf-name');
     if (!f.email || f.email.indexOf('@') < 1) missing.push('cf-email');
     if (!f.message) missing.push('cf-message');
+    return { fields: f, missing: missing };
+  }
 
-    if (missing.length){
+  function buildDraft(f){
+    return {
+      subject: 'Project enquiry — ' + f.name,
+      body:
+        'Name: '    + f.name    + '\n' +
+        'Email: '   + f.email   + '\n' +
+        'Needs: '   + f.type    + '\n' +
+        'Budget: '  + f.budget  + '\n\n' +
+        f.message   + '\n'
+    };
+  }
+
+  /* Validates, then hands the built draft to `run`. Every button below goes
+     through this so "fill in your name first" only has to be written once. */
+  function withDraft(run){
+    var r = readForm();
+    if (r.missing.length){
       status.textContent = 'Add your name, a valid email, and a note about the project first.';
-      document.getElementById(missing[0]).focus();
+      document.getElementById(r.missing[0]).focus();
       return;
     }
+    run(r.fields, buildDraft(r.fields));
+  }
 
-    var subject = 'Project enquiry — ' + f.name;
-    var body =
-      'Name: '    + f.name    + '\n' +
-      'Email: '   + f.email   + '\n' +
-      'Needs: '   + f.type    + '\n' +
-      'Budget: '  + f.budget  + '\n\n' +
-      f.message   + '\n';
+  /* Web compose URLs open a normal browser tab and need nothing installed or
+     set as a system default — unlike mailto:, which silently does nothing on
+     a machine with no registered mail app. */
+  var PROVIDERS = {
+    gmail: function(d){
+      return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(TO) +
+        '&su=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.body);
+    },
+    outlook: function(d){
+      return 'https://outlook.live.com/mail/0/deeplink/compose?to=' + encodeURIComponent(TO) +
+        '&subject=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.body);
+    },
+    yahoo: function(d){
+      return 'https://compose.mail.yahoo.com/?to=' + encodeURIComponent(TO) +
+        '&subject=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.body);
+    }
+  };
 
-    status.textContent = 'Opening your mail app. Nothing sends until you press send there.';
-    window.location.href = 'mailto:' + TO +
-      '?subject=' + encodeURIComponent(subject) +
-      '&body='    + encodeURIComponent(body);
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    withDraft(function(f, d){
+      status.textContent = 'Opening your mail app. Nothing sends until you press send there.';
+      window.location.href = 'mailto:' + TO +
+        '?subject=' + encodeURIComponent(d.subject) +
+        '&body='    + encodeURIComponent(d.body);
+    });
+  });
+
+  Array.prototype.slice.call(document.querySelectorAll('[data-provider]')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var name = btn.textContent.trim();
+      withDraft(function(f, d){
+        status.textContent = 'Opening ' + name + ' in a new tab. Nothing sends until you press send there.';
+        window.open(PROVIDERS[btn.dataset.provider](d), '_blank', 'noopener');
+      });
+    });
+  });
+
+  /* Clipboard write needs a secure context (https) in most browsers and can
+     be unavailable over file:// or on very old browsers — fall back to a
+     hidden textarea + execCommand, which needs neither. */
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function(resolve, reject){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(ta);
+      ok ? resolve() : reject(new Error('copy failed'));
+    });
+  }
+
+  var copyBtn = document.getElementById('copyBtn');
+  copyBtn.addEventListener('click', function(){
+    withDraft(function(f, d){
+      var text = 'To: ' + TO + '\nSubject: ' + d.subject + '\n\n' + d.body;
+      copyText(text).then(function(){
+        status.textContent = 'Copied — paste it into any email or message.';
+      }, function(){
+        status.textContent = 'Could not copy automatically. Select the text and copy it by hand.';
+      });
+    });
   });
 })();
