@@ -426,6 +426,26 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 }
 .card:hover .thumb span{transform:scale(1.07)}
 
+/* concept pieces carry a corner badge so nobody mistakes a self-directed
+   demo for paid client work at a glance.
+   It's an <em> rather than a <span> on purpose: `.card .thumb span` above
+   is the screenshot plate (absolute, inset:0, background-size:cover) and
+   would swallow a span badge whole. */
+.badge{
+  position:absolute;z-index:2;top:10px;right:10px;
+  font-family:var(--body);font-style:normal;
+  font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  padding:.32rem .62rem;border-radius:var(--r-pill);
+  background:rgba(10,10,24,.62);color:#F4EEF6;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+}
+/* it isn't a link, so it must not behave like one */
+.card-demo{cursor:default}
+.card-demo:hover{transform:none}
+.card-demo:hover .thumb span{transform:none}
+
 /* the open slot — dashed and empty, so it reads as an invitation rather than
    as a fifth project whose screenshot failed to load */
 .card-open .thumb-open{
