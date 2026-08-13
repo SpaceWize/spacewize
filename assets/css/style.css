@@ -265,18 +265,27 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 
 /* per-section backgrounds — each ends where the next begins */
 /* #home is flat and equal to the plate's own backdrop, so the plate dissolves
-   into it; #portfolio holds that same flat tone too — the day→night fade
-   doesn't begin until its bottom edge. From there it runs the full length of
-   #services, through the (now taller) dusk band, and settles early in
-   #pricing, so it's fully resolved by the time the "Two ways to work
-   together" heading is on screen rather than mid-transition behind it. */
+   into it; #portfolio holds that same flat tone, so the day→night fade
+   doesn't begin until below it. */
 #home     {background:#F7ECEA}
 #portfolio{background:#F7ECEA}
-#services {background:linear-gradient(180deg,#F7ECEA 0%,var(--sky) 45%,var(--lilac) 100%)}
+
+/* Services + dusk band + pricing are one continuous ramp, so the stops below
+   are pinned to landmarks rather than eyeballed. The handoff colours
+   (#B9A6CC, #3C2C5D) are the ramp's value at each section boundary — change
+   one section and its neighbour's edge colour has to move with it.
+     · light holds to 12%, so it finishes just above "What I actually do" (16.7%)
+     · lilac lands at 86%, the bottom of the "Ongoing care" row (86.3%)
+     · full dusk arrives 6% into pricing, just above the "Pricing" label (7.2%) */
+#services {background:linear-gradient(180deg,
+             #F7ECEA 0%, #F7ECEA 12%, var(--sky) 49%,
+             var(--lilac) 86%, #B9A6CC 100%)}
 .dusk     {background:linear-gradient(180deg,
-             var(--lilac) 0%, #B49FC7 20%, #8A6FA8 42%,
-             #5C4478 66%, #38295A 84%, var(--dusk) 100%)}
-#pricing  {background:linear-gradient(180deg,var(--dusk) 0%,var(--midnight) 6%,var(--midnight) 100%)}
+             #B9A6CC 0%, #B49FC7 6%, #8A6FA8 45%,
+             #5C4478 77%, #3C2C5D 100%)}
+#pricing  {background:linear-gradient(180deg,
+             #3C2C5D 0%, var(--dusk) 6%, var(--dusk) 15%,
+             var(--midnight) 45%, var(--midnight) 100%)}
 #about    {background:linear-gradient(180deg,var(--midnight) 0%,var(--deep) 100%)}
 #contact  {background:linear-gradient(180deg,var(--deep) 0%,var(--void) 100%)}
 
