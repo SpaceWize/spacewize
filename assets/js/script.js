@@ -112,7 +112,8 @@
   /* ---------- 6. contact form -> mailto draft ---------- */
   var form = document.getElementById('contactForm');
   var status = document.getElementById('formStatus');
-  var TO = 'hello@spacewize.com';
+  /* keep in sync with the two mailto: links in #contact */
+  var TO = 'thespacewize@gmail.com';
 
   form.addEventListener('submit', function(e){
     e.preventDefault();

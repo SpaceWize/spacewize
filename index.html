@@ -167,7 +167,7 @@
         </div>
         <div class="row">
           <h3>Ongoing care</h3>
-          <p>Updates, new pages, fixes, and small improvements on a monthly retainer. For businesses that keep changing and don't want to start a new project every time.</p>
+          <p>Once you're live I can keep the site looked after - updates, backups, small edits, and someone to call when something breaks. $100 CAD a month, cancel any time. For bigger changes there's an hourly retainer instead.</p>
         </div>
       </div>
     </div>
@@ -183,8 +183,8 @@
     <div class="shell">
       <div class="head">
         <p class="eyebrow">Pricing</p>
-        <h2>Two ways to work together</h2>
-        <p class="lede">No packages, no upsells. We get on a call, I learn what you need, and you get a number. Whichever option fits, you'll know the cost before anything starts.</p>
+        <h2>Two ways to build, one way to keep it running</h2>
+        <p class="lede">No packages, no upsells. We get on a call, I learn what you need, and you get a number. Whichever option fits, you'll know the cost before anything starts. Every price on this page is in Canadian dollars.</p>
       </div>
       <div class="tiers">
 
@@ -205,7 +205,7 @@
         <div class="tier glass">
           <p class="kicker">Ongoing</p>
           <h3>Hourly retainer</h3>
-          <p class="price">$30<small>/hour</small><br><small>$1,500 minimum retainer</small></p>
+          <p class="price">$30<small> CAD/hour</small><br><small>$1,500 CAD minimum retainer</small></p>
           <ul>
             <li>Hours drawn down as you use them</li>
             <li>Design, build, fixes, and content updates</li>
@@ -215,11 +215,35 @@
           </ul>
           <a class="btn btn-solid" href="#contact"><span>Start a retainer</span></a>
         </div>
+
+        <!-- After-launch care spans the full row rather than becoming a third
+             column: it isn't another way to build, it's what happens next. -->
+        <div class="care glass">
+          <div class="care-main">
+            <p class="kicker">After launch</p>
+            <h3>Site care &amp; on&#8209;call</h3>
+            <p class="care-copy">A site isn't finished the day it goes live. This keeps yours current, and puts someone on the other end of the phone when something breaks at an inconvenient hour.</p>
+            <ul class="care-points">
+              <li>Updates, backups, and security patches</li>
+              <li>Uptime checks and broken-link sweeps</li>
+              <li>Small copy and content edits as they come up</li>
+              <li>On call by phone or email when something breaks</li>
+              <li>A short monthly note on what changed</li>
+              <li>Month to month, cancel any time</li>
+            </ul>
+          </div>
+          <div class="care-buy">
+            <p class="price">$100<small> CAD</small><br><small>per month</small></p>
+            <a class="btn btn-solid" href="#contact"><span>Add site care</span></a>
+            <p class="care-note">Optional, and only worth paying for once you're live. Add it at handoff or any time after.</p>
+          </div>
+        </div>
+
        <div class="notice" role="note">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/>
           </svg>
-          <p><strong>These rates hold for my first 10 clients.</strong> After that, both options go up. If you're reading this, the current pricing is still available.</p>
+          <p><strong>These rates hold for my first 10 clients.</strong> After that, they go up. If you're reading this, the current pricing is still available.</p>
         </div>
 
       </div>
@@ -273,12 +297,14 @@
           <select id="cf-type" name="type">
             <option>A new site, design and build</option>
             <option>A redesign of an existing site</option>
+            <option>Site care for a site that's already live</option>
             <option>Not sure yet</option>
           </select>
         </div>
         <div class="field">
-          <label for="cf-budget">Rough budget</label>
+          <label for="cf-budget">Rough budget (CAD)</label>
           <select id="cf-budget" name="budget">
+            <option>Site care only - $100/month</option>
             <option>$1,500 – $3,000</option>
             <option>$3,000 – $6,000</option>
             <option>$6,000+</option>

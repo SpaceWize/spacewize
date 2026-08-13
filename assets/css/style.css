@@ -527,6 +527,38 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 }
 .tier .btn{margin-top:auto;width:100%}
 
+/* after-launch care — a full-width band under the two build tiers rather than
+   a third column, since maintenance isn't another way to build. Copy on the
+   left, price and CTA held to the right. */
+.care{
+  grid-column:1/-1;
+  border-radius:var(--r-lg);
+  padding:32px 30px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:clamp(24px,4vw,56px);align-items:start;
+}
+.care > *{position:relative;z-index:1}
+.care .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.care h3{font-size:1.9rem;margin:.7rem 0 .55rem}
+.care-copy{color:var(--ink-soft);font-size:.98rem;max-width:54ch}
+.care-points{
+  list-style:none;margin:1.3rem 0 0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));
+  gap:.7rem clamp(16px,2.5vw,32px);
+}
+.care-points li{
+  position:relative;padding-left:22px;
+  font-size:.93rem;color:var(--ink-soft);
+}
+.care-points li::before{
+  content:'';position:absolute;left:0;top:.55em;
+  width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.85;
+}
+.care-buy{display:flex;flex-direction:column;min-width:224px}
+.care-buy .price{margin:.1rem 0 1.2rem}
+.care-buy .btn{width:100%}
+.care-note{margin-top:.9rem;font-size:.8rem;color:var(--ink-faint);max-width:26ch}
+
 .notice{
   grid-column:1/-1;
   display:flex;align-items:center;gap:14px;
@@ -645,6 +677,8 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
   .hero{min-height:94vh;padding-top:104px}
   .hero-card{max-width:none;border-radius:24px}
   .tiers{grid-template-columns:1fr}
+  .care{grid-template-columns:1fr;padding:28px 24px}
+  .care-buy{min-width:0}
   .about-grid{grid-template-columns:1fr}
   .row{grid-template-columns:1fr;gap:8px}
   .form{grid-template-columns:1fr}
