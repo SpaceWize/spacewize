@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Space Wize — Web Design Portfolio</title>
+<meta name="description" content="Space Wize is a web design studio building fast, considered websites for people who need one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   SPACE WIZE — design tokens
+   Scroll = one spring day. Dawn blush -> night.
+   Tweak these first; everything else derives from them.
+   ============================================================ */
+:root{
+  /* --- daylight band --- */
+  --blush:      #FFF8FA;
+  --petal:      #FBE4EC;
+  --sky:        #E4ECF6;
+  --lilac:      #CFC4E0;
+
+  /* --- night band --- */
+  --dusk:       #241844;
+  --midnight:   #171B3A;
+  --deep:       #0C1026;
+  --void:       #06070F;
+
+  /* --- accents --- */
+  --bark:       #6B4B3A;   /* structural lines, small labels on light */
+  --cherry:     #E36FA0;   /* decoration only — too light to carry text */
+  --cherry-ink: #A81B54;   /* the same hue, deep enough to set type in */
+  --magenta:    #E8579F;   /* accent on dark */
+  --teal:       #4FD8CF;   /* accent on dark */
+  --sakura:     #FBD3E0;   /* drifting petals */
+
+  /* --- ink, flipped by [data-tone] --- */
+  --ink:        #241726;
+  --ink-soft:   #5B4A57;
+  --ink-faint:  #63555F;   /* darkened to clear 4.5:1 on the sky/lilac bands */
+  --line:       rgba(36,23,38,.14);
+  --accent:     var(--bark);
+
+  /* --- system --- */
+  --rail: 152px;
+  --shell: 1120px;
+  --r-lg: 22px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(.16,1,.3,1);
+  --tone-fade: 700ms;
+
+  --display: 'Instrument Serif', Georgia, serif;
+  --body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html[data-tone="dark"]{
+  --ink:      #F4EEF6;
+  --ink-soft: #BDB2CC;
+  --ink-faint:#8E85A3;
+  --line:     rgba(244,238,246,.16);
+  --accent:   var(--teal);
+}
+
+/* ============================================================
+   base
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  transition:color var(--tone-fade) var(--ease);
+}
+img,svg{max-width:100%;display:block}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.05;letter-spacing:-.015em}
+p{margin:0}
+a{color:inherit}
+
+:focus-visible{
+  outline:2.5px solid var(--accent);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
+.skip{
+  position:absolute;left:12px;top:-70px;z-index:200;
+  background:var(--ink);color:var(--blush);
+  padding:12px 18px;border-radius:var(--r-pill);
+  font-size:.85rem;font-weight:500;text-decoration:none;
+  transition:top .2s var(--ease);
+}
+.skip:focus{top:12px}
+
+.eyebrow{
+  font-size:.7rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.18em;color:var(--accent);
+  transition:color var(--tone-fade) var(--ease);
+}
+.lede{color:var(--ink-soft);font-size:1.05rem;max-width:56ch;transition:color var(--tone-fade) var(--ease)}
+
+/* ============================================================
+   liquid glass + smoke swirl
+   ============================================================ */
+.glass{
+  position:relative;
+  overflow:hidden;
+  background:rgba(255,255,255,.10);
+  backdrop-filter:blur(14px) saturate(1.3);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border:none;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.45), 0 12px 40px -22px rgba(36,23,38,.5);
+}
+html[data-tone="dark"] .glass{
+  background:rgba(255,255,255,.045);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.16), 0 18px 50px -26px rgba(0,0,0,.9);
+}
+/* hairline gradient border, top+bottom bright */
+.glass::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  border-radius:inherit;padding:1.4px;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.75) 0%, rgba(255,255,255,.22) 22%,
+    rgba(255,255,255,0) 45%, rgba(255,255,255,0) 58%,
+    rgba(255,255,255,.22) 80%, rgba(255,255,255,.6) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+  pointer-events:none;
+}
+
+@keyframes swirl{to{transform:rotate(360deg)}}
+
+.btn{
+  position:relative;overflow:hidden;isolation:isolate;
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  min-height:48px;padding:.85rem 1.6rem;
+  border:none;border-radius:var(--r-pill);
+  font-family:var(--body);font-size:.92rem;font-weight:500;letter-spacing:.01em;
+  cursor:pointer;text-decoration:none;
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.btn > span{position:relative;z-index:2}
+/* the smoke: a soft conic plume that starts turning on hover */
+.btn::after{
+  content:'';position:absolute;inset:-70%;z-index:1;
+  background:conic-gradient(from 0deg,
+    transparent 0%, var(--smoke-a) 14%, transparent 33%,
+    var(--smoke-b) 52%, transparent 70%,
+    var(--smoke-a) 88%, transparent 100%);
+  filter:blur(16px);
+  opacity:0;
+  transition:opacity .5s var(--ease);
+  animation:swirl 9s linear infinite;
+  animation-play-state:paused;
+  pointer-events:none;
+}
+.btn:hover::after,.btn:focus-visible::after{opacity:.9;animation-play-state:running}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+
+.btn-solid{
+  background:var(--ink);color:var(--blush);
+  --smoke-a:rgba(227,111,160,.85);
+  --smoke-b:rgba(107,75,58,.7);
+}
+html[data-tone="dark"] .btn-solid{
+  background:var(--blush);color:var(--dusk);
+  --smoke-a:rgba(232,87,159,.9);
+  --smoke-b:rgba(79,216,207,.75);
+}
+.btn-ghost{
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:var(--ink);
+  box-shadow:inset 0 0 0 1.2px var(--line);
+  --smoke-a:rgba(251,211,224,.9);
+  --smoke-b:rgba(207,196,224,.8);
+}
+html[data-tone="dark"] .btn-ghost{
+  background:rgba(255,255,255,.06);
+  --smoke-a:rgba(79,216,207,.55);
+  --smoke-b:rgba(232,87,159,.5);
+}
+
+/* ============================================================
+   rail (sidebar)
+   ============================================================ */
+.rail{
+  position:fixed;inset:0 auto 0 0;z-index:60;
+  width:var(--rail);
+  display:flex;flex-direction:column;
+  padding:30px 20px;
+  border-right:1px solid var(--line);
+  background:rgba(255,255,255,.16);
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  transition:background var(--tone-fade) var(--ease), border-color var(--tone-fade) var(--ease);
+}
+html[data-tone="dark"] .rail{background:rgba(10,10,24,.30)}
+
+.wordmark{
+  font-family:var(--display);font-size:1.35rem;line-height:1.05;
+  text-decoration:none;letter-spacing:-.02em;
+}
+.wordmark em{font-style:italic;color:var(--accent);transition:color var(--tone-fade) var(--ease)}
+
+.rail-nav{margin-top:42px;display:flex;flex-direction:column;gap:2px}
+.rail-nav a{
+  position:relative;
+  display:flex;align-items:center;
+  min-height:44px;padding:.4rem 0 .4rem 17px;
+  font-size:.85rem;font-weight:400;text-decoration:none;
+  color:var(--ink-soft);
+  transition:color .3s var(--ease), transform .3s var(--ease);
+}
+.rail-nav a::before{
+  content:'';position:absolute;left:0;top:50%;
+  width:7px;height:7px;margin-top:-3.5px;border-radius:50%;
+  background:var(--accent);
+  opacity:0;transform:scale(.4);
+  transition:opacity .35s var(--ease), transform .35s var(--ease);
+}
+.rail-nav a:hover{color:var(--ink);transform:translateX(3px)}
+.rail-nav a[aria-current="true"]{color:var(--ink);font-weight:500}
+.rail-nav a[aria-current="true"]::before{opacity:1;transform:scale(1)}
+
+.rail-foot{margin-top:auto;font-size:.72rem;color:var(--ink-soft);line-height:1.5}
+.status{display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.8rem;color:var(--ink-soft)}
+.status .dot{margin-top:.42rem}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--cherry);
+  box-shadow:0 0 0 0 rgba(227,111,160,.55);
+  animation:pulse 2.2s ease-out infinite;
+  flex:none;
+}
+html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,216,207,.55)}
+@keyframes pulse{
+  0%{transform:scale(1);opacity:1}
+  60%{transform:scale(1.5);opacity:.4}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* mobile bar */
+.bar{display:none}
+
+/* ============================================================
+   layout
+   ============================================================ */
+/* Sections run full-bleed and inset their own content, so the section
+   colour passes *under* the glass rail instead of leaving body showing. */
+.section{
+  position:relative;
+  padding:clamp(84px,11vh,132px) clamp(24px,5vw,72px);
+  padding-left:calc(var(--rail) + clamp(24px,5vw,72px));
+}
+.shell{max-width:var(--shell);margin:0 auto;width:100%}
+.head{max-width:60ch;margin-bottom:clamp(38px,5vw,58px)}
+.head h2{
+  font-size:clamp(2.3rem,5vw,3.6rem);
+  margin:.5rem 0 1.1rem;
+}
+
+/* per-section backgrounds — each ends where the next begins */
+/* #home is flat and equal to the plate's own backdrop, so the plate dissolves
+   into it; #portfolio opens on the same tone so the hero hands off seamlessly */
+#home     {background:#F8E6E8}
+#portfolio{background:linear-gradient(180deg,#FAE5E8 0%,var(--sky) 100%)}
+#services {background:linear-gradient(180deg,var(--sky) 0%,var(--lilac) 100%)}
+.dusk     {background:linear-gradient(180deg,var(--lilac) 0%,#8A6FA8 34%,#4A2F63 68%,var(--dusk) 100%)}
+#pricing  {background:linear-gradient(180deg,var(--dusk) 0%,var(--midnight) 100%)}
+#about    {background:linear-gradient(180deg,var(--midnight) 0%,var(--deep) 100%)}
+#contact  {background:linear-gradient(180deg,var(--deep) 0%,var(--void) 100%)}
+
+/* ============================================================
+   hero + the branch
+   ============================================================ */
+/* Copy occupies the upper register, the photograph a band beneath it.
+   The branch sweeps its trunk across the middle-left of the frame, so a
+   full-height plate would always run under the text — a band never does. */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:flex-start;
+  padding-top:clamp(96px,11vh,128px);
+  overflow:hidden;
+}
+.hero .shell{position:relative;z-index:2}
+.hero h1{
+  font-size:clamp(2.7rem,5.6vw,4.8rem);
+  letter-spacing:-.03em;
+  margin-bottom:1.25rem;
+}
+.hero h1 em{font-style:italic;color:var(--cherry-ink)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:2rem}
+.hero-hint{
+  margin-top:1.5rem;
+  font-size:.8rem;color:var(--ink-soft);
+  font-style:italic;
+}
+
+/* branch photography — two registered plates, leaves under blossom */
+/* The two registered plates, full-bleed across the hero — no mask, no band.
+   The photograph is the hero; nothing crops or feathers it. The seam at the
+   foot is handled by matching #portfolio's first stop to the plate's own
+   background tone instead. */
+.branch{
+  position:absolute;inset:0;z-index:1;
+  pointer-events:none;
+}
+/* Not `cover` — cover crops. Sized so the entire branch is in frame and set
+   into the lower right, which leaves the plate's own empty corner sitting in
+   the upper left. That corner is the whitespace the type stands on, and it
+   matches #home's fill exactly, so the plate has no visible edge. */
+.branch-img{
+  position:absolute;inset:0;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+  background-position:center top;
+}
+.branch-base { background-image:url('assets/branch-leaves.jpg') }
+.branch-bloom{ background-image:url('assets/branch-blossom.jpg') }
+
+/* the blossom plate is only visible inside a spotlight trailing the cursor */
+.branch-bloom{
+  --mx:-500px; --my:-500px; --r:260px;
+  -webkit-mask-image:radial-gradient(circle var(--r) at var(--mx) var(--my),
+    #000 0%, #000 40%, rgba(0,0,0,.72) 62%, rgba(0,0,0,.26) 82%, transparent 100%);
+  mask-image:radial-gradient(circle var(--r) at var(--mx) var(--my),
+    #000 0%, #000 40%, rgba(0,0,0,.72) 62%, rgba(0,0,0,.26) 82%, transparent 100%);
+}
+
+/* No panel, no scrim — the copy sits directly on the plate's empty corner. */
+.hero-card{max-width:530px}
+/* a warm bloom of light riding on top of the plates, not behind them */
+.glowspot{
+  position:absolute;z-index:1;pointer-events:none;
+  width:560px;height:560px;margin:-280px 0 0 -280px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,240,246,.7) 0%,rgba(255,224,237,.24) 46%,transparent 72%);
+  mix-blend-mode:soft-light;
+  opacity:0;transition:opacity .6s var(--ease);
+}
+.hero:hover .glowspot{opacity:1}
+
+/* touch devices: no cursor to trail, so show the branch in full bloom
+   and drop the hint that tells you to move one */
+@media (hover:none){
+  .branch-bloom{-webkit-mask-image:none;mask-image:none}
+  .glowspot{display:none}
+  .hero-hint{display:none}
+}
+
+/* ambient drifting petals */
+.drift{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.drift i{
+  position:absolute;top:-6%;
+  width:11px;height:14px;
+  background:var(--sakura);
+  border-radius:60% 0 60% 0;
+  opacity:.55;
+  animation:fall linear infinite;
+}
+@keyframes fall{
+  0%  {transform:translate3d(0,-10vh,0) rotate(0deg)}
+  100%{transform:translate3d(58px,112vh,0) rotate(420deg)}
+}
+
+/* ============================================================
+   portfolio
+   ============================================================ */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.card{
+  position:relative;overflow:hidden;
+  border-radius:var(--r-lg);
+  padding:20px;
+  text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;
+  transition:transform .45s var(--ease), box-shadow .45s var(--ease);
+}
+.card:hover{transform:translateY(-6px)}
+.card .thumb{
+  position:relative;z-index:1;
+  aspect-ratio:16/10;border-radius:14px;overflow:hidden;
+  margin-bottom:18px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);
+}
+.card .thumb span{
+  position:absolute;inset:0;
+  transition:transform .7s var(--ease);
+}
+.card:hover .thumb span{transform:scale(1.07)}
+.card-body{position:relative;z-index:1}
+.card h3{font-size:1.5rem;margin-bottom:.35rem}
+.card p{font-size:.92rem;color:var(--ink-soft);margin-bottom:1rem}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:auto}
+.tag{
+  font-size:.68rem;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  padding:.35rem .7rem;border-radius:var(--r-pill);
+  color:var(--ink-faint);
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+
+/* ============================================================
+   services
+   ============================================================ */
+.rows{border-top:1px solid var(--line)}
+.row{
+  display:grid;grid-template-columns:1fr 2fr;gap:24px;
+  padding:26px 0;border-bottom:1px solid var(--line);
+  align-items:start;
+}
+.row h3{font-size:1.55rem}
+.row p{color:var(--ink-soft);font-size:.98rem;max-width:52ch}
+
+/* ============================================================
+   dusk band
+   ============================================================ */
+.dusk{
+  position:relative;height:42vh;min-height:280px;overflow:hidden;
+  padding-left:var(--rail);
+  display:flex;align-items:center;justify-content:center;
+}
+.dusk .line{
+  font-family:var(--display);font-style:italic;
+  font-size:clamp(1.3rem,3.2vw,2.1rem);
+  color:rgba(255,255,255,.82);
+  text-align:center;max-width:22ch;padding:0 24px;
+}
+
+/* ============================================================
+   pricing
+   ============================================================ */
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
+.tier{
+  border-radius:var(--r-lg);
+  padding:32px 30px;
+  display:flex;flex-direction:column;
+}
+.tier .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.tier h3{font-size:1.9rem;margin:.7rem 0 .2rem}
+.price{
+  font-family:var(--display);font-size:clamp(2.4rem,4.6vw,3.4rem);
+  line-height:1.05;margin:.9rem 0 .3rem;
+}
+.price small{font-family:var(--body);font-size:.9rem;color:var(--ink-faint);letter-spacing:0}
+.tier ul{list-style:none;margin:1.4rem 0 2rem;padding:0;display:flex;flex-direction:column;gap:.7rem}
+.tier li{
+  position:relative;padding-left:22px;
+  font-size:.93rem;color:var(--ink-soft);
+}
+.tier li::before{
+  content:'';position:absolute;left:0;top:.55em;
+  width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.85;
+}
+.tier .btn{margin-top:auto;width:100%}
+
+.notice{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:14px;
+  margin:4px 0;
+  padding:18px 24px;border-radius:var(--r-pill);
+  font-size:.92rem;color:var(--ink);
+  background:rgba(232,87,159,.13);
+  box-shadow:inset 0 0 0 1.4px rgba(232,87,159,.42);
+}
+.notice svg{flex:none;stroke:var(--magenta)}
+.notice strong{font-weight:600;color:#FBB8D6}
+
+/* ============================================================
+   about
+   ============================================================ */
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,6vw,80px);align-items:start}
+.about-grid p + p{margin-top:1.1rem}
+.about-grid .lede{font-size:1.15rem;color:var(--ink)}
+.facts{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.fact{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.fact dt{color:var(--ink-faint)}
+.fact dd{margin:0;color:var(--ink)}
+
+/* ============================================================
+   contact
+   ============================================================ */
+#contact{padding-bottom:clamp(56px,7vh,80px)}
+.form{
+  border-radius:var(--r-lg);
+  padding:clamp(26px,4vw,42px);
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;
+}
+.field{display:flex;flex-direction:column;gap:.45rem;position:relative;z-index:1}
+.field.wide{grid-column:1/-1}
+.field label{font-size:.78rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+.field input,.field select,.field textarea{
+  font-family:var(--body);font-size:.98rem;color:var(--ink);
+  background:rgba(255,255,255,.06);
+  border:none;box-shadow:inset 0 0 0 1.2px var(--line);
+  border-radius:14px;padding:.85rem 1rem;min-height:48px;
+  transition:box-shadow .3s var(--ease), background .3s var(--ease);
+}
+.field select{appearance:none;cursor:pointer}
+.field textarea{resize:vertical;min-height:132px;line-height:1.6}
+.field input:hover,.field select:hover,.field textarea:hover{background:rgba(255,255,255,.1)}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;background:rgba(255,255,255,.12);
+  box-shadow:inset 0 0 0 2px var(--teal);
+}
+.field .hint{font-size:.78rem;color:var(--ink-faint)}
+.form-actions{
+  grid-column:1/-1;position:relative;z-index:1;
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px;
+  margin-top:.4rem;
+}
+.form-actions .hint{font-size:.83rem;color:var(--ink-faint);max-width:40ch}
+.form-actions a{color:var(--teal)}
+
+.colophon{
+  max-width:var(--shell);margin:52px auto 0;
+  padding-top:22px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;
+  font-size:.8rem;color:var(--ink-faint);
+}
+
+/* ============================================================
+   responsive
+   ============================================================ */
+@media (max-width:1000px){
+  :root{--rail:0px}
+  /* no padding on main — the hero's own background runs under the translucent bar */
+  main{margin-left:0}
+  .section{scroll-margin-top:68px}
+  .rail{display:none}
+
+  .bar{
+    display:flex;align-items:center;justify-content:space-between;
+    position:fixed;top:0;left:0;right:0;z-index:80;
+    height:68px;padding:0 20px;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(18px) saturate(1.2);
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);
+    transition:background var(--tone-fade) var(--ease);
+  }
+  html[data-tone="dark"] .bar{background:rgba(8,8,20,.55)}
+  .bar .wordmark{font-size:1.35rem}
+  .menu-btn{
+    width:46px;height:46px;border-radius:50%;
+    display:grid;place-items:center;
+    background:rgba(255,255,255,.18);
+    border:none;box-shadow:inset 0 0 0 1.2px var(--line);
+    color:var(--ink);cursor:pointer;
+  }
+  .menu-btn svg{transition:transform .3s var(--ease), opacity .3s var(--ease)}
+  .sheet{
+    position:fixed;inset:68px 0 auto 0;z-index:79;
+    display:grid;grid-template-rows:0fr;
+    background:rgba(255,255,255,.72);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border-bottom:1px solid var(--line);
+    transition:grid-template-rows .42s var(--ease);
+  }
+  html[data-tone="dark"] .sheet{background:rgba(8,8,20,.82)}
+  .sheet[data-open="true"]{grid-template-rows:1fr}
+  .sheet-inner{overflow:hidden}
+  .sheet a{
+    display:block;padding:15px 22px;
+    font-family:var(--display);font-size:1.7rem;
+    text-decoration:none;color:var(--ink);
+  }
+  .sheet a:first-child{padding-top:26px}
+  .sheet a:last-child{padding-bottom:30px}
+
+  .hero{min-height:94vh;padding-top:104px}
+  .hero-card{max-width:none}
+  .tiers{grid-template-columns:1fr}
+  .about-grid{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr;gap:8px}
+  .form{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+  .drift{display:none}
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ============ rail (desktop) ============ -->
+<header class="rail">
+  <a class="wordmark" href="#home">Space <em>Wize</em></a>
+  <nav class="rail-nav" aria-label="Sections">
+    <a href="#home">Home</a>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#services">Services</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <div class="rail-foot">
+    <p class="status"><span class="dot" aria-hidden="true"></span> Taking on 3 projects this spring</p>
+    <p>Ontario, Canada<br>Remote worldwide</p>
+  </div>
+</header>
+
+<!-- ============ bar (mobile) ============ -->
+<div class="bar">
+  <a class="wordmark" href="#home">Space <em>Wize</em></a>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="sheet" aria-label="Open menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"/>
+    </svg>
+  </button>
+</div>
+<nav class="sheet" id="sheet" data-open="false" aria-label="Sections">
+  <div class="sheet-inner">
+    <a href="#home">Home</a>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#services">Services</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<main id="main">
+
+  <!-- ============ HOME ============ -->
+  <section class="section hero" id="home" data-tone="light">
+    <div class="branch" aria-hidden="true">
+      <div class="branch-img branch-base"></div>
+      <div class="branch-img branch-bloom" id="bloomLayer"></div>
+    </div>
+    <div class="drift" aria-hidden="true"></div>
+    <div class="glowspot" id="glowspot" aria-hidden="true"></div>
+
+    <div class="shell">
+      <div class="hero-card">
+        <p class="eyebrow">Web design &amp; build — Space Wize</p>
+        <h1>Sites that feel <em>considered</em>, not assembled.</h1>
+        <p class="lede">I'm a web designer building fast, clear websites for people who need one and don't want to think about it twice. You bring the business. I handle design, build, and launch.</p>
+        <div class="hero-cta">
+          <a class="btn btn-solid" href="#portfolio"><span>See the work</span></a>
+          <a class="btn btn-ghost" href="#contact"><span>Start a project</span></a>
+        </div>
+        <p class="hero-hint">Move your cursor across the branch.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PORTFOLIO ============ -->
+  <section class="section" id="portfolio" data-tone="light">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Portfolio</p>
+        <h2>Recent work</h2>
+        <p class="lede">Four builds from the last year. Each one shipped, each one live. Swap these for your real projects — the card takes a screenshot, a title, a one-liner, and up to three tags.</p>
+      </div>
+      <div class="grid">
+
+        <a class="card glass" href="#contact">
+          <div class="thumb"><span style="background:linear-gradient(135deg,#FBD3E0,#E8A6C4 55%,#C98BA8)"></span></div>
+          <div class="card-body">
+            <h3>Hollow Pine Roasters</h3>
+            <p>A single-page storefront for a small-batch coffee roaster. Menu, subscription signup, and a wholesale form that routes straight to their inbox.</p>
+            <div class="tags"><span class="tag">E-commerce</span><span class="tag">Shopify</span><span class="tag">Brand</span></div>
+          </div>
+        </a>
+
+        <a class="card glass" href="#contact">
+          <div class="thumb"><span style="background:linear-gradient(135deg,#CFE0F2,#A8C4E8 55%,#8FA8CE)"></span></div>
+          <div class="card-body">
+            <h3>Marlowe &amp; Reed</h3>
+            <p>Site refresh for a two-person law practice. Cut the page count in half, rewrote the service copy, and added online consult booking.</p>
+            <div class="tags"><span class="tag">Redesign</span><span class="tag">Copy</span><span class="tag">Booking</span></div>
+          </div>
+        </a>
+
+        <a class="card glass" href="#contact">
+          <div class="thumb"><span style="background:linear-gradient(135deg,#E8DCC8,#C9A886 55%,#A8845F)"></span></div>
+          <div class="card-body">
+            <h3>Fieldnote Studio</h3>
+            <p>A photographer's portfolio with a full-bleed gallery, client proofing area, and a print shop. Loads in under a second on mobile.</p>
+            <div class="tags"><span class="tag">Portfolio</span><span class="tag">Gallery</span><span class="tag">Performance</span></div>
+          </div>
+        </a>
+
+        <a class="card glass" href="#contact">
+          <div class="thumb"><span style="background:linear-gradient(135deg,#D8CFE8,#B0A0CE 55%,#8C7BAB)"></span></div>
+          <div class="card-body">
+            <h3>Northline Physio</h3>
+            <p>Clinic site with location pages, an intake form, and a staff directory their front desk can update without calling me.</p>
+            <div class="tags"><span class="tag">Local SEO</span><span class="tag">CMS</span><span class="tag">Forms</span></div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="section" id="services" data-tone="light">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Services</p>
+        <h2>What I actually do</h2>
+        <p class="lede">Most projects are a full design-and-build: we talk, I design it, I build it, it goes live. If you already have a site and it just needs to work better, that's fine too.</p>
+      </div>
+      <div class="rows">
+        <div class="row">
+          <h3>Design &amp; build</h3>
+          <p>A complete site from a blank page. Structure, layout, copy direction, and a working build you own outright. Typically three to six pages, launched in two to four weeks.</p>
+        </div>
+        <div class="row">
+          <h3>Redesign</h3>
+          <p>You have a site. It's slow, dated, or nobody can find anything. I audit what's there, keep what works, and rebuild the rest without losing your search rankings.</p>
+        </div>
+        <div class="row">
+          <h3>Ongoing care</h3>
+          <p>Updates, new pages, fixes, and small improvements on a monthly retainer. For businesses that keep changing and don't want to start a new project every time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DUSK ============ -->
+  <div class="dusk" aria-hidden="true">
+    <p class="line">Every site starts as a conversation about what you actually need.</p>
+  </div>
+
+  <!-- ============ PRICING ============ -->
+  <section class="section" id="pricing" data-tone="dark">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Pricing</p>
+        <h2>Two ways to work together</h2>
+        <p class="lede">No packages, no upsells. We get on a call, I learn what you need, and you get a number. Whichever option fits, you'll know the cost before anything starts.</p>
+      </div>
+      <div class="tiers">
+
+        <div class="tier glass">
+          <p class="kicker">Project</p>
+          <h3>Flat rate</h3>
+          <p class="price">Quoted<br><small>after a free scouting call</small></p>
+          <ul>
+            <li>One 30-minute call to scope the work</li>
+            <li>A fixed number, in writing, before we start</li>
+            <li>Design, build, and launch included</li>
+            <li>Two rounds of revisions</li>
+            <li>You own everything at handoff</li>
+          </ul>
+          <a class="btn btn-solid" href="#contact"><span>Book a scouting call</span></a>
+        </div>
+
+        <div class="notice" role="note">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/>
+          </svg>
+          <p><strong>These rates hold for my first 10 clients.</strong> After that, both options go up. If you're reading this, the current pricing is still available.</p>
+        </div>
+
+        <div class="tier glass">
+          <p class="kicker">Ongoing</p>
+          <h3>Hourly retainer</h3>
+          <p class="price">$30<small>/hour</small><br><small>$1,500 minimum retainer</small></p>
+          <ul>
+            <li>Hours drawn down as you use them</li>
+            <li>Design, build, fixes, and content updates</li>
+            <li>A log of what each hour went to</li>
+            <li>Unused hours roll into the next month</li>
+            <li>Cancel whenever — no notice period</li>
+          </ul>
+          <a class="btn btn-solid" href="#contact"><span>Start a retainer</span></a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="section" id="about" data-tone="dark">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">About</p>
+        <h2>Hi, I'm the whole studio</h2>
+      </div>
+      <div class="about-grid">
+        <div>
+          <p class="lede">I'm a self-taught web designer based in Ontario. I build sites for small businesses, independent practices, and people launching something for the first time.</p>
+          <p class="lede" style="margin-top:1.1rem">I'm early in this, and I price accordingly. What you get in exchange is someone who answers the phone, ships on schedule, and doesn't hand you a site you can't maintain.</p>
+        </div>
+        <dl class="facts">
+          <div class="fact"><dt>Based in</dt><dd>Ontario, Canada</dd></div>
+          <div class="fact"><dt>Working since</dt><dd>2024</dd></div>
+          <div class="fact"><dt>Typical timeline</dt><dd>2–4 weeks</dd></div>
+          <div class="fact"><dt>Clients so far</dt><dd>4 of 10</dd></div>
+          <div class="fact"><dt>Reply time</dt><dd>Within one business day</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="section" id="contact" data-tone="dark">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Contact</p>
+        <h2>Tell me what you're building</h2>
+        <p class="lede">Fill this in and it opens a pre-written email in your mail app — nothing sends until you hit send there. Or write to me directly at <a href="mailto:hello@spacewize.com">hello@spacewize.com</a>.</p>
+      </div>
+
+      <form class="form glass" id="contactForm" novalidate>
+        <div class="field">
+          <label for="cf-name">Your name</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="cf-email">Your email</label>
+          <input id="cf-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="cf-type">What you need</label>
+          <select id="cf-type" name="type">
+            <option>A new site, design and build</option>
+            <option>A redesign of an existing site</option>
+            <option>Ongoing care on a retainer</option>
+            <option>Not sure yet</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-budget">Rough budget</label>
+          <select id="cf-budget" name="budget">
+            <option>Under $1,500</option>
+            <option>$1,500 – $3,000</option>
+            <option>$3,000 – $6,000</option>
+            <option>$6,000+</option>
+            <option>Tell me what it should be</option>
+          </select>
+        </div>
+        <div class="field wide">
+          <label for="cf-message">What's the project</label>
+          <textarea id="cf-message" name="message" required></textarea>
+          <p class="hint" id="cf-hint">What the business does, what the site needs to accomplish, and when you'd like it live.</p>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-solid" type="submit"><span>Open email draft</span></button>
+          <p class="hint" id="formStatus" role="status">Nothing is sent from this page. Prefer to write it yourself? <a href="mailto:hello@spacewize.com">hello@spacewize.com</a></p>
+        </div>
+      </form>
+
+      <div class="colophon">
+        <p>Space Wize — web design, Ontario, Canada</p>
+        <p>Placeholder copy. Replace before launch.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 1. seeded rng (drifting petals) ---------- */
+  var seed = 20260813;
+  function rnd(){ seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
+
+  var blooms = document.getElementById('bloomLayer');
+
+  /* ---------- 2. spotlight that trails the cursor ---------- */
+  /* Lerped in a rAF loop and written to CSS variables — the mask is a
+     plain radial-gradient, so the compositor does the work.            */
+  var hero = document.getElementById('home');
+  var glow = document.getElementById('glowspot');
+  var raw = {x:-500, y:-500}, smooth = {x:-500, y:-500}, running = false, rafId = null;
+
+  /* The glow is a child of the hero, but the mask lives on the plate, which is
+     inset from the left. Track that gap so both stay under the same cursor.  */
+  var off = {x:0, y:0};
+  function measure(){
+    var h = hero.getBoundingClientRect(), b = blooms.getBoundingClientRect();
+    off.x = b.left - h.left;
+    off.y = b.top - h.top;
+  }
+  measure();
+  window.addEventListener('resize', measure);
+
+  function loop(){
+    smooth.x += (raw.x - smooth.x) * 0.12;
+    smooth.y += (raw.y - smooth.y) * 0.12;
+    blooms.style.setProperty('--mx', (smooth.x - off.x).toFixed(1) + 'px');
+    blooms.style.setProperty('--my', (smooth.y - off.y).toFixed(1) + 'px');
+    glow.style.transform = 'translate3d(' + smooth.x.toFixed(1) + 'px,' + smooth.y.toFixed(1) + 'px,0)';
+    if (Math.abs(raw.x - smooth.x) > 0.4 || Math.abs(raw.y - smooth.y) > 0.4){
+      rafId = requestAnimationFrame(loop);
+    } else {
+      running = false;
+    }
+  }
+
+  if (window.matchMedia('(hover: hover)').matches){
+    hero.addEventListener('pointermove', function(e){
+      var r = hero.getBoundingClientRect();
+      raw.x = e.clientX - r.left;
+      raw.y = e.clientY - r.top;
+      if (!running){ running = true; rafId = requestAnimationFrame(loop); }
+    });
+    hero.addEventListener('pointerleave', function(){
+      raw.x = -600; raw.y = -600;
+      if (!running){ running = true; rafId = requestAnimationFrame(loop); }
+    });
+  }
+
+  /* ---------- 3. drifting petals ---------- */
+  if (!reduced){
+    var drift = document.querySelector('.drift');
+    for (var p = 0; p < 7; p++){
+      var el = document.createElement('i');
+      el.style.left = (6 + rnd() * 88).toFixed(1) + '%';
+      el.style.animationDuration = (16 + rnd() * 14).toFixed(1) + 's';
+      el.style.animationDelay = (-rnd() * 24).toFixed(1) + 's';
+      el.style.opacity = (0.3 + rnd() * 0.3).toFixed(2);
+      el.style.transform = 'scale(' + (0.7 + rnd() * 0.7).toFixed(2) + ')';
+      drift.appendChild(el);
+    }
+  }
+
+  /* ---------- 4. light/dark tone flip + active nav ---------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main [data-tone]'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail-nav a, .sheet a'));
+
+  function setActive(id){
+    links.forEach(function(a){
+      if (a.getAttribute('href') === '#' + id) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      document.documentElement.dataset.tone = en.target.dataset.tone;
+      setActive(en.target.id);
+    });
+  }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+
+  sections.forEach(function(s){ io.observe(s); });
+  document.documentElement.dataset.tone = 'light';
+  setActive('home');
+
+  /* ---------- 5. mobile menu ---------- */
+  var btn = document.getElementById('menuBtn');
+  var sheet = document.getElementById('sheet');
+
+  function closeSheet(){
+    sheet.dataset.open = 'false';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Open menu');
+  }
+  btn.addEventListener('click', function(){
+    var open = sheet.dataset.open === 'true';
+    sheet.dataset.open = open ? 'false' : 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    btn.setAttribute('aria-label', open ? 'Open menu' : 'Close menu');
+  });
+  sheet.addEventListener('click', function(e){ if (e.target.tagName === 'A') closeSheet(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && sheet.dataset.open === 'true'){ closeSheet(); btn.focus(); }
+  });
+
+  /* ---------- 6. contact form -> mailto draft ---------- */
+  var form = document.getElementById('contactForm');
+  var status = document.getElementById('formStatus');
+  var TO = 'hello@spacewize.com';
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    var f = {
+      name:    form.name.value.trim(),
+      email:   form.email.value.trim(),
+      type:    form.type.value,
+      budget:  form.budget.value,
+      message: form.message.value.trim()
+    };
+
+    var missing = [];
+    if (!f.name) missing.push('cf-name');
+    if (!f.email || f.email.indexOf('@') < 1) missing.push('cf-email');
+    if (!f.message) missing.push('cf-message');
+
+    if (missing.length){
+      status.textContent = 'Add your name, a valid email, and a note about the project first.';
+      document.getElementById(missing[0]).focus();
+      return;
+    }
+
+    var subject = 'Project enquiry — ' + f.name;
+    var body =
+      'Name: '    + f.name    + '\n' +
+      'Email: '   + f.email   + '\n' +
+      'Needs: '   + f.type    + '\n' +
+      'Budget: '  + f.budget  + '\n\n' +
+      f.message   + '\n';
+
+    status.textContent = 'Opening your mail app. Nothing sends until you press send there.';
+    window.location.href = 'mailto:' + TO +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body='    + encodeURIComponent(body);
+  });
+})();
+</script>
+</body>
+</html>
