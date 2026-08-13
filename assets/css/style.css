@@ -408,17 +408,40 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
   transition:transform .45s var(--ease), box-shadow .45s var(--ease);
 }
 .card:hover{transform:translateY(-6px)}
+/* 16/9 rather than 16/10: the screenshots are all ~2.19:1, so the shallower
+   box trims less off their sides when `cover` crops them horizontally. */
 .card .thumb{
   position:relative;z-index:1;
-  aspect-ratio:16/10;border-radius:14px;overflow:hidden;
+  aspect-ratio:16/9;border-radius:14px;overflow:hidden;
   margin-bottom:18px;
+  background:rgba(255,255,255,.22);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);
 }
 .card .thumb span{
   position:absolute;inset:0;
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
   transition:transform .7s var(--ease);
 }
 .card:hover .thumb span{transform:scale(1.07)}
+
+/* the open slot — dashed and empty, so it reads as an invitation rather than
+   as a fifth project whose screenshot failed to load */
+.card-open .thumb-open{
+  display:grid;place-items:center;
+  background:transparent;
+  border:1.5px dashed var(--line);
+  box-shadow:none;
+}
+.card-open .thumb-open span{
+  position:static;
+  font-family:var(--display);
+  font-size:2.6rem;line-height:1;
+  color:var(--ink-faint);
+  transition:color .45s var(--ease), transform .45s var(--ease);
+}
+.card-open:hover .thumb-open span{color:var(--accent);transform:scale(1.12)}
 .card-body{position:relative;z-index:1}
 .card h3{font-size:1.5rem;margin-bottom:.35rem}
 .card p{font-size:.92rem;color:var(--ink-soft);margin-bottom:1rem}
