@@ -265,12 +265,18 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 
 /* per-section backgrounds — each ends where the next begins */
 /* #home is flat and equal to the plate's own backdrop, so the plate dissolves
-   into it; #portfolio opens on the same tone so the hero hands off seamlessly */
+   into it; #portfolio holds that same flat tone too — the day→night fade
+   doesn't begin until its bottom edge. From there it runs the full length of
+   #services, through the (now taller) dusk band, and settles early in
+   #pricing, so it's fully resolved by the time the "Two ways to work
+   together" heading is on screen rather than mid-transition behind it. */
 #home     {background:#F7ECEA}
-#portfolio{background:linear-gradient(180deg,#F7ECEA 0%,var(--sky) 100%)}
-#services {background:linear-gradient(180deg,var(--sky) 0%,var(--lilac) 100%)}
-.dusk     {background:linear-gradient(180deg,var(--lilac) 0%,#8A6FA8 34%,#4A2F63 68%,var(--dusk) 100%)}
-#pricing  {background:linear-gradient(180deg,var(--dusk) 0%,var(--midnight) 100%)}
+#portfolio{background:#F7ECEA}
+#services {background:linear-gradient(180deg,#F7ECEA 0%,var(--sky) 45%,var(--lilac) 100%)}
+.dusk     {background:linear-gradient(180deg,
+             var(--lilac) 0%, #B49FC7 20%, #8A6FA8 42%,
+             #5C4478 66%, #38295A 84%, var(--dusk) 100%)}
+#pricing  {background:linear-gradient(180deg,var(--dusk) 0%,var(--midnight) 6%,var(--midnight) 100%)}
 #about    {background:linear-gradient(180deg,var(--midnight) 0%,var(--deep) 100%)}
 #contact  {background:linear-gradient(180deg,var(--deep) 0%,var(--void) 100%)}
 
@@ -431,7 +437,7 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
    dusk band
    ============================================================ */
 .dusk{
-  position:relative;height:42vh;min-height:280px;overflow:hidden;
+  position:relative;height:52vh;min-height:340px;overflow:hidden;
   padding-left:var(--rail);
   display:flex;align-items:center;justify-content:center;
 }
