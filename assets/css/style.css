@@ -585,6 +585,10 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 /* ============================================================
    contact
    ============================================================ */
+#contact{
+  background:linear-gradient(180deg,var(--void) 0%,var(--void) 100%);
+}
+
 #contact{padding-bottom:clamp(56px,7vh,80px)}
 .form{
   border-radius:var(--r-lg);
@@ -648,8 +652,9 @@ html[data-tone="dark"] .btn-text:hover{color:var(--teal);opacity:.75}
    FAQ
    ============================================================ */
 #faq{
-  background:linear-gradient(180deg,var(--deep) 0%,var(--deep) 40%,#0A0D1C 100%);
+  background:linear-gradient(180deg,var(--deep) 0%,var(--deep) 55%,var(--void) 100%);
 }
+
 
 .faq-list{
   display:flex;
