@@ -473,6 +473,22 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
   box-shadow:inset 0 0 0 1px var(--line);
 }
 
+/* AWDEA has two destinations: the whole card links to the primary site via a
+   "stretched link", while one inline exception link stays independently
+   clickable. z-index can't solve this — .inline-link's z-index only ranks it
+   among siblings *inside* .card-body's own stacking context (already z-index:1
+   from the shared .card-body rule); it can't outrank .card-body's ancestor
+   context against a sibling .card-stretch no matter how high it goes. So the
+   stretch link sits *behind* thumb/card-body (z-index:0, below their 1)
+   instead, and thumb/card-body are punched transparent to clicks via
+   pointer-events:none — everywhere clicks now fall through to the link
+   beneath, except .inline-link, which re-enables pointer-events and (being
+   an ordinary painted element with nothing covering it) stays clickable. */
+.card-linked{position:relative}
+.card-stretch{position:absolute;inset:0;z-index:0}
+.card-linked .thumb,.card-linked .card-body{pointer-events:none}
+.card-body .inline-link{pointer-events:auto;color:var(--accent);text-decoration:underline}
+
 /* ============================================================
    services
    ============================================================ */
@@ -585,10 +601,6 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 /* ============================================================
    contact
    ============================================================ */
-#contact{
-  background:linear-gradient(180deg,var(--void) 0%,var(--void) 100%);
-}
-
 #contact{padding-bottom:clamp(56px,7vh,80px)}
 .form{
   border-radius:var(--r-lg);
