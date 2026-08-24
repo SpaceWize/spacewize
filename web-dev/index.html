@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Space Wize - Web Design Portfolio</title>
+<meta name="description" content="Space Wize is a web design studio building fast, considered websites for people who need one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ============ rail (desktop) ============ -->
+<header class="rail">
+  <a class="wordmark" href="#home">Space <em>Wize</em></a>
+  <nav class="rail-nav" aria-label="Sections">
+    <a href="#home">Home</a>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#services">Services</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <div class="rail-foot">
+    <p class="status"><span class="dot" aria-hidden="true"></span> Available! <br> 9/10 spots left. </p>
+    <p>BC, Canada<br>Remote worldwide</p>
+  </div>
+</header>
+
+<!-- ============ bar (mobile) ============ -->
+<div class="bar">
+  <a class="wordmark" href="#home">Space <em>Wize</em></a>
+  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="sheet" aria-label="Open menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"/>
+    </svg>
+  </button>
+</div>
+<nav class="sheet" id="sheet" data-open="false" aria-label="Sections">
+  <div class="sheet-inner">
+    <a href="#home">Home</a>
+    <a href="#portfolio">Portfolio</a>
+    <a href="#services">Services</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<main id="main">
+
+  <!-- ============ HOME ============ -->
+  <section class="section hero" id="home" data-tone="light">
+    <div class="branch" aria-hidden="true">
+      <div class="branch-img branch-base"></div>
+      <div class="branch-img branch-bloom" id="bloomLayer"></div>
+    </div>
+    <div class="drift" aria-hidden="true"></div>
+    <div class="glowspot" id="glowspot" aria-hidden="true"></div>
+
+    <div class="shell">
+      <div class="hero-card glass">
+        <p class="eyebrow">Web design &amp; build - Space Wize</p>
+        <h1>Sites that are <em>considered</em>, not assembled.</h1>
+        <p class="lede">I'm a web designer building fast, clear websites for people who need one and don't want to overcomplicate it. You bring the business, I bring a place for it to live.</p>
+        <div class="hero-cta">
+          <a class="btn btn-solid" href="#portfolio"><span>See the work</span></a>
+          <a class="btn btn-ghost" href="#contact"><span>Start a project</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PORTFOLIO ============ -->
+ <section class="section" id="portfolio" data-tone="light">
+  <div class="shell">
+    <div class="head">
+      <p class="eyebrow">Portfolio</p>
+      <h2>Recent work</h2>
+      <p class="lede">Four live builds and one concept piece. The live ones open in a new tab. Have a look around before you decide whether I'm the right person to call.</p>
+    </div>
+    <div class="grid">
+
+      <a class="card glass" href="https://spacewize.github.io/canuteach.me/" target="_blank" rel="noopener">
+        <div class="thumb"><span style="background-image:url('assets/images/work/canuteach.jpg')"></span></div>
+        <div class="card-body">
+          <h3>Computer U&#8209;Teach</h3>
+          <p>Computer lessons and repair for kids and seniors in Vancouver. I repaired the broken links, rewrote the copy so every course explains itself, and brought the styling up to a current standard.</p>
+          <div class="tags">
+            <span class="tag">Client Work</span>
+            <span class="tag">Redesign</span>
+            <span class="tag">Copy</span>
+            <span class="tag">Education</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="card glass card-linked">
+        <div class="thumb"><span style="background-image:url('assets/images/work/awdea.jpg')"></span></div>
+        <div class="card-body">
+          <h3>AWDEA</h3>
+          <p>A BC nonprofit getting disabled adults into concerts, festivals, and games. Rebuilt from their original site, with an events calendar the admins update themselves - no code, no developer. There's also a <a class="inline-link" href="https://spacewize.github.io/AWDEAAA/" target="_blank" rel="noopener">second art direction</a> on the same build.</p>
+          <div class="tags">
+            <span class="tag">Pro Bono</span>
+            <span class="tag">Redesign</span>
+            <span class="tag">No-code calendar</span>
+            <span class="tag">Nonprofit</span>
+          </div>
+        </div>
+        <a class="card-stretch" href="https://spacewize.github.io/AWDEA/" target="_blank" rel="noopener" aria-label="AWDEA — view live site"></a>
+      </div>
+
+      <a class="card glass" href="https://spacewize.github.io/acespaders3/" target="_blank" rel="noopener">
+        <div class="thumb"><span style="background-image:url('assets/images/work/acespaders.jpg')"></span></div>
+        <div class="card-body">
+          <h3>Ace Spaders</h3>
+          <p>A leadership operator and facilitator needing a representative site. Rebuilt from the ground up to match his business's growing needs, with some added flair along the way.</p>
+          <div class="tags"><span class="tag">Redesign</span><span class="tag">Ground-up build</span><span class="tag">Consulting</span></div>
+        </div>
+      </a>
+
+      <div class="card glass card-demo">
+        <div class="thumb">
+          <span style="background-image:url('assets/images/work/frontrow.jpg')"></span>
+          <em class="badge">Concept</em>
+        </div>
+        <div class="card-body">
+          <h3>Front Row</h3>
+          <p>A self-directed concept, not a client build - one of my first. A booking service for watching matches out: find a fixture, pick a venue on screens and sound, hold a seat. Built to practise dark UI and live state - countdowns, seat counts, fill bars.</p>
+          <div class="tags"><span class="tag">Concept</span><span class="tag">Dark UI</span><span class="tag">Booking flow</span></div>
+        </div>
+      </div>
+
+      <a class="card glass card-open" href="#contact">
+        <div class="thumb thumb-open"><span aria-hidden="true">+</span></div>
+        <div class="card-body">
+          <h3>Your site here!</h3>
+          <p>This spot's up for grabs. If you need a new build, redesign, or a tidy-up of something that already exists, book a scouting call and I'll make it happen.</p>
+          <div class="tags"><span class="tag">Available now</span><span class="tag">Free scoping call</span><span class="tag">1-2 weeks</span></div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="section" id="services" data-tone="light">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Services</p>
+        <h2>What I actually do</h2>
+        <p class="lede">Most projects are a full design-and-build: we talk, I design it, I build it, it goes live. If you already have a site and it just needs to work better, that's fine too.</p>
+      </div>
+      <div class="rows">
+        <div class="row">
+          <h3>Design &amp; build</h3>
+          <p>A complete site from a blank page. Structure, layout, copy direction, and a working build you own outright. Typically three to six pages, launched in one to two weeks.</p>
+        </div>
+        <div class="row">
+          <h3>Redesign</h3>
+          <p>You have a site. It's slow, dated, or nobody can find anything. I audit what's there, keep what works, and rebuild the rest without losing your search rankings.</p>
+        </div>
+        <div class="row">
+          <h3>Ongoing care</h3>
+          <p>Once you're live I can keep the site looked after - updates, backups, small edits, and someone to call when something breaks. $100 CAD a month, cancel any time. For bigger changes than that, it's a new project - see pricing below.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DUSK ============ -->
+  <div class="dusk" aria-hidden="true">
+    <p class="line">Great websites don’t start with templates; <br> they start with an idea and a business.</p>
+  </div>
+
+  <!-- ============ PRICING ============ -->
+  <section class="section" id="pricing" data-tone="dark">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Pricing</p>
+        <h2>Two ways to build, one way to keep it running</h2>
+        <p class="lede">Two flat rates, no hourly guessing. You'll know the cost before anything starts, and the only extras - copywriting, ongoing care - are optional and priced plainly below. Every price on this page is in Canadian dollars.</p>
+      </div>
+      <div class="tiers">
+
+        <div class="tier glass">
+          <p class="kicker">Project</p>
+          <h3>Full build</h3>
+          <p class="price">$2,500<small> CAD</small><br><small>flat rate</small></p>
+          <ul>
+            <li>One 30-minute call to scope the work</li>
+            <li>Design, build, and launch included</li>
+            <li>Three rounds of revisions - up to 3 small edits per round, or one larger change in place of the rest</li>
+            <li>Launches with placeholder copy; write it yourself, or add copywriting for $300 CAD</li>
+            <li>You own everything at handoff</li>
+          </ul>
+          <a class="btn btn-solid" href="#contact"><span>Start a build</span></a>
+        </div>
+
+        <div class="tier glass">
+          <p class="kicker">Project</p>
+          <h3>Redesign</h3>
+          <p class="price">$1,000<small> CAD</small><br><small>flat rate</small></p>
+          <ul>
+            <li>One 30-minute call to scope the work</li>
+            <li>Audit, rebuild, and relaunch included</li>
+            <li>Two rounds of revisions</li>
+            <li>Keeps your existing copy; rewrite it yourself, or add copywriting for $250 CAD</li>
+            <li>You own everything at handoff</li>
+          </ul>
+          <a class="btn btn-solid" href="#contact"><span>Start a redesign</span></a>
+        </div>
+
+        <!-- After-launch care spans the full row rather than becoming a third
+             column: it isn't another way to build, it's what happens next. -->
+        <div class="care glass">
+          <div class="care-main">
+            <p class="kicker">After launch</p>
+            <h3>Site care &amp; on&#8209;call</h3>
+            <p class="care-copy">A site isn't finished the day it goes live. This keeps yours current, and puts someone on the other end of the phone when something breaks at an inconvenient hour.</p>
+            <ul class="care-points">
+              <li>Updates and backups</li>
+              <li>Uptime checks and broken-link sweeps</li>
+              <li>Small copy and content edits as they come up</li>
+              <li>On call by phone or email when something breaks</li>
+              <li>A short monthly note on what changed</li>
+              <li>Month to month, cancel any time</li>
+            </ul>
+          </div>
+          <div class="care-buy">
+            <p class="price">$100<small> CAD</small><br><small>per month</small></p>
+            <a class="btn btn-solid" href="#contact"><span>Add site care</span></a>
+            <p class="care-note">Optional, and only worth paying for once you're live. Add it at handoff or any time after. Let me know if this is something you are interested in when you write to me.</p>
+          </div>
+        </div>
+
+       <div class="notice" role="note">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/>
+          </svg>
+          <p><strong>These rates hold for my first 10 clients.</strong> After that, they go up. If you're reading this, the current pricing is still available.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="section" id="about" data-tone="dark">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">About</p>
+        <h2>Hi, I'm Sophia (AKA Space Wize)</h2>
+      </div>
+      <div class="about-grid">
+        <div>
+          <p class="lede">I'm a self-taught web designer based in BC. I build sites for small businesses, independent practices, and people launching something for the first time.</p>
+          <p class="lede" style="margin-top:1.1rem">I'm early in this, and I price accordingly. What you get in exchange is someone who builds quickly, responds accordingly, and gives you a real home for your brand.</p>
+          <p><em>When I’m not coding or designing, I’m usually watching anime, spending time with family, or learning about new stuff.</em></p>
+        </div>
+        <dl class="facts">
+          <div class="fact"><dt>Based in</dt><dd>British Columbia, Canada</dd></div>
+          <div class="fact"><dt>Working since</dt><dd>2026</dd></div>
+          <div class="fact"><dt>Typical timeline</dt><dd>1-2 weeks</dd></div>
+          <div class="fact"><dt>Clients so far</dt><dd>1 of 10</dd></div>
+          <div class="fact"><dt>Reply time</dt><dd>Within one business day</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="section" id="contact" data-tone="dark">
+    <div class="shell">
+      <div class="head">
+        <p class="eyebrow">Contact</p>
+        <h2>Tell me what you're building</h2>
+        <p class="lede">Fill this in and you can open it in the mail-app of your choice - nothing sends until you hit send there. Or write to me directly at <a href="mailto:thespacewize@gmail.com">thespacewize@gmail.com</a>.</p>
+      </div>
+
+      <form class="form glass" id="contactForm" novalidate>
+        <div class="field">
+          <label for="cf-name">Your name</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label for="cf-email">Your email</label>
+          <input id="cf-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="cf-type">What you need</label>
+          <select id="cf-type" name="type">
+            <option>A new site, design and build</option>
+            <option>A redesign of an existing site</option>
+            <option>Not sure yet</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-budget">Which price fits? (CAD)</label>
+          <select id="cf-budget" name="budget">
+            <option>$1,000 - Redesign</option>
+            <option>$2,500 - Full build</option>
+            <option>Site care only - $100/month</option>
+            <option>Not sure yet</option>
+          </select>
+        </div>
+        <div class="field wide">
+          <label for="cf-message">What's the project</label>
+          <textarea id="cf-message" name="message" required></textarea>
+          <p class="hint" id="cf-hint">What the business/brand does, what the site needs to accomplish, and when you'd like it live. If you already have a site, include the URL here. Also include if you would like maintenance after your new site is live.</p>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-solid" type="submit"><span>Open in Mail app</span></button>
+          <div class="mail-alt">
+            <span class="mail-alt-label">or open with</span>
+            <button class="btn btn-ghost btn-compact" type="button" data-provider="gmail"><span>Gmail</span></button>
+            <button class="btn btn-ghost btn-compact" type="button" data-provider="outlook"><span>Outlook</span></button>
+            <button class="btn btn-ghost btn-compact" type="button" data-provider="yahoo"><span>Yahoo</span></button>
+          </div>
+          <button class="btn-text" type="button" id="copyBtn">Copy the details instead</button>
+          <p class="hint" id="formStatus" role="status">Nothing sends from this page - every option above only opens a draft for you to review and send yourself.</p>
+        </div>
+      </form>
+
+      <div class="colophon">
+        <p> Sophia F. - Web design, BC, Canada</p>
+        <p> © 2026 Space Wize Enterprise, By TheSpaceWize. All rights reserved.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="assets/js/script.js"></script>
+</body>
+</html>

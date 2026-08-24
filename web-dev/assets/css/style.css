@@ -1,0 +1,733 @@
+/* ============================================================
+   SPACE WIZE — design tokens
+   Scroll = one spring day. Dawn blush -> night.
+   Tweak these first; everything else derives from them.
+   ============================================================ */
+:root{
+  /* --- daylight band --- */
+  --blush:      #FFF8FA;
+  --petal:      #FBE4EC;
+  --sky:        #E4ECF6;
+  --lilac:      #CFC4E0;
+
+  /* --- night band --- */
+  --dusk:       #241844;
+  --midnight:   #171B3A;
+  --deep:       #0C1026;
+  --void:       #06070F;
+
+  /* --- accents --- */
+  --bark:       #6B4B3A;   /* structural lines, small labels on light */
+  --cherry:     #E36FA0;   /* decoration only — too light to carry text */
+  --cherry-ink: #A81B54;   /* the same hue, deep enough to set type in */
+  --magenta:    #E8579F;   /* accent on dark */
+  --teal:       #4FD8CF;   /* accent on dark */
+  --sakura:     #FBD3E0;   /* drifting petals */
+
+  /* --- ink, flipped by [data-tone] --- */
+  --ink:        #241726;
+  --ink-soft:   #5B4A57;
+  --ink-faint:  #63555F;   /* darkened to clear 4.5:1 on the sky/lilac bands */
+  --line:       rgba(36,23,38,.14);
+  --accent:     var(--bark);
+
+  /* --- system --- */
+  --rail: 152px;
+  --shell: 1120px;
+  --r-lg: 22px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(.16,1,.3,1);
+  --tone-fade: 700ms;
+
+  --display: 'Instrument Serif', Georgia, serif;
+  --body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html[data-tone="dark"]{
+  --ink:      #F4EEF6;
+  --ink-soft: #BDB2CC;
+  --ink-faint:#8E85A3;
+  --line:     rgba(244,238,246,.16);
+  --accent:   var(--teal);
+}
+
+/* ============================================================
+   base
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  transition:color var(--tone-fade) var(--ease);
+}
+img,svg{max-width:100%;display:block}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.05;letter-spacing:-.015em}
+p{margin:0}
+a{color:inherit}
+
+:focus-visible{
+  outline:2.5px solid var(--accent);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
+.skip{
+  position:absolute;left:12px;top:-70px;z-index:200;
+  background:var(--ink);color:var(--blush);
+  padding:12px 18px;border-radius:var(--r-pill);
+  font-size:.85rem;font-weight:500;text-decoration:none;
+  transition:top .2s var(--ease);
+}
+.skip:focus{top:12px}
+
+.eyebrow{
+  font-size:.7rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:.18em;color:var(--accent);
+  transition:color var(--tone-fade) var(--ease);
+}
+.lede{color:var(--ink-soft);font-size:1.05rem;max-width:56ch;transition:color var(--tone-fade) var(--ease)}
+
+/* ============================================================
+   liquid glass + smoke swirl
+   ============================================================ */
+.glass{
+  position:relative;
+  overflow:hidden;
+  background:rgba(255,255,255,.10);
+  backdrop-filter:blur(14px) saturate(1.3);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border:none;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.45), 0 12px 40px -22px rgba(36,23,38,.5);
+}
+html[data-tone="dark"] .glass{
+  background:rgba(255,255,255,.045);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.16), 0 18px 50px -26px rgba(0,0,0,.9);
+}
+/* hairline gradient border, top+bottom bright */
+.glass::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  border-radius:inherit;padding:1.4px;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.75) 0%, rgba(255,255,255,.22) 22%,
+    rgba(255,255,255,0) 45%, rgba(255,255,255,0) 58%,
+    rgba(255,255,255,.22) 80%, rgba(255,255,255,.6) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+  pointer-events:none;
+}
+
+@keyframes swirl{to{transform:rotate(360deg)}}
+
+.btn{
+  position:relative;overflow:hidden;isolation:isolate;
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  min-height:48px;padding:.85rem 1.6rem;
+  border:none;border-radius:var(--r-pill);
+  font-family:var(--body);font-size:.92rem;font-weight:500;letter-spacing:.01em;
+  cursor:pointer;text-decoration:none;
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.btn > span{position:relative;z-index:2}
+/* the smoke: a soft conic plume that starts turning on hover */
+.btn::after{
+  content:'';position:absolute;inset:-70%;z-index:1;
+  background:conic-gradient(from 0deg,
+    transparent 0%, var(--smoke-a) 14%, transparent 33%,
+    var(--smoke-b) 52%, transparent 70%,
+    var(--smoke-a) 88%, transparent 100%);
+  filter:blur(16px);
+  opacity:0;
+  transition:opacity .5s var(--ease);
+  animation:swirl 9s linear infinite;
+  animation-play-state:paused;
+  pointer-events:none;
+}
+.btn:hover::after,.btn:focus-visible::after{opacity:.9;animation-play-state:running}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+
+.btn-solid{
+  background:var(--ink);color:var(--blush);
+  --smoke-a:rgba(227,111,160,.85);
+  --smoke-b:rgba(107,75,58,.7);
+}
+html[data-tone="dark"] .btn-solid{
+  background:var(--blush);color:var(--dusk);
+  --smoke-a:rgba(232,87,159,.9);
+  --smoke-b:rgba(79,216,207,.75);
+}
+.btn-ghost{
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  color:var(--ink);
+  box-shadow:inset 0 0 0 1.2px var(--line);
+  --smoke-a:rgba(251,211,224,.9);
+  --smoke-b:rgba(207,196,224,.8);
+}
+html[data-tone="dark"] .btn-ghost{
+  background:rgba(255,255,255,.06);
+  --smoke-a:rgba(79,216,207,.55);
+  --smoke-b:rgba(232,87,159,.5);
+}
+
+/* ============================================================
+   rail (sidebar)
+   ============================================================ */
+.rail{
+  position:fixed;inset:0 auto 0 0;z-index:60;
+  width:var(--rail);
+  display:flex;flex-direction:column;
+  padding:30px 20px;
+  border-right:1px solid var(--line);
+  background:rgba(255,255,255,.16);
+  backdrop-filter:blur(20px) saturate(1.2);
+  -webkit-backdrop-filter:blur(20px) saturate(1.2);
+  transition:background var(--tone-fade) var(--ease), border-color var(--tone-fade) var(--ease);
+}
+html[data-tone="dark"] .rail{background:rgba(10,10,24,.30)}
+
+.wordmark{
+  font-family:var(--display);font-size:1.35rem;line-height:1.05;
+  text-decoration:none;letter-spacing:-.02em;
+}
+.wordmark em{font-style:italic;color:var(--accent);transition:color var(--tone-fade) var(--ease)}
+
+.rail-nav{margin-top:42px;display:flex;flex-direction:column;gap:2px}
+.rail-nav a{
+  position:relative;
+  display:flex;align-items:center;
+  min-height:44px;padding:.4rem 0 .4rem 17px;
+  font-size:.85rem;font-weight:400;text-decoration:none;
+  color:var(--ink-soft);
+  transition:color .3s var(--ease), transform .3s var(--ease);
+}
+.rail-nav a::before{
+  content:'';position:absolute;left:0;top:50%;
+  width:7px;height:7px;margin-top:-3.5px;border-radius:50%;
+  background:var(--accent);
+  opacity:0;transform:scale(.4);
+  transition:opacity .35s var(--ease), transform .35s var(--ease);
+}
+.rail-nav a:hover{color:var(--ink);transform:translateX(3px)}
+.rail-nav a[aria-current="true"]{color:var(--ink);font-weight:500}
+.rail-nav a[aria-current="true"]::before{opacity:1;transform:scale(1)}
+
+.rail-foot{margin-top:auto;font-size:.72rem;color:var(--ink-soft);line-height:1.5}
+.status{display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.8rem;color:var(--ink-soft)}
+.status .dot{margin-top:.42rem}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--cherry);
+  box-shadow:0 0 0 0 rgba(227,111,160,.55);
+  animation:pulse 2.2s ease-out infinite;
+  flex:none;
+}
+html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,216,207,.55)}
+@keyframes pulse{
+  0%{transform:scale(1);opacity:1}
+  60%{transform:scale(1.5);opacity:.4}
+  100%{transform:scale(1);opacity:1}
+}
+
+/* mobile bar + its menu panel — both need an explicit desktop fallback.
+   .sheet had none: outside the max-width:1000px block it fell back to a
+   plain static <nav>, in normal document flow above <main>, with no
+   background of its own — which let body's near-black --void show through
+   as a thin strip across the top of the page at every width above 1000px. */
+.bar{display:none}
+.sheet{display:none}
+
+/* ============================================================
+   layout
+   ============================================================ */
+/* Sections run full-bleed and inset their own content, so the section
+   colour passes *under* the glass rail instead of leaving body showing. */
+.section{
+  position:relative;
+  padding:clamp(84px,11vh,132px) clamp(24px,5vw,72px);
+  padding-left:calc(var(--rail) + clamp(24px,5vw,72px));
+}
+.shell{max-width:var(--shell);margin:0 auto;width:100%}
+.head{max-width:60ch;margin-bottom:clamp(38px,5vw,58px)}
+.head h2{
+  font-size:clamp(2.3rem,5vw,3.6rem);
+  margin:.5rem 0 1.1rem;
+}
+
+/* per-section backgrounds — each ends where the next begins */
+/* #home is flat and equal to the plate's own backdrop, so the plate dissolves
+   into it; #portfolio holds that same flat tone, so the day→night fade
+   doesn't begin until below it. */
+#home     {background:#F7ECEA}
+#portfolio{background:#F7ECEA}
+
+/* Services + dusk band + pricing are one continuous ramp, so the stops below
+   are pinned to landmarks rather than eyeballed. The handoff colours
+   (#B9A6CC, #3C2C5D) are the ramp's value at each section boundary — change
+   one section and its neighbour's edge colour has to move with it.
+     · light holds to 12%, so it finishes just above "What I actually do" (16.7%)
+     · lilac lands at 86%, the bottom of the "Ongoing care" row (86.3%)
+     · full dusk arrives 6% into pricing, just above the "Pricing" label (7.2%) */
+#services {background:linear-gradient(180deg,
+             #F7ECEA 0%, #F7ECEA 12%, var(--sky) 49%,
+             var(--lilac) 86%, #B9A6CC 100%)}
+.dusk     {background:linear-gradient(180deg,
+             #B9A6CC 0%, #B49FC7 6%, #8A6FA8 45%,
+             #5C4478 77%, #3C2C5D 100%)}
+#pricing  {background:linear-gradient(180deg,
+             #3C2C5D 0%, var(--dusk) 6%, var(--dusk) 15%,
+             var(--midnight) 45%, var(--midnight) 100%)}
+#about    {background:linear-gradient(180deg,var(--midnight) 0%,var(--deep) 100%)}
+#contact  {background:linear-gradient(180deg,var(--deep) 0%,var(--void) 100%)}
+
+/* ============================================================
+   hero + the branch
+   ============================================================ */
+/* Copy occupies the upper register, the photograph a band beneath it.
+   The branch sweeps its trunk across the middle-left of the frame, so a
+   full-height plate would always run under the text — a band never does. */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:flex-start;
+  padding-top:clamp(96px,11vh,128px);
+  overflow:hidden;
+}
+.hero .shell{position:relative;z-index:2}
+.hero h1{
+  font-size:clamp(2.7rem,5.6vw,4.8rem);
+  letter-spacing:-.03em;
+  margin-bottom:1.25rem;
+}
+.hero h1 em{font-style:italic;color:var(--cherry-ink)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:2rem}
+.hero-hint{
+  margin-top:1.5rem;
+  font-size:.8rem;color:var(--ink-soft);
+  font-style:italic;
+}
+
+/* branch photography — two registered plates, leaves under blossom */
+/* The two registered plates, full-bleed across the hero — no mask, no band.
+   The photograph is the hero; nothing crops or feathers it. The seam at the
+   foot is handled by matching #portfolio's first stop to the plate's own
+   background tone instead. */
+.branch{
+  position:absolute;inset:0;z-index:1;
+  pointer-events:none;
+  /* the plate's fixed aspect ratio means its bottom edge lands at a
+     different height than the viewport at most window sizes — fade the
+     last stretch into #home's flat colour instead of a hard cut */
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 88%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 88%,transparent 100%);
+}
+/* Not `cover` — cover crops. Sized so the entire branch is in frame and set
+   into the lower right, which leaves the plate's own empty corner sitting in
+   the upper left. That corner is the whitespace the type stands on, and it
+   matches #home's fill exactly, so the plate has no visible edge. */
+.branch-img{
+  position:absolute;inset:0;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+  background-position:center top;
+}
+.branch-base { background-image:url('../images/branch-leaves.jpg') }
+.branch-bloom{ background-image:url('../images/branch-blossom.jpg') }
+
+/* the blossom plate is only visible inside a spotlight trailing the cursor */
+.branch-bloom{
+  --mx:-500px; --my:-500px; --r:260px;
+  -webkit-mask-image:radial-gradient(circle var(--r) at var(--mx) var(--my),
+    #000 0%, #000 40%, rgba(0,0,0,.72) 62%, rgba(0,0,0,.26) 82%, transparent 100%);
+  mask-image:radial-gradient(circle var(--r) at var(--mx) var(--my),
+    #000 0%, #000 40%, rgba(0,0,0,.72) 62%, rgba(0,0,0,.26) 82%, transparent 100%);
+}
+
+/* Same liquid-glass mechanic as the portfolio cards, pricing tiers, and
+   contact form (see .glass above) — just tinted warmer and less transparent,
+   since it's reading over a photo rather than a flat section colour. */
+.hero-card{
+  max-width:530px;
+  border-radius:30px;
+  padding:clamp(28px,3.2vw,44px);
+}
+.hero-card.glass{background:rgba(255,241,245,.82)}
+.hero-card > *{position:relative;z-index:1}
+/* a warm bloom of light riding on top of the plates, not behind them */
+.glowspot{
+  position:absolute;z-index:1;pointer-events:none;
+  width:560px;height:560px;margin:-280px 0 0 -280px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,240,246,.7) 0%,rgba(255,224,237,.24) 46%,transparent 72%);
+  mix-blend-mode:soft-light;
+  opacity:0;transition:opacity .6s var(--ease);
+}
+.hero:hover .glowspot{opacity:1}
+
+/* touch devices: no cursor to trail, so show the branch in full bloom
+   and drop the hint that tells you to move one */
+@media (hover:none){
+  .branch-bloom{-webkit-mask-image:none;mask-image:none}
+  .glowspot{display:none}
+  .hero-hint{display:none}
+}
+
+/* ambient drifting petals */
+.drift{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.drift i{
+  position:absolute;top:-6%;
+  width:11px;height:14px;
+  background:var(--sakura);
+  border-radius:60% 0 60% 0;
+  opacity:.55;
+  animation:fall linear infinite;
+}
+@keyframes fall{
+  0%  {transform:translate3d(0,-10vh,0) rotate(0deg)}
+  100%{transform:translate3d(58px,112vh,0) rotate(420deg)}
+}
+
+/* ============================================================
+   portfolio
+   ============================================================ */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.card{
+  position:relative;overflow:hidden;
+  border-radius:var(--r-lg);
+  padding:20px;
+  text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;
+  transition:transform .45s var(--ease), box-shadow .45s var(--ease);
+}
+.card:hover{transform:translateY(-6px)}
+/* 16/9 rather than 16/10: the screenshots are all ~2.19:1, so the shallower
+   box trims less off their sides when `cover` crops them horizontally. */
+.card .thumb{
+  position:relative;z-index:1;
+  aspect-ratio:16/9;border-radius:14px;overflow:hidden;
+  margin-bottom:18px;
+  background:rgba(255,255,255,.22);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);
+}
+.card .thumb span{
+  position:absolute;inset:0;
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
+  transition:transform .7s var(--ease);
+}
+.card:hover .thumb span{transform:scale(1.07)}
+
+/* concept pieces carry a corner badge so nobody mistakes a self-directed
+   demo for paid client work at a glance.
+   It's an <em> rather than a <span> on purpose: `.card .thumb span` above
+   is the screenshot plate (absolute, inset:0, background-size:cover) and
+   would swallow a span badge whole. */
+.badge{
+  position:absolute;z-index:2;top:10px;right:10px;
+  font-family:var(--body);font-style:normal;
+  font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  padding:.32rem .62rem;border-radius:var(--r-pill);
+  background:rgba(10,10,24,.62);color:#F4EEF6;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+}
+/* it isn't a link, so it must not behave like one */
+.card-demo{cursor:default}
+.card-demo:hover{transform:none}
+.card-demo:hover .thumb span{transform:none}
+
+/* the open slot — dashed and empty, so it reads as an invitation rather than
+   as a fifth project whose screenshot failed to load */
+.card-open .thumb-open{
+  display:grid;place-items:center;
+  background:transparent;
+  border:1.5px dashed var(--line);
+  box-shadow:none;
+}
+.card-open .thumb-open span{
+  position:static;
+  font-family:var(--display);
+  font-size:2.6rem;line-height:1;
+  color:var(--ink-faint);
+  transition:color .45s var(--ease), transform .45s var(--ease);
+}
+.card-open:hover .thumb-open span{color:var(--accent);transform:scale(1.12)}
+.card-body{position:relative;z-index:1}
+.card h3{font-size:1.5rem;margin-bottom:.35rem}
+.card p{font-size:.92rem;color:var(--ink-soft);margin-bottom:1rem}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:auto}
+.tag{
+  font-size:.68rem;font-weight:500;letter-spacing:.09em;text-transform:uppercase;
+  padding:.35rem .7rem;border-radius:var(--r-pill);
+  color:var(--ink-faint);
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+
+/* AWDEA has two destinations: the whole card links to the primary site via a
+   "stretched link", while one inline exception link stays independently
+   clickable. z-index can't solve this — .inline-link's z-index only ranks it
+   among siblings *inside* .card-body's own stacking context (already z-index:1
+   from the shared .card-body rule); it can't outrank .card-body's ancestor
+   context against a sibling .card-stretch no matter how high it goes. So the
+   stretch link sits *behind* thumb/card-body (z-index:0, below their 1)
+   instead, and thumb/card-body are punched transparent to clicks via
+   pointer-events:none — everywhere clicks now fall through to the link
+   beneath, except .inline-link, which re-enables pointer-events and (being
+   an ordinary painted element with nothing covering it) stays clickable. */
+.card-linked{position:relative}
+.card-stretch{position:absolute;inset:0;z-index:0}
+.card-linked .thumb,.card-linked .card-body{pointer-events:none}
+.card-body .inline-link{pointer-events:auto;color:var(--accent);text-decoration:underline}
+
+/* ============================================================
+   services
+   ============================================================ */
+.rows{border-top:1px solid var(--line)}
+.row{
+  display:grid;grid-template-columns:1fr 2fr;gap:24px;
+  padding:26px 0;border-bottom:1px solid var(--line);
+  align-items:start;
+}
+.row h3{font-size:1.55rem}
+.row p{color:var(--ink-soft);font-size:.98rem;max-width:52ch}
+
+/* ============================================================
+   dusk band
+   ============================================================ */
+.dusk{
+  position:relative;height:52vh;min-height:340px;overflow:hidden;
+  padding-left:var(--rail);
+  display:flex;align-items:center;justify-content:center;
+}
+.dusk .line{
+  font-family:var(--display);font-style:italic;
+  font-size:clamp(1.3rem,3.2vw,2.1rem);
+  color:rgba(255,255,255,.82);
+  text-align:center;max-width:22ch;padding:0 24px;
+}
+
+/* ============================================================
+   pricing
+   ============================================================ */
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
+.tier{
+  border-radius:var(--r-lg);
+  padding:32px 30px;
+  display:flex;flex-direction:column;
+}
+.tier .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.tier h3{font-size:1.9rem;margin:.7rem 0 .2rem}
+.price{
+  font-family:var(--display);font-size:clamp(2.4rem,4.6vw,3.4rem);
+  line-height:1.05;margin:.9rem 0 .3rem;
+}
+.price small{font-family:var(--body);font-size:.9rem;color:var(--ink-faint);letter-spacing:0}
+.tier ul{list-style:none;margin:1.4rem 0 2rem;padding:0;display:flex;flex-direction:column;gap:.7rem}
+.tier li{
+  position:relative;padding-left:22px;
+  font-size:.93rem;color:var(--ink-soft);
+}
+.tier li::before{
+  content:'';position:absolute;left:0;top:.55em;
+  width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.85;
+}
+.tier .btn{margin-top:auto;width:100%}
+
+/* after-launch care — a full-width band under the two build tiers rather than
+   a third column, since maintenance isn't another way to build. Copy on the
+   left, price and CTA held to the right. */
+.care{
+  grid-column:1/-1;
+  border-radius:var(--r-lg);
+  padding:32px 30px;
+  display:grid;grid-template-columns:1fr auto;
+  gap:clamp(24px,4vw,56px);align-items:start;
+}
+.care > *{position:relative;z-index:1}
+.care .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.care h3{font-size:1.9rem;margin:.7rem 0 .55rem}
+.care-copy{color:var(--ink-soft);font-size:.98rem;max-width:54ch}
+.care-points{
+  list-style:none;margin:1.3rem 0 0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));
+  gap:.7rem clamp(16px,2.5vw,32px);
+}
+.care-points li{
+  position:relative;padding-left:22px;
+  font-size:.93rem;color:var(--ink-soft);
+}
+.care-points li::before{
+  content:'';position:absolute;left:0;top:.55em;
+  width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.85;
+}
+.care-buy{display:flex;flex-direction:column;min-width:224px}
+.care-buy .price{margin:.1rem 0 1.2rem}
+.care-buy .btn{width:100%}
+.care-note{margin-top:.9rem;font-size:.8rem;color:var(--ink-faint);max-width:26ch}
+
+.notice{
+  grid-column:1/-1;
+  display:flex;align-items:center;gap:14px;
+  margin:4px 0;
+  padding:18px 24px;border-radius:var(--r-pill);
+  font-size:.92rem;color:var(--ink);
+  background:rgba(232,87,159,.13);
+  box-shadow:inset 0 0 0 1.4px rgba(232,87,159,.42);
+}
+.notice svg{flex:none;stroke:var(--magenta)}
+.notice strong{font-weight:600;color:#FBB8D6}
+
+/* ============================================================
+   about
+   ============================================================ */
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,6vw,80px);align-items:start}
+.about-grid p + p{margin-top:1.1rem}
+.about-grid .lede{font-size:1.15rem;color:var(--ink)}
+.facts{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.fact{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.fact dt{color:var(--ink-faint)}
+.fact dd{margin:0;color:var(--ink)}
+
+/* ============================================================
+   contact
+   ============================================================ */
+#contact{padding-bottom:clamp(56px,7vh,80px)}
+.form{
+  border-radius:var(--r-lg);
+  padding:clamp(26px,4vw,42px);
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;
+}
+.field{display:flex;flex-direction:column;gap:.45rem;position:relative;z-index:1}
+.field.wide{grid-column:1/-1}
+.field label{font-size:.78rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint)}
+.field input,.field select,.field textarea{
+  font-family:var(--body);font-size:.98rem;color:var(--ink);
+  background:rgba(255,255,255,.06);
+  border:none;box-shadow:inset 0 0 0 1.2px var(--line);
+  border-radius:14px;padding:.85rem 1rem;min-height:48px;
+  transition:box-shadow .3s var(--ease), background .3s var(--ease);
+}
+.field select{appearance:none;cursor:pointer}
+.field textarea{resize:vertical;min-height:132px;line-height:1.6}
+.field input:hover,.field select:hover,.field textarea:hover{background:rgba(255,255,255,.1)}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;background:rgba(255,255,255,.12);
+  box-shadow:inset 0 0 0 2px var(--teal);
+}
+.field .hint{font-size:.78rem;color:var(--ink-faint)}
+.form-actions{
+  grid-column:1/-1;position:relative;z-index:1;
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px;
+  margin-top:.4rem;
+}
+.form-actions .hint{font-size:.83rem;color:var(--ink-faint);max-width:40ch;flex-basis:100%}
+.form-actions a{color:var(--teal)}
+
+/* provider shortcuts: mailto: only hands off to whatever's registered as the
+   OS default, which is often nothing — these open web compose in a new tab,
+   so they work regardless of what's installed. Visually one notch quieter
+   than the primary button since any one of them completes the task. */
+.mail-alt{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem}
+.mail-alt-label{font-size:.78rem;color:var(--ink-faint)}
+.btn-compact{min-height:40px;padding:.55rem 1.05rem;font-size:.83rem}
+
+/* the guaranteed-to-work fallback: no mail app, no browser sign-in, nothing
+   to configure. Styled as a text link, not a button, since it's the last
+   resort rather than a peer of the options above it. */
+.btn-text{
+  background:none;border:none;padding:0;
+  font-family:var(--body);font-size:.83rem;font-weight:500;
+  color:var(--teal);text-decoration:underline;text-underline-offset:2px;
+  cursor:pointer;
+}
+.btn-text:hover{color:var(--magenta)}
+html[data-tone="dark"] .btn-text:hover{color:var(--teal);opacity:.75}
+
+.colophon{
+  max-width:var(--shell);margin:52px auto 0;
+  padding-top:22px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;
+  font-size:.8rem;color:var(--ink-faint);
+}
+
+
+
+/* ============================================================
+   responsive
+   ============================================================ */
+@media (max-width:1000px){
+  :root{--rail:0px}
+  /* no padding on main — the hero's own background runs under the translucent bar */
+  main{margin-left:0}
+  .section{scroll-margin-top:68px}
+  .rail{display:none}
+
+  .bar{
+    display:flex;align-items:center;justify-content:space-between;
+    position:fixed;top:0;left:0;right:0;z-index:80;
+    height:68px;padding:0 20px;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.5);
+    backdrop-filter:blur(18px) saturate(1.2);
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);
+    transition:background var(--tone-fade) var(--ease);
+  }
+  html[data-tone="dark"] .bar{background:rgba(8,8,20,.55)}
+  .bar .wordmark{font-size:1.35rem}
+  .menu-btn{
+    width:46px;height:46px;border-radius:50%;
+    display:grid;place-items:center;
+    background:rgba(255,255,255,.18);
+    border:none;box-shadow:inset 0 0 0 1.2px var(--line);
+    color:var(--ink);cursor:pointer;
+  }
+  .menu-btn svg{transition:transform .3s var(--ease), opacity .3s var(--ease)}
+  .sheet{
+    position:fixed;inset:68px 0 auto 0;z-index:79;
+    display:grid;grid-template-rows:0fr;
+    background:rgba(255,255,255,.72);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border-bottom:1px solid var(--line);
+    transition:grid-template-rows .42s var(--ease);
+  }
+  html[data-tone="dark"] .sheet{background:rgba(8,8,20,.82)}
+  .sheet[data-open="true"]{grid-template-rows:1fr}
+  .sheet-inner{overflow:hidden}
+  .sheet a{
+    display:block;padding:15px 22px;
+    font-family:var(--display);font-size:1.7rem;
+    text-decoration:none;color:var(--ink);
+  }
+  .sheet a:first-child{padding-top:26px}
+  .sheet a:last-child{padding-bottom:30px}
+
+  .hero{min-height:94vh;padding-top:104px}
+  .hero-card{max-width:none;border-radius:24px}
+  .tiers{grid-template-columns:1fr}
+  .care{grid-template-columns:1fr;padding:28px 24px}
+  .care-buy{min-width:0}
+  .about-grid{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr;gap:8px}
+  .form{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+  .drift{display:none}
+}

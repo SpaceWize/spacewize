@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Space Wize Enterprise — Six ventures under one name</title>
+<meta name="description" content="Space Wize Enterprise runs six divisions: web development, 3D printing, dropshipping, real estate development, game development, and books. Each one has its own site.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar-inner glass">
+    <a class="wordmark" href="index.html">Space <em>Wize</em></a>
+    <nav class="topnav" aria-label="Primary">
+      <a href="about.html">About</a>
+      <a href="sites.html">Sites</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="stage">
+
+  <canvas id="scene"></canvas>
+
+  <!-- keyboard route into every branch; revealed on focus -->
+  <nav id="branchKeys" class="branch-keys" aria-label="Divisions" hidden></nav>
+
+  <!-- what a blossom says when it opens, hung off the branch on a cord -->
+  <div class="tag" id="tag" data-open="false">
+    <span class="tag-pin" aria-hidden="true"></span>
+    <span class="tag-cord" aria-hidden="true"></span>
+    <aside id="panel" class="panel glass" data-live="false">
+      <p class="panel-status" id="panelTag"><span class="pip" aria-hidden="true"></span></p>
+      <h2 id="panelName"></h2>
+      <p id="panelLine"></p>
+      <a class="btn" id="panelBtn">
+        <span id="panelBtnText">Enter site</span>
+        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+    </aside>
+  </div>
+
+  <p class="hint glass" id="hint">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+      <path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/>
+    </svg>
+    <span>Drag to turn the tree.
+      <span class="hover">Hover a branch to open it.</span>
+      <span class="touch">Tap a branch to open it.</span>
+    </span>
+  </p>
+
+  <div class="stage-copy">
+    <div>
+      <p class="eyebrow">Space Wize Enterprise</p>
+      <h1>Six ventures under one name.</h1>
+      <p class="lede">Space Wize Enterprise runs six divisions, each with its own site
+        and its own way of working. Pick one to go through.</p>
+    </div>
+    <div class="stage-meta">
+      <p class="status"><span class="dot" aria-hidden="true"></span> 1 of 6 sites live</p>
+      <p>BC, Canada<br>Remote worldwide</p>
+    </div>
+  </div>
+
+  <!-- The source of truth for the six divisions. Read by the scene at
+       startup, and left standing as the whole page when there is no
+       JavaScript or no WebGL. -->
+  <div class="fallback" id="fallback">
+    <p class="eyebrow">Space Wize Enterprise</p>
+    <h1 style="font-family:var(--display);font-size:clamp(2.2rem,6vw,3.6rem);margin-bottom:14px">
+      Six ventures under one name.</h1>
+    <p class="lede" style="margin-bottom:40px">Space Wize Enterprise runs six divisions,
+      each with its own site and its own way of working. Pick one to go through.</p>
+
+    <ul class="tree-list" id="branchData">
+      <li data-id="web"
+          data-name="Web Development"
+          data-line="Fast, considered websites for people who need one and don&rsquo;t want to overcomplicate it."
+          data-url="web-dev/index.html"
+          data-live="true">
+        <a class="branch-card glass" data-live="true"
+           href="web-dev/index.html">
+          <span class="tag"><span class="pip"></span>Live</span>
+          <h3>Web Development</h3>
+          <p>Fast, considered websites for people who need one and don&rsquo;t want to overcomplicate it.</p>
+        </a>
+      </li>
+
+      <li data-id="print"
+          data-name="3D Printing"
+          data-line="Objects designed and printed to spec. Prototypes, parts, and things that don&rsquo;t exist yet."
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>In development</span>
+          <h3>3D Printing</h3>
+          <p>Objects designed and printed to spec. Prototypes, parts, and things that don&rsquo;t exist yet.</p>
+        </div>
+      </li>
+
+      <li data-id="shop"
+          data-name="Dropshipping"
+          data-line="Storefronts built to sell, sourced and run end to end."
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>In development</span>
+          <h3>Dropshipping</h3>
+          <p>Storefronts built to sell, sourced and run end to end.</p>
+        </div>
+      </li>
+
+      <li data-id="property"
+          data-name="Real Estate Development"
+          data-line="Property projects taken from raw ground to finished build."
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>In development</span>
+          <h3>Real Estate Development</h3>
+          <p>Property projects taken from raw ground to finished build.</p>
+        </div>
+      </li>
+
+      <li data-id="games"
+          data-name="Game Development"
+          data-line="Games made small and made properly. Systems first, polish second."
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>In development</span>
+          <h3>Game Development</h3>
+          <p>Games made small and made properly. Systems first, polish second.</p>
+        </div>
+      </li>
+
+      <li data-id="books"
+          data-name="Books"
+          data-line="Written, designed, and published in-house."
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>In development</span>
+          <h3>Books</h3>
+          <p>Written, designed, and published in-house.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
+</main>
+
+<script type="module" src="assets/js/scene.js"></script>
+</body>
+</html>
