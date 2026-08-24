@@ -6,7 +6,6 @@
    ============================================================ */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -16,6 +15,7 @@ const canvas     = document.getElementById('scene');
 const stage      = document.getElementById('main');
 const fallback   = document.getElementById('fallback');
 const tag        = document.getElementById('tag');
+const panel      = document.getElementById('panel');
 const panelName  = document.getElementById('panelName');
 const panelLine  = document.getElementById('panelLine');
 const panelTag   = document.getElementById('panelTag');
@@ -87,16 +87,6 @@ canvas.setAttribute(
   'Drag to turn the tree. Use the division buttons to open each branch.'
 );
 
-/* The tag is a real object in the scene, not an overlay: CSS3DRenderer
-   drives it from the same camera as the tree, so it foreshortens and
-   turns away as you orbit instead of always facing you. */
-const cssRenderer = new CSS3DRenderer();
-cssRenderer.domElement.style.position = 'absolute';
-cssRenderer.domElement.style.inset = '0';
-cssRenderer.domElement.style.zIndex = '25';
-cssRenderer.domElement.style.pointerEvents = 'none';
-stage.appendChild(cssRenderer.domElement);
-
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x06070f, 15, 38);
 
@@ -130,11 +120,18 @@ const MOON_POS = new THREE.Vector3(
 );
 const orbit = {
   radius: 12.4,
+  baseRadius: 12.4,
   theta: 0.6, phi: 1.42,
   targetTheta: 0.6, targetPhi: 1.42,
   velTheta: 0,
 };
 const LOOK_AT = new THREE.Vector3(0, 1.3, 0);
+/* Where the camera rests when nothing is selected. LOOK_AT and
+   orbit.radius are then eased away from these toward whichever branch
+   is open, which is the whole push-in effect. */
+const homeLook = new THREE.Vector3(0, 1.3, 0);
+const ZOOM_IN = 0.58;      // fraction of the framing distance when close
+let zoom = 1;
 
 /* Size from the canvas box, not the window. A tab that loads while
    hidden reports a zero-size viewport, and a scene that starts at 0x0
@@ -160,7 +157,6 @@ function resize() {
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(w, h, false);
-  cssRenderer.setSize(w, h);
   if (composer) {
     composer.setSize(w, h);
     bloomPass.resolution.set(w, h);
@@ -174,12 +170,13 @@ function resize() {
   const halfH = (fitTop - fitBottom) / 2;
   const distH = halfH / HALF_FOV;
   const distW = fitRadius / (HALF_FOV * aspect);
-  orbit.radius = Math.max(distH, Math.min(distW, distH * 1.25)) * FRAMING;
+  orbit.baseRadius = Math.max(distH, Math.min(distW, distH * 1.25)) * FRAMING;
+  orbit.radius = orbit.baseRadius * zoom;
 
   /* Portrait puts the copy over the lower half, so aim lower and let
      the canopy sit in the space that is actually free. */
   const portrait = aspect < 0.95;
-  LOOK_AT.y = (fitTop + fitBottom) / 2 - (portrait ? 1.1 : 0);
+  homeLook.set(0, (fitTop + fitBottom) / 2 - (portrait ? 1.1 : 0), 0);
   /* aiming lower lifts everything in frame, which would tuck the moon
      up behind the nav bar — so it follows the aim point down */
   if (moonSprite) moonSprite.position.y = portrait ? 0.6 : 2.6;
@@ -486,7 +483,7 @@ const MAX_DEPTH = 3;
 const UP = new THREE.Vector3(0, 1, 0);
 /* how many flower spurs each limb carries, indexed by depth — index 0
    is the finest twig, index 3 the scaffold off the trunk */
-const SPUR_COUNT = isSmall ? [2, 1, 1, 1] : [3, 2, 2, 1];
+const SPUR_COUNT = isSmall ? [2, 2, 2, 2] : [5, 5, 5, 5];
 
 function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
   const end = p0.clone().addScaledVector(dir, len);
@@ -525,7 +522,7 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
   for (let k = 1; k <= n; k++) {
     /* On the scaffold itself keep the spray to its outer end, so
        flowers do not sprout straight out of the trunk. */
-    const u = depth === MAX_DEPTH ? 0.62 + 0.24 * (k / n) : k / (n + 1);
+    const u = depth === MAX_DEPTH ? 0.2 + 0.66 * (k / n) : k / (n + 1);
     spurs.push({ pos: curve.getPointAt(u), dir: curve.getTangentAt(u) });
   }
 
@@ -555,9 +552,22 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
 /* ============================================================
    build the tree
    ============================================================ */
+/* Wind has to pivot at the foot of the trunk, or the whole tree
+   slides sideways instead of swaying. treeSway sits at the trunk's
+   base and `tree` is lifted back up inside it, so the two cancel out
+   and every world position stays exactly where it was. */
+const TREE_LIFT  = -0.15;
+const TRUNK_FOOT = -5.1;          // matches the first point of trunkCurve
+
+const treeSway = new THREE.Group();
+treeSway.position.y = TREE_LIFT + TRUNK_FOOT;
+scene.add(treeSway);
+
 const tree = new THREE.Group();
-tree.position.y = -0.15;
-scene.add(tree);
+tree.position.y = -TRUNK_FOOT;
+treeSway.add(tree);
+
+let wind = 0;                     // 0 still, 1 swaying
 
 /* trunk — leans, kinks, and runs off the bottom of the frame */
 const trunkCurve = new THREE.CatmullRomCurve3([
@@ -649,7 +659,7 @@ DIVISIONS.forEach((division, i) => {
   /* dense clusters at the twig ends */
   tips.forEach((tip) => {
     anchor.add(tip.pos);
-    const count = isSmall ? 3 + Math.floor(rnd() * 3) : 4 + Math.floor(rnd() * 4);
+    const count = isSmall ? 2 + Math.floor(rnd() * 3) : 3 + Math.floor(rnd() * 3);
     for (let n = 0; n < count; n++) {
       addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1);
     }
@@ -695,7 +705,7 @@ DIVISIONS.forEach((division, i) => {
   branches.push({
     division, blossoms, petals, cores, petalMat, halo, anchor,
     rest, t: -1, target: rest,
-    flick: -1,          // seconds since this branch was woken, -1 = idle
+    pulse: -1,          // seconds since this branch was woken, -1 = idle
   });
 });
 
@@ -729,7 +739,7 @@ DIVISIONS.forEach((division, i) => {
   });
 
   fitRadius = maxR + 0.5;
-  fitTop    = top + tree.position.y + 1.4;
+  fitTop    = top + TREE_LIFT + 1.4;
   /* keep the canopy plus a good length of trunk; the rest runs off the
      bottom of the frame on purpose */
   fitBottom = fitTop - (maxR * 1.55 + 2.2);
@@ -821,68 +831,53 @@ function writeBranchMatrices(b) {
 }
 
 /* ============================================================
-   the flicker
-   A dormant branch stutters like a tube light failing to strike, then
-   settles to a dim standby glow for as long as its card is open.
+   the standby pulse
+   A dormant branch breathes rather than flashes — one very slow, dim
+   cycle for as long as its card is open. It reads as something idling,
+   not as something broken.
    ============================================================ */
-const FLICKER = [0.9, 0.04, 0.65, 0.0, 1.0, 0.1, 0.5, 0.18, 0.42];
-const FLICKER_STEP = 0.085;
-const FLICKER_REST = 0.3;
+const PULSE_PERIOD = 6.5;   // seconds for one full breath
+const PULSE_LOW    = 0.08;
+const PULSE_HIGH   = 0.26;
+const PULSE_WAKE   = 1.6;   // eases up from dark rather than snapping on
 
-function flickerLevel(t) {
+function pulseLevel(t) {
   if (t < 0) return 0;
-  const i = Math.floor(t / FLICKER_STEP);
-  return i >= FLICKER.length ? FLICKER_REST : FLICKER[i];
+  const wake = Math.min(1, t / PULSE_WAKE);
+  const wave = 0.5 - 0.5 * Math.cos((t / PULSE_PERIOD) * Math.PI * 2);
+  return wake * (PULSE_LOW + (PULSE_HIGH - PULSE_LOW) * wave);
 }
 
 /* ============================================================
-   the hanging tag — a flat card living in the scene
-   It squares up to you the moment it opens, then stays put in world
-   space: orbiting turns it away rather than swivelling it to follow.
+   the hanging tag — a flat overlay pinned to the branch
+   Projected to screen space rather than living in the scene, so the
+   type is always square to the reader and always crisp.
    ============================================================ */
-const TAG_WORLD_W = isSmall ? 2.35 : 3.0;
-/* how far the hang point is pulled back toward the trunk — a card
-   hung off the outermost blossoms falls outside a narrow viewport,
-   and a 3D card has no way to clamp itself to the screen */
-const TAG_PULL = isSmall ? 0.5 : 0.22;
-
-const tagYaw   = new THREE.Group();   // which way the card faces
-const tagSwing = new THREE.Group();   // pendulum, in the card's own plane
-tagYaw.add(tagSwing);
-scene.add(tagYaw);
-
-const tagObject = new CSS3DObject(tag);
-tagSwing.add(tagObject);
-
-let tagScale = 0;
 let tagFade = 0;
-/* the card is square to the viewer when it opens, then stays put in
-   world space — it does not track the camera afterwards */
-let tagFacing = null;
 let swing = 0;
 let swingVel = 0;
 let swingPrev = null;
+let tagW = 0;
+let tagH = 0;
+/* where the open branch projects to, in screen pixels */
+let activeScreenX = 0;
+let activeScreenY = 0;
 
-const _camDir = new THREE.Vector3();
-const _normal = new THREE.Vector3();
-const _worldQ = new THREE.Quaternion();
+const _tagProject = new THREE.Vector3();
 
 function measureTag() {
   const w = tag.offsetWidth;
   const h = tag.offsetHeight;
   if (!w || !h) return false;
-  tagScale = TAG_WORLD_W / w;
-  tagObject.scale.setScalar(tagScale);
-  /* CSS3D centres the element on its position; drop it by half its
-     height so the pin lands on the pivot and it hangs from there */
-  tagObject.position.set(0, -(h * tagScale) / 2, 0);
+  tagW = w;
+  tagH = h;
   tagMetricsDirty = false;
   return true;
 }
 
 function updateTag(dt, time) {
   const open = active !== null;
-  if (open && (tagMetricsDirty || !tagScale)) measureTag();
+  if (open && (tagMetricsDirty || !tagW)) measureTag();
 
   const goal = open ? 1 : 0;
   tagFade += (goal - tagFade) * Math.min(1, dt * (noMotion ? 60 : 9));
@@ -891,48 +886,49 @@ function updateTag(dt, time) {
     swingPrev = null;
     swing = 0;
     swingVel = 0;
-    tag.style.opacity = String(tagFade * 0.4);
+    tag.style.opacity = String(tagFade * 0.35);
     tag.style.visibility = tagFade < 0.02 ? 'hidden' : 'visible';
     return;
   }
 
+  /* hang the card off the branch's blossoms, in screen space */
   const b = branches[active];
-  tagYaw.position.copy(b.anchor);
-  tree.localToWorld(tagYaw.position);
-  tagYaw.position.x += (tree.position.x - tagYaw.position.x) * TAG_PULL;
-  tagYaw.position.z += (tree.position.z - tagYaw.position.z) * TAG_PULL;
+  _tagProject.copy(b.anchor);
+  tree.localToWorld(_tagProject);
+  _tagProject.project(camera);
 
-  if (tagFacing === null) {
-    tagFacing = Math.atan2(
-      camera.position.x - tagYaw.position.x,
-      camera.position.z - tagYaw.position.z
-    );
-  }
-  tagYaw.rotation.y = tagFacing;
+  const px = (_tagProject.x * 0.5 + 0.5) * sizedW;
+  const py = (-_tagProject.y * 0.5 + 0.5) * sizedH;
+  /* the hover test needs this: see keepRadius() */
+  activeScreenX = px;
+  activeScreenY = py;
 
-  /* the tree turning under it gives the tag a shove */
+  /* keep it on screen — a 2D card can clamp itself, which is most of
+     why this reads better than the version that lived in the scene */
+  const x = clamp(px, tagW * 0.5 + 14, sizedW - tagW * 0.5 - 14);
+  const y = clamp(py + 18, 74, Math.max(74, sizedH - tagH - 16));
+
+  /* the tree turning under it gives the card a shove, and a spring
+     pulls it back to plumb */
   if (noMotion) {
     swing = 0;
   } else {
-    if (swingPrev === null) swingPrev = orbit.theta;
-    const dTheta = orbit.theta - swingPrev;
-    swingPrev = orbit.theta;
-    swingVel += dTheta * 46;
-    swingVel += (-70 * swing - 5.5 * swingVel) * dt;
-    swingVel = clamp(swingVel, -9, 9);
+    if (swingPrev === null) swingPrev = x;
+    const dx = x - swingPrev;
+    swingPrev = x;
+    swingVel += -dx * 1.7;
+    swingVel += (-90 * swing - 6 * swingVel) * dt;
+    swingVel = clamp(swingVel, -260, 260);
     swing += swingVel * dt;
-    swing = clamp(swing, -0.33, 0.33);
+    swing = clamp(swing, -18, 18);
   }
-  tagSwing.rotation.z = swing + (noMotion ? 0 : Math.sin(time * 0.8) * 0.022);
+  const sway = noMotion ? 0 : Math.sin(time * 0.8) * 1.3;
 
-  /* fade out as the card turns edge-on, then away — a real card has a
-     blank back, and mirrored text would read as a bug */
-  _camDir.subVectors(camera.position, tagYaw.position).normalize();
-  _normal.set(0, 0, 1).applyQuaternion(tagYaw.getWorldQuaternion(_worldQ));
-  const opacity = tagFade * smoothstep(0.04, 0.42, _normal.dot(_camDir));
-
-  tag.style.opacity = String(opacity);
-  tag.style.visibility = opacity < 0.02 ? 'hidden' : 'visible';
+  tag.style.transform =
+    `translate3d(${Math.round(x - tagW / 2)}px, ${Math.round(y)}px, 0) ` +
+    `rotate(${(swing + sway).toFixed(2)}deg)`;
+  tag.style.opacity = String(tagFade);
+  tag.style.visibility = tagFade < 0.02 ? 'hidden' : 'visible';
 }
 
 /* ============================================================
@@ -954,7 +950,7 @@ function select(index) {
   branches.forEach((b, i) => {
     const on = i === index;
     b.target = on ? 1 : b.rest;
-    if (!b.division.live) b.flick = on ? 0 : -1;
+    if (!b.division.live) b.pulse = on ? 0 : -1;
   });
 
   if (index === null) {
@@ -987,7 +983,6 @@ function select(index) {
     ? `${d.name}. Live site.`
     : `${d.name}. In development.`;
   tagMetricsDirty = true;
-  tagFacing = null;
   dismissHint();
 }
 
@@ -1023,6 +1018,33 @@ DIVISIONS.forEach((d, i) => {
    ============================================================ */
 const raycaster = new THREE.Raycaster();
 const pointer   = new THREE.Vector2();
+let overCard = false;   // pointer is over the card, so keep it open
+
+/* Closing is deferred rather than immediate. Pushing the camera in
+   moves the branch and the card under a stationary cursor, which fires
+   spurious leave events — and without a delay that becomes a loop:
+   deselect, camera pulls back, branch slides under the cursor again,
+   reselect. The dwell absorbs it. */
+const CLEAR_DELAY = 220;
+
+/* Pushing the camera toward a branch moves that branch away from the
+   cursor that picked it — so an exact hit test cannot hold a
+   selection open. Once a branch is chosen it stays chosen while the
+   pointer is anywhere near it, and only a decisive move away, or a
+   different branch, closes it. */
+function nearActive(px, py) {
+  if (active === null) return false;
+  const r = clamp(Math.min(sizedW, sizedH) * 0.34, 170, 420);
+  const dx = px - activeScreenX;
+  const dy = py - activeScreenY;
+  return dx * dx + dy * dy < r * r;
+}
+
+let clearAtMs = 0;
+function scheduleClear() {
+  if (!clearAtMs) clearAtMs = performance.now() + CLEAR_DELAY;
+}
+function cancelClear() { clearAtMs = 0; }
 let dragging = false;
 let dragDistance = 0;
 let last = { x: 0, y: 0 };
@@ -1057,14 +1079,37 @@ canvas.addEventListener('pointermove', (e) => {
     return;
   }
   if (!canHover) return;
+  const r = canvas.getBoundingClientRect();
   const index = pick(e.clientX, e.clientY);
   canvas.dataset.over = index !== null ? 'true' : 'false';
   if (index !== null) {
+    cancelClear();
     select(index);
     locked = false;
-  } else if (!locked) {
-    select(null);
+  } else if (nearActive(e.clientX - r.left, e.clientY - r.top)) {
+    cancelClear();                       // still hovering its neighbourhood
+  } else if (!overCard && !keys.matches(':focus-within')) {
+    /* off the branch and off the card — let it go, but not instantly */
+    scheduleClear();
   }
+});
+
+/* The card sits above the canvas, so moving onto it stops the canvas
+   getting pointermove at all. Listen on the panel — the wrapper is
+   pointer-events:none — or reaching for the button would dismiss the
+   very thing you were reaching for. */
+panel.addEventListener('pointerenter', () => {
+  overCard = true;
+  cancelClear();
+});
+panel.addEventListener('pointerleave', () => {
+  overCard = false;
+  if (canHover) scheduleClear();
+});
+
+canvas.addEventListener('pointerleave', () => {
+  canvas.dataset.over = 'false';
+  if (canHover && !overCard && !keys.matches(':focus-within')) scheduleClear();
 });
 
 function endDrag(e) {
@@ -1239,6 +1284,7 @@ scene.add(drift);
    ============================================================ */
 const clock = new THREE.Clock();
 const anchorWorld = new THREE.Vector3();
+const _aim = new THREE.Vector3();
 
 function animate() {
   requestAnimationFrame(animate);
@@ -1260,7 +1306,42 @@ function animate() {
   const ease = noMotion ? 1 : Math.min(1, dt * 5.5);
   orbit.theta += (orbit.targetTheta - orbit.theta) * ease;
   orbit.phi   += (orbit.targetPhi   - orbit.phi)   * ease;
+
+  /* ---- cinematic push-in toward whichever branch is open ---- */
+  const closing = active !== null;
+  const zoomGoal = closing ? ZOOM_IN : 1;
+  const windGoal = closing ? 1 : 0;
+  const settle = noMotion ? 1 : Math.min(1, dt * 1.9);
+
+  zoom += (zoomGoal - zoom) * settle;
+  wind += (windGoal - wind) * Math.min(1, dt * 1.2);
+  orbit.radius = orbit.baseRadius * zoom;
+
+  if (closing) {
+    /* aim between the framing centre and the branch itself, so the
+       canopy stays in shot rather than filling it entirely */
+    anchorWorld.copy(branches[active].anchor);
+    tree.localToWorld(anchorWorld);
+    _aim.lerpVectors(homeLook, anchorWorld, 0.72);
+  } else {
+    _aim.copy(homeLook);
+  }
+  LOOK_AT.lerp(_aim, settle);
   applyCamera();
+
+  /* ---- wind, pivoting at the foot of the trunk ---- */
+  if (!noMotion) {
+    const a = wind * 0.019;
+    treeSway.rotation.z =
+      Math.sin(time * 0.62) * a + Math.sin(time * 1.43 + 1.3) * a * 0.38;
+    treeSway.rotation.x =
+      Math.sin(time * 0.51 + 2.1) * a * 0.55;
+  } else {
+    treeSway.rotation.set(0, 0, 0);
+  }
+  /* anchors are read out of world space further down this same frame,
+     and matrixWorld is otherwise not refreshed until render */
+  treeSway.updateMatrixWorld(true);
 
   /* bloom on the live branch, flicker on the dormant ones */
   let glowBranch = null;
@@ -1285,14 +1366,14 @@ function animate() {
     } else {
       /* buds stay shut, so the matrices are written once and left */
       if (b.t < 0) { b.t = 0; writeBranchMatrices(b); }
-      if (b.flick >= 0 && !noMotion) b.flick += dt;
+      if (b.pulse >= 0 && !noMotion) b.pulse += dt;
       lum = noMotion
-        ? (b.flick >= 0 ? FLICKER_REST : 0)
-        : flickerLevel(b.flick);
-      b.petalMat.emissiveIntensity = 0.12 + lum * 0.34;
+        ? (b.pulse >= 0 ? PULSE_LOW : 0)
+        : pulseLevel(b.pulse);
+      b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
     }
 
-    b.halo.material.opacity = lum * (b.division.live ? 0.42 : 0.3);
+    b.halo.material.opacity = lum * (b.division.live ? 0.42 : 0.55);
     b.halo.scale.setScalar(2.6 + lum * 1.1);
 
     if (lum > 0.02 && lum > glowLum) { glowBranch = b; glowLum = lum; }
@@ -1303,7 +1384,7 @@ function animate() {
     tree.localToWorld(anchorWorld);
     glow.position.copy(anchorWorld);
     glow.color.set(glowBranch.division.live ? 0xe36fa0 : 0x9c8fd0);
-    glow.intensity = glowLum * (glowBranch.division.live ? 8 : 5.5);
+    glow.intensity = glowLum * (glowBranch.division.live ? 8 : 11);
   } else {
     glow.intensity = 0;
   }
@@ -1337,9 +1418,14 @@ function animate() {
     }
   }
 
+  if (clearAtMs && performance.now() >= clearAtMs) {
+    clearAtMs = 0;
+    locked = false;
+    select(null);
+  }
+
   updateTag(dt, time);
   composer.render();
-  cssRenderer.render(scene, camera);
 }
 
 /* the static list has done its job — hand over to the canvas */

@@ -244,16 +244,18 @@ body[data-scene="on"] .hint{display:flex}
    tree is turned. Position and swing angle come from the scene. */
 .tag{display:none}
 body[data-scene="on"] .tag{display:flex}
-/* CSS3DRenderer owns this element's transform and position, and the
-   scene owns its opacity — so neither is set here. The width is a
-   fixed pixel value on purpose: the card is scaled into world units,
-   so a vw-relative width would change its physical size in the scene
-   every time the window resized. */
+/* A flat overlay pinned to the branch: the scene projects the anchor
+   to screen space and writes transform/opacity, so neither is set
+   here. transform-origin sits at the pin so the card swings from the
+   cord rather than about its own middle. */
 .tag{
-  width:272px;
+  position:absolute;top:0;left:0;z-index:25;
+  width:min(300px,82vw);
   flex-direction:column;align-items:center;
+  transform-origin:50% 0;
   pointer-events:none;
   opacity:0;visibility:hidden;
+  will-change:transform;
 }
 
 .tag-pin{
@@ -268,20 +270,19 @@ body[data-scene="on"] .tag{display:flex}
   box-shadow:0 0 6px rgba(79,195,247,.55);
 }
 
-/* backdrop-filter does not apply inside a 3D-transformed element, so
-   the frosted glass silently stops working once the card is in the
-   scene. It carries its own fill instead — same look, still legible
-   over the bright sun behind it. */
+/* Out of the 3D layer, backdrop-filter works again — so the card gets
+   its frosted glass back, over a fill dark enough to stay legible
+   against the moon. */
 .panel{
   position:relative;width:100%;
   padding:18px 20px;
   border-radius:var(--r-lg);
   pointer-events:auto;
   background:linear-gradient(158deg,
-    rgba(36,24,68,.93) 0%,
-    rgba(12,16,38,.95) 100%);
-  backdrop-filter:none;
-  -webkit-backdrop-filter:none;
+    rgba(36,24,68,.74) 0%,
+    rgba(12,16,38,.8) 100%);
+  backdrop-filter:blur(16px) saturate(1.3);
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);
   border:1px solid rgba(244,238,246,.2);
   box-shadow:inset 0 1px 1px rgba(255,255,255,.16),
              0 26px 60px -22px rgba(0,0,0,.95);
