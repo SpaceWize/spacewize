@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tell me when it opens — Space Wize Enterprise</title>
+<meta name="description" content="Get a note when a Space Wize Enterprise division opens.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="page">
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar-inner glass">
+    <a class="wordmark" href="index.html">Space <em>Wize</em></a>
+    <nav class="topnav" aria-label="Primary">
+      <a href="about.html">About</a>
+      <a href="sites.html">Sites</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="shell">
+
+    <div class="page-head">
+      <p class="eyebrow">Space Wize Enterprise</p>
+      <h1>Tell me when it opens</h1>
+      <p class="lede">Leave an address and you will get one note when
+        <span id="whichDivision">this division</span> is live. Nothing else, ever.</p>
+    </div>
+
+    <!-- Posts to the same Google Form the responses have always gone to;
+         only the surface is ours. The action and the entry names below are
+         the form's own, so answers land in the same sheet. -->
+    <form class="notify-form glass" id="notifyForm"
+          action="https://docs.google.com/forms/d/e/1FAIpQLSdAHzy9cm3SSZYHs1xCQntc_JIGqm_JXKaLDcl1ay5AfcI04w/formResponse"
+          method="POST">
+
+      <div class="field">
+        <label for="fName">Name <span class="opt">optional</span></label>
+        <input id="fName" name="entry.1138461797" type="text"
+               autocomplete="given-name" placeholder="First name">
+      </div>
+
+      <div class="field">
+        <label for="fEmail">Email</label>
+        <input id="fEmail" name="entry.1879581011" type="email" required
+               autocomplete="email" placeholder="you@example.com">
+      </div>
+
+      <div class="field">
+        <label for="fDivision">Division</label>
+        <select id="fDivision" name="entry.996979780" required>
+          <option value="3D Printing">3D Printing</option>
+          <option value="Dropshipping">Dropshipping</option>
+          <option value="Real Estate Development">Real Estate Development</option>
+          <option value="Game Development">Game Development</option>
+          <option value="Books">Books</option>
+          <option value="Web Development">Web Development</option>
+        </select>
+      </div>
+
+      <fieldset class="field choice">
+        <legend>Opt in for extra monthly updates?</legend>
+        <div class="choice-row">
+          <label class="choice-opt">
+            <input type="radio" name="entry.538647971" value="Yes" required>
+            <span>Yes</span>
+          </label>
+          <label class="choice-opt">
+            <input type="radio" name="entry.538647971" value="No" required>
+            <span>No</span>
+          </label>
+        </div>
+        <!-- Neither is pre-selected on purpose. It is a marketing opt-in
+             and the form marks it required, so the answer should be the
+             visitor's rather than a default they did not notice. -->
+      </fieldset>
+
+      <button class="btn btn-live" type="submit" id="notifySubmit">
+        <span id="notifySubmitText">Let me know</span>
+        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </button>
+
+      <p class="notify-note">Goes to a Google Form. Your address is used for
+        that one note and nothing else.</p>
+    </form>
+
+    <div class="notify-done glass" id="notifyDone" hidden>
+      <h2>That's it</h2>
+      <p id="doneLine">You will hear from me when it opens.</p>
+      <a class="btn" href="index.html">
+        <span>Back to the tree</span>
+        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+    </div>
+
+    <footer class="foot">
+      <p>Space Wize Enterprise</p>
+      <p><a href="index.html">Back to the tree</a></p>
+    </footer>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  var form   = document.getElementById('notifyForm');
+  var select = document.getElementById('fDivision');
+  var which  = document.getElementById('whichDivision');
+  var done   = document.getElementById('notifyDone');
+  var btn    = document.getElementById('notifySubmit');
+  var btnTxt = document.getElementById('notifySubmitText');
+
+  /* which division the visitor arrived asking about */
+  var wanted = new URLSearchParams(location.search).get('division') || '';
+  var matched = '';
+  for (var i = 0; i < select.options.length; i++) {
+    if (select.options[i].value.toLowerCase() === wanted.toLowerCase()) {
+      select.selectedIndex = i;
+      matched = select.options[i].value;
+      break;
+    }
+  }
+  which.textContent = matched || 'the division you pick';
+  if (matched) document.title = matched + ' — Space Wize Enterprise';
+
+  /* A cross-origin POST cannot be read back, so the answer is aimed at a
+     hidden frame and the frame loading is the signal it went. Without
+     script the form posts normally and Google shows its own confirmation
+     — worse, but never broken. */
+  var sink = document.createElement('iframe');
+  sink.name = 'swz-form-sink';
+  sink.setAttribute('aria-hidden', 'true');
+  sink.style.display = 'none';
+  document.body.appendChild(sink);
+  form.target = 'swz-form-sink';
+
+  var sent = false;
+  function finish() {
+    if (!sent) return;
+    done.querySelector('#doneLine').textContent =
+      'You will hear from me when ' + select.value + ' opens.';
+    form.hidden = true;
+    done.hidden = false;
+    done.querySelector('h2').setAttribute('tabindex', '-1');
+    done.querySelector('h2').focus();
+  }
+  sink.addEventListener('load', finish);
+
+  form.addEventListener('submit', function () {
+    sent = true;
+    btn.disabled = true;
+    btnTxt.textContent = 'Sending…';
+    /* the frame's load event is the only confirmation available, and it
+       can be missed — never leave the button dead */
+    setTimeout(finish, 2500);
+  });
+})();
+</script>
+
+</body>
+</html>

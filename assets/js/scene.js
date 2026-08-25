@@ -1236,8 +1236,6 @@ function select(index) {
 
   if (d.live) {
     panelBtn.setAttribute('href', d.url);
-    panelBtn.removeAttribute('target');
-    panelBtn.removeAttribute('rel');
     panelBtn.classList.add('btn-live');
     panelBtnText.textContent = 'Enter site';
   } else {
@@ -1245,9 +1243,6 @@ function select(index) {
        no backend, and matches how the web-design site already takes
        enquiries. */
     panelBtn.setAttribute('href', d.notify);
-    /* the form lives elsewhere — send them there without losing the tree */
-    panelBtn.setAttribute('target', '_blank');
-    panelBtn.setAttribute('rel', 'noopener');
     panelBtn.classList.remove('btn-live');
     panelBtnText.textContent = 'Tell me when this opens';
   }
