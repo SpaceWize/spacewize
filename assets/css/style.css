@@ -475,3 +475,41 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
     transition-duration:.001ms !important;
   }
 }
+
+/* ============================================================
+   arriving from the branch
+   The circle that grew over the web-design site lands here still
+   covering the page, holds for a beat, then shrinks away to nothing
+   and uncovers the tree.
+
+   This is an animation rather than a transition on purpose: a
+   transition has to be triggered after the element is already
+   painted, which on a page that is still loading is a race. An
+   animation just runs.
+
+   Sized in vmax so it is correct on the very first painted frame —
+   measuring it in script would show a flash of the scene first.
+   ============================================================ */
+.page-arrive{ display:none }
+html[data-arrive="1"] .page-arrive{
+  display:block;
+  position:fixed;z-index:200;
+  left:50%;top:50%;
+  width:300vmax;height:300vmax;
+  margin-left:-150vmax;margin-top:-150vmax;
+  border-radius:50%;
+  background:var(--void);
+  pointer-events:none;
+  transform:scale(1);
+  animation:arriveShrink 1150ms cubic-bezier(.45,0,.25,1) 200ms forwards;
+}
+@keyframes arriveShrink{
+  0%   { transform:scale(1);    opacity:1 }
+  /* fades over the last stretch so it does not end as a hard dot
+     sitting in the middle of the tree */
+  72%  { transform:scale(.24);  opacity:1 }
+  100% { transform:scale(0);    opacity:0 }
+}
+@media (prefers-reduced-motion: reduce){
+  html[data-arrive="1"] .page-arrive{ animation:none;display:none }
+}

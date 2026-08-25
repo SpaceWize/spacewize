@@ -9,6 +9,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
+<script>
+/* Arriving from the branch on the web-design site: cover the scene
+   before anything paints, so the transition is continuous rather than
+   a cut followed by an overlay. */
+try {
+  if (sessionStorage.getItem('swz:arrive')) {
+    sessionStorage.removeItem('swz:arrive');
+    document.documentElement.dataset.arrive = '1';
+  }
+} catch (e) {}
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -166,6 +177,29 @@
   <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
 </main>
 
+<div class="page-arrive" id="pageArrive" aria-hidden="true"></div>
+<script>
+/* The shrink itself is a CSS animation that runs on its own; this only
+   clears up after it. Deliberately not part of scene.js — if WebGL is
+   unavailable the visitor still has to get out from behind this. */
+(function () {
+  var el = document.getElementById('pageArrive');
+  if (!el || document.documentElement.dataset.arrive !== '1') return;
+
+  var gone = false;
+  function done() {
+    if (gone) return;
+    gone = true;
+    if (el.parentNode) el.parentNode.removeChild(el);
+    document.documentElement.removeAttribute('data-arrive');
+  }
+
+  el.addEventListener('animationend', done);
+  /* animations are suspended in a hidden tab — never strand the
+     visitor behind an opaque cover waiting for a frame */
+  setTimeout(done, 2600);
+})();
+</script>
 <script type="module" src="assets/js/scene.js"></script>
 </body>
 </html>

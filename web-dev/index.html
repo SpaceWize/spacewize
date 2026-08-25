@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/branch-link.css">
 </head>
 <body>
 
@@ -58,6 +59,12 @@
     <div class="branch" aria-hidden="true">
       <div class="branch-img branch-base"></div>
       <div class="branch-img branch-bloom" id="bloomLayer"></div>
+    </div>
+
+    <!-- this branch came off a tree; the tree is the umbrella site -->
+    <div class="branch-pin-layer">
+      <a class="branch-pin" id="branchPin" href="../index.html"
+         aria-label="Space Wize Enterprise — the tree this branch grew from">Click Me!</a>
     </div>
     <div class="drift" aria-hidden="true"></div>
     <div class="glowspot" id="glowspot" aria-hidden="true"></div>
@@ -337,5 +344,7 @@
 </main>
 
 <script src="assets/js/script.js"></script>
+<div class="page-wipe" id="pageWipe" aria-hidden="true"></div>
+<script src="assets/js/branch-link.js"></script>
 </body>
 </html>

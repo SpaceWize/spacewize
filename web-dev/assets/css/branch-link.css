@@ -1,0 +1,111 @@
+/* ============================================================
+   The branch runs off the left of the frame, and the tree it came
+   from is the umbrella site. This marks the spot and carries you up
+   it: the circle swells over the page, turns the night colour of
+   that page, then shrinks away to the side once you land.
+   Kept in its own file — everything else here is a mirror of the
+   live web-design site, and this is not part of it.
+   ============================================================ */
+
+/* Locked to the branch plate's exact box: the photograph is drawn at
+   100% width, top-aligned, so a layer of the same width and the
+   image's own aspect ratio makes percentage coordinates read straight
+   off the picture — and hold at every window size. */
+.branch-pin-layer{
+  position:absolute;top:0;left:0;right:0;
+  aspect-ratio:2810 / 1581;
+  z-index:3;
+  pointer-events:none;
+}
+
+.branch-pin{
+  /* where on the photograph the circle sits. Tune these two numbers
+     to move it; nothing else needs to change. */
+  --pin-x:14.4%;
+  --pin-y:73.3%;
+  /* scales with the picture so it stays in proportion to the bark,
+     with a floor that keeps the words readable */
+  --pin-size:clamp(84px, 7.1vw, 118px);
+
+  position:absolute;
+  left:var(--pin-x);top:var(--pin-y);
+  width:var(--pin-size);height:var(--pin-size);
+  /* centred with margins, not translate(-50%,-50%): hover owns
+     `transform`, and the two would fight over the same property */
+  margin-left:calc(var(--pin-size) / -2);
+  margin-top:calc(var(--pin-size) / -2);
+
+  display:grid;place-items:center;
+  border-radius:50%;
+  pointer-events:auto;
+  text-align:center;text-decoration:none;
+  font-family:var(--body);
+  font-size:clamp(.72rem, .95vw, .86rem);
+  font-weight:600;letter-spacing:.01em;
+  color:var(--cherry-ink);
+
+  /* pink glass: lit from the upper left, deepening to cherry at the
+     rim, with the bark blurred through it */
+  background:radial-gradient(circle at 34% 26%,
+    rgba(255,255,255,.66) 0%,
+    rgba(255,236,244,.36) 46%,
+    rgba(227,111,160,.32) 100%);
+  backdrop-filter:blur(7px) saturate(1.4);
+  -webkit-backdrop-filter:blur(7px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.66);
+
+  /* the breathing is on the glow alone — leaving transform free */
+  animation:pinGlow 3.8s ease-in-out infinite;
+  transition:transform .35s var(--ease);
+  -webkit-tap-highlight-color:transparent;
+}
+
+@keyframes pinGlow{
+  0%,100%{
+    box-shadow:0 0 20px 2px rgba(227,111,160,.36),
+               0 0 44px 10px rgba(227,111,160,.16),
+               inset 0 1px 2px rgba(255,255,255,.8),
+               0 10px 26px -14px rgba(0,0,0,.55);
+  }
+  50%{
+    box-shadow:0 0 34px 6px rgba(227,111,160,.54),
+               0 0 74px 20px rgba(227,111,160,.24),
+               inset 0 1px 2px rgba(255,255,255,.85),
+               0 10px 26px -14px rgba(0,0,0,.55);
+  }
+}
+
+.branch-pin:hover,
+.branch-pin:focus-visible{ transform:scale(1.08) }
+.branch-pin:focus-visible{ outline:2.5px solid var(--cherry-ink);outline-offset:5px }
+
+/* ---- the swell ----
+   Never display:none. A transition has nothing to interpolate from if
+   the element was not rendered on the previous frame, so hiding it
+   that way makes the circle snap straight to full size instead of
+   growing. It rests at scale(0) instead, which is rendered but
+   occupies nothing. */
+.page-wipe{
+  position:fixed;z-index:200;
+  top:0;left:0;width:0;height:0;
+  border-radius:50%;
+  background:var(--cherry);
+  transform:scale(0);
+  pointer-events:none;
+  will-change:transform;
+}
+.page-wipe[data-on="true"]{
+  pointer-events:auto;
+  transform:scale(1);
+  background:var(--void);
+  /* deliberately slow: this is the journey up the branch, not a page
+     flip. The colour turns partway through the growth so the change
+     is seen happening rather than arriving with the next page. */
+  transition:transform 1400ms cubic-bezier(.42,0,.4,1),
+             background-color 900ms linear 380ms;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .branch-pin{ animation:none }
+  .page-wipe[data-on="true"]{ transition:none }
+}

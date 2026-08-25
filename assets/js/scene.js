@@ -219,7 +219,7 @@ uplight.position.set(0, -7, 4);
 scene.add(uplight);
 
 /* one roaming point light rather than six — it follows the open branch */
-const glow = new THREE.PointLight(0xe36fa0, 0, 10, 2);
+const glow = new THREE.PointLight(0xe36fa0, 0, 19, 1.7);
 scene.add(glow);
 
 /* ============================================================
@@ -450,6 +450,11 @@ function mulberry32(a) {
   };
 }
 const rnd = mulberry32(20260823);
+/* Blossoms draw from their own stream. grow() keeps `rnd` to itself,
+   so changing how many flowers a twig carries can never reshape the
+   branches — otherwise every density tweak silently regrows the tree
+   and there is no way to judge the change you actually made. */
+const rndBloom = mulberry32(20260824);
 
 /* ============================================================
    tapered tubes — wood thins along its length
@@ -581,7 +586,6 @@ tree.add(new THREE.Mesh(taperedTube(trunkCurve, 0.30, 0.11, 40, 12), trunkMat));
 
 const branches = [];
 const hitTargets = [];
-
 /* One geometry and one material shared by every hover target, rather
    than a fresh pair per twig — there are a few hundred of them. */
 const hitGeo = new THREE.SphereGeometry(1, 6, 4);
@@ -600,22 +604,22 @@ function addHitTarget(group, at, radius, index) {
 /* one blossom, facing mostly upward off whatever wood it sits on */
 function addBlossom(list, at, along, jitter, scaleMul) {
   const pos = at.clone().add(new THREE.Vector3(
-    (rnd() - 0.5) * jitter, (rnd() - 0.5) * jitter * 0.88, (rnd() - 0.5) * jitter
+    (rndBloom() - 0.5) * jitter, (rndBloom() - 0.5) * jitter * 0.88, (rndBloom() - 0.5) * jitter
   ));
   const face = new THREE.Vector3(
-    along.x * 0.5 + (rnd() - 0.5) * 0.75,
-    0.75 + rnd() * 0.55,
-    along.z * 0.5 + (rnd() - 0.5) * 0.75
+    along.x * 0.5 + (rndBloom() - 0.5) * 0.75,
+    0.75 + rndBloom() * 0.55,
+    along.z * 0.5 + (rndBloom() - 0.5) * 0.75
   ).normalize();
   const yaws = [];
   for (let j = 0; j < 5; j++) {
-    yaws.push((j / 5) * Math.PI * 2 + (rnd() - 0.5) * 0.2);
+    yaws.push((j / 5) * Math.PI * 2 + (rndBloom() - 0.5) * 0.2);
   }
   list.push({
     pos,
     quat: new THREE.Quaternion().setFromUnitVectors(UP, face),
-    base: (0.32 + rnd() * 0.22) * scaleMul,
-    delay: rnd() * 0.5,
+    base: (0.32 + rndBloom() * 0.22) * scaleMul,
+    delay: rndBloom() * 0.5,
     yaws,
   });
 }
@@ -659,7 +663,7 @@ DIVISIONS.forEach((division, i) => {
   /* dense clusters at the twig ends */
   tips.forEach((tip) => {
     anchor.add(tip.pos);
-    const count = isSmall ? 2 + Math.floor(rnd() * 3) : 3 + Math.floor(rnd() * 3);
+    const count = isSmall ? 3 + Math.floor(rndBloom() * 3) : 4 + Math.floor(rndBloom() * 3);
     for (let n = 0; n < count; n++) {
       addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1);
     }
@@ -668,7 +672,7 @@ DIVISIONS.forEach((division, i) => {
 
   /* smaller sprays back down the limbs */
   spurs.forEach((spur) => {
-    const count = isSmall ? 1 + Math.floor(rnd() * 2) : 2 + Math.floor(rnd() * 2);
+    const count = isSmall ? 1 + Math.floor(rndBloom() * 3) : 2 + Math.floor(rndBloom() * 3);
     for (let n = 0; n < count; n++) {
       addBlossom(blossoms, spur.pos, spur.dir, 0.24, 0.84);
     }
@@ -688,14 +692,35 @@ DIVISIONS.forEach((division, i) => {
   cores.frustumCulled = false;
   branchGroup.add(cores);
 
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+  /* One halo on the centroid put all the light in a ball at the middle
+     of the crown and left the outer flowers dark. Spreading several
+     smaller ones along the branch lights the whole spray instead. */
+  const haloMat = new THREE.SpriteMaterial({
     map: haloTex,
     color: division.live ? 0xe36fa0 : 0x8e85a3,
     transparent: true, opacity: 0, depthWrite: false,
     blending: THREE.AdditiveBlending,
-  }));
-  halo.position.copy(anchor);
-  branchGroup.add(halo);
+  });
+
+  const haloSpots = [anchor.clone()];
+  const stride = Math.max(1, Math.floor(tips.length / 5));
+  for (let k = 0; k < tips.length && haloSpots.length < 6; k += stride) {
+    haloSpots.push(tips[k].pos.clone());
+  }
+
+  /* how far this branch's flowers reach — the halos are sized off it
+     so a long branch gets a long glow rather than a fixed blob */
+  let spread = 0;
+  for (const bl of blossoms) spread = Math.max(spread, bl.pos.distanceTo(anchor));
+
+  const halos = haloSpots.map((p, k) => {
+    const sp = new THREE.Sprite(haloMat);
+    sp.position.copy(p);
+    /* the centroid one stays widest, the outliers are smaller */
+    sp.userData.base = (k === 0 ? 1.5 : 0.85) * Math.max(1.6, spread * 0.9);
+    branchGroup.add(sp);
+    return sp;
+  });
 
   tree.add(branchGroup);
 
@@ -703,7 +728,7 @@ DIVISIONS.forEach((division, i) => {
      so the tree actually shows one branch in bloom. */
   const rest = division.live ? 0.45 : 0;
   branches.push({
-    division, blossoms, petals, cores, petalMat, halo, anchor,
+    division, blossoms, petals, cores, petalMat, halos, haloMat, anchor,
     rest, t: -1, target: rest,
     pulse: -1,          // seconds since this branch was woken, -1 = idle
   });
@@ -1373,8 +1398,13 @@ function animate() {
       b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
     }
 
-    b.halo.material.opacity = lum * (b.division.live ? 0.42 : 0.55);
-    b.halo.scale.setScalar(2.6 + lum * 1.1);
+    /* several overlapping additive sprites stack, so each is fainter
+       than the single halo was — the total reads about the same */
+    b.haloMat.opacity = lum * (b.division.live ? 0.17 : 0.2);
+    const haloGrow = 1 + lum * 0.3;
+    for (let h = 0; h < b.halos.length; h++) {
+      b.halos[h].scale.setScalar(b.halos[h].userData.base * haloGrow);
+    }
 
     if (lum > 0.02 && lum > glowLum) { glowBranch = b; glowLum = lum; }
   }
