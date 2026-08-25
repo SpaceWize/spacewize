@@ -527,6 +527,9 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
    measuring it in script would show a flash of the scene first.
    ============================================================ */
 .page-arrive{ display:none }
+/* hidden while script runs; restored if the scene never starts */
+html[data-js="1"] #fallback{ display:none }
+
 html[data-arrive="1"] .page-arrive{
   display:block;
   position:fixed;z-index:200;
@@ -537,7 +540,9 @@ html[data-arrive="1"] .page-arrive{
   background:var(--void);
   pointer-events:none;
   transform:scale(1);
-  animation:arriveShrink 1150ms cubic-bezier(.45,0,.25,1) 200ms forwards;
+}
+html[data-arrive="1"] .page-arrive[data-go="true"]{
+  animation:arriveShrink 1150ms cubic-bezier(.45,0,.25,1) forwards;
 }
 @keyframes arriveShrink{
   0%   { transform:scale(1);    opacity:1 }

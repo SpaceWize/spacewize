@@ -69,6 +69,8 @@ function webglAvailable() {
   }
 }
 if (!webglAvailable() || !DIVISIONS.length) {
+  /* no scene is coming — the static list is the page */
+  document.documentElement.removeAttribute('data-js');
   canvas.remove();
   if (hint) hint.remove();
   if (tag) tag.remove();
@@ -367,7 +369,11 @@ const petalGeo = new THREE.ShapeGeometry(petalShape, 10);
 petalGeo.scale(0.30, 0.30, 0.30);
 
 const coreGeo = new THREE.SphereGeometry(0.032, 6, 5);
-const coreMat = new THREE.MeshStandardMaterial({
+/* A template. Every branch clones it, because a single shared core
+   material cannot follow its branch: with a fixed emissive the flower
+   centres stayed dim while the petals blew out around them, leaving a
+   dark speck exactly where each flower was. */
+const CORE_MAT = new THREE.MeshStandardMaterial({
   color: 0xf6e3a1, emissive: 0xf6c96a, emissiveIntensity: 0.5, roughness: 0.6,
 });
 
@@ -710,6 +716,7 @@ DIVISIONS.forEach((division, i) => {
   petals.frustumCulled = false;
   branchGroup.add(petals);
 
+  const coreMat = CORE_MAT.clone();
   const cores = new THREE.InstancedMesh(coreGeo, coreMat, blossoms.length);
   cores.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   cores.frustumCulled = false;
@@ -752,7 +759,7 @@ DIVISIONS.forEach((division, i) => {
      and five identical dead ones. */
   const rest = division.live ? 0.45 : division.bloom * 0.55;
   branches.push({
-    division, blossoms, petals, cores, petalMat, halos, haloMat, anchor,
+    division, blossoms, petals, cores, petalMat, coreMat, halos, haloMat, anchor,
     rest, t: -1, target: rest,
     pulse: -1,          // seconds since this branch was woken, -1 = idle
   });
@@ -1409,7 +1416,10 @@ function animate() {
     const b = branches[i];
     let lum;
 
-    if (b.division.live) {
+    /* Whether a branch opens is its progress, not whether it is live —
+       the two divisions with dates sit part-open, which is the whole
+       point of the tree doubling as the progress board. */
+    if (b.division.bloom > 0) {
       const before = b.t;
       if (noMotion || b.t < 0) {
         b.t = b.target;
@@ -1418,19 +1428,29 @@ function animate() {
       }
       /* only rewrite instance matrices for branches actually moving */
       if (Math.abs(b.t - before) > 0.0004) writeBranchMatrices(b);
+    } else if (b.t < 0) {
+      /* never opens, so the shut matrices are written once and left */
+      b.t = 0;
+      writeBranchMatrices(b);
+    }
+
+    /* How brightly it burns is a separate question from how far it is
+       open: only the live one glows on its own, the rest answer with
+       the standby pulse. */
+    if (b.division.live) {
       lum = b.t;
       /* softened: with real bloom in the pipeline the old values blew
          the whole crown out into a flat white disc */
       b.petalMat.emissiveIntensity = 0.16 + lum * 0.4;
     } else {
-      /* buds stay shut, so the matrices are written once and left */
-      if (b.t < 0) { b.t = 0; writeBranchMatrices(b); }
       if (b.pulse >= 0 && !noMotion) b.pulse += dt;
       lum = noMotion
         ? (b.pulse >= 0 ? PULSE_LOW : 0)
         : pulseLevel(b.pulse);
       b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
     }
+    /* the centre of a flower must never sit darker than its petals */
+    b.coreMat.emissiveIntensity = b.petalMat.emissiveIntensity * 1.2;
 
     /* several overlapping additive sprites stack, so each is fainter
        than the single halo was — the total reads about the same */

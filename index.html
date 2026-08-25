@@ -19,6 +19,18 @@ try {
     document.documentElement.dataset.arrive = '1';
   }
 } catch (e) {}
+
+/* The static division list is the no-JS fallback, not the front door.
+   Left visible it paints first and the tree replaces it a moment
+   later — which on a phone, where three.js comes off a CDN, reads as
+   the wrong page loading before the right one. Hide it while script
+   is running, and put it straight back if the scene never arrives. */
+document.documentElement.dataset.js = '1';
+setTimeout(function () {
+  if (document.body && document.body.dataset.scene !== 'on') {
+    document.documentElement.removeAttribute('data-js');
+  }
+}, 6000);
 </script>
 <script type="importmap">
 {
@@ -242,9 +254,24 @@ try {
   }
 
   el.addEventListener('animationend', done);
+
+  /* Hold the cover until the tree is actually up. Uncovering on a
+     timer showed the static list first and the scene a moment later,
+     so the transition landed on the wrong page. */
+  var waited = 0;
+  (function ready() {
+    if (gone) return;
+    if (document.body.dataset.scene === 'on' || waited > 3000) {
+      el.dataset.go = 'true';
+      return;
+    }
+    waited += 60;
+    setTimeout(ready, 60);
+  })();
+
   /* animations are suspended in a hidden tab — never strand the
      visitor behind an opaque cover waiting for a frame */
-  setTimeout(done, 2600);
+  setTimeout(done, 7000);
 })();
 </script>
 <script type="module" src="assets/js/scene.js"></script>

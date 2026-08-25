@@ -105,6 +105,19 @@
              background-color 900ms linear 380ms;
 }
 
+/* On a phone the hero card goes full width and the photograph is only
+   a couple of hundred pixels tall, so the bark is covered completely —
+   there is no spot on the branch left to point at. Below this width the
+   circle stops pretending to be pinned to the picture and sits under
+   the card instead, where there is room for it. */
+@media (max-width:1000px){
+  .branch-pin-layer{ aspect-ratio:auto;inset:0 }
+  .branch-pin{
+    left:50%;top:auto;bottom:clamp(18px,4vh,40px);
+    margin-top:0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce){
   .branch-pin{ animation:none }
   .page-wipe[data-on="true"]{ transition:none }
