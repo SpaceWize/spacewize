@@ -58,6 +58,7 @@ try {
       <p class="panel-status" id="panelTag"><span class="pip" aria-hidden="true"></span></p>
       <h2 id="panelName"></h2>
       <p id="panelLine"></p>
+      <p class="panel-when" id="panelWhen" hidden></p>
       <a class="btn" id="panelBtn">
         <span id="panelBtnText">Enter site</span>
         <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -66,6 +67,7 @@ try {
           <path d="M5 12h14M13 6l6 6-6 6"/>
         </svg>
       </a>
+      <a class="panel-alt" id="panelAlt" href="web-dev/index.html" hidden>Need something built now?</a>
     </aside>
   </div>
 
@@ -88,7 +90,7 @@ try {
         and its own way of working. Pick one to go through.</p>
     </div>
     <div class="stage-meta">
-      <p class="status"><span class="dot" aria-hidden="true"></span> 1 of 6 sites live</p>
+      <p class="status"><span class="dot" aria-hidden="true"></span> 1 live &middot; 2 opening in 2027</p>
       <p>BC, Canada<br>Remote worldwide</p>
     </div>
   </div>
@@ -107,10 +109,13 @@ try {
       <li data-id="web"
           data-name="Web Development"
           data-line="Fast, considered websites for people who need one and don&rsquo;t want to overcomplicate it."
+          data-stage="Live"
+          data-when=""
+          data-bloom="1"
+          data-notify="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Web%20Development&body=Let%20me%20know%20when%20Web%20Development%20opens."
           data-url="web-dev/index.html"
           data-live="true">
-        <a class="branch-card glass" data-live="true"
-           href="web-dev/index.html">
+        <a class="branch-card glass" data-live="true" href="web-dev/index.html">
           <span class="tag"><span class="pip"></span>Live</span>
           <h3>Web Development</h3>
           <p>Fast, considered websites for people who need one and don&rsquo;t want to overcomplicate it.</p>
@@ -120,55 +125,97 @@ try {
       <li data-id="print"
           data-name="3D Printing"
           data-line="Objects designed and printed to spec. Prototypes, parts, and things that don&rsquo;t exist yet."
+          data-stage="In build"
+          data-when="Opening spring 2027"
+          data-bloom="0.5"
+          data-notify="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%203D%20Printing&body=Let%20me%20know%20when%203D%20Printing%20opens."
           data-live="false">
         <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>In development</span>
+          <span class="tag"><span class="pip"></span>In build</span>
           <h3>3D Printing</h3>
           <p>Objects designed and printed to spec. Prototypes, parts, and things that don&rsquo;t exist yet.</p>
+            <p class="card-when">Opening spring 2027</p>
+          <div class="card-acts">
+            <a class="card-notify" href="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%203D%20Printing&body=Let%20me%20know%20when%203D%20Printing%20opens.">Tell me when this opens</a>
+            <a class="card-alt" href="web-dev/index.html">Need something built now?</a>
+          </div>
         </div>
       </li>
 
       <li data-id="shop"
           data-name="Dropshipping"
           data-line="Storefronts built to sell, sourced and run end to end."
+          data-stage="In build"
+          data-when="Opening summer 2027"
+          data-bloom="0.45"
+          data-notify="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Dropshipping&body=Let%20me%20know%20when%20Dropshipping%20opens."
           data-live="false">
         <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>In development</span>
+          <span class="tag"><span class="pip"></span>In build</span>
           <h3>Dropshipping</h3>
           <p>Storefronts built to sell, sourced and run end to end.</p>
+            <p class="card-when">Opening summer 2027</p>
+          <div class="card-acts">
+            <a class="card-notify" href="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Dropshipping&body=Let%20me%20know%20when%20Dropshipping%20opens.">Tell me when this opens</a>
+            <a class="card-alt" href="web-dev/index.html">Need something built now?</a>
+          </div>
         </div>
       </li>
 
       <li data-id="property"
           data-name="Real Estate Development"
           data-line="Property projects taken from raw ground to finished build."
+          data-stage="Planned"
+          data-when=""
+          data-bloom="0"
+          data-notify="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Real%20Estate%20Development&body=Let%20me%20know%20when%20Real%20Estate%20Development%20opens."
           data-live="false">
         <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>In development</span>
+          <span class="tag"><span class="pip"></span>Planned</span>
           <h3>Real Estate Development</h3>
           <p>Property projects taken from raw ground to finished build.</p>
+          <div class="card-acts">
+            <a class="card-notify" href="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Real%20Estate%20Development&body=Let%20me%20know%20when%20Real%20Estate%20Development%20opens.">Tell me when this opens</a>
+            <a class="card-alt" href="web-dev/index.html">Need something built now?</a>
+          </div>
         </div>
       </li>
 
       <li data-id="games"
           data-name="Game Development"
           data-line="Games made small and made properly. Systems first, polish second."
+          data-stage="Planned"
+          data-when=""
+          data-bloom="0"
+          data-notify="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Game%20Development&body=Let%20me%20know%20when%20Game%20Development%20opens."
           data-live="false">
         <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>In development</span>
+          <span class="tag"><span class="pip"></span>Planned</span>
           <h3>Game Development</h3>
           <p>Games made small and made properly. Systems first, polish second.</p>
+          <div class="card-acts">
+            <a class="card-notify" href="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Game%20Development&body=Let%20me%20know%20when%20Game%20Development%20opens.">Tell me when this opens</a>
+            <a class="card-alt" href="web-dev/index.html">Need something built now?</a>
+          </div>
         </div>
       </li>
 
       <li data-id="books"
           data-name="Books"
           data-line="Written, designed, and published in-house."
+          data-stage="Planned"
+          data-when=""
+          data-bloom="0"
+          data-notify="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Books&body=Let%20me%20know%20when%20Books%20opens."
           data-live="false">
         <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>In development</span>
+          <span class="tag"><span class="pip"></span>Planned</span>
           <h3>Books</h3>
           <p>Written, designed, and published in-house.</p>
+          <div class="card-acts">
+            <a class="card-notify" href="mailto:thespacewize@gmail.com?subject=Notify%20me%20-%20Books&body=Let%20me%20know%20when%20Books%20opens.">Tell me when this opens</a>
+            <a class="card-alt" href="web-dev/index.html">Need something built now?</a>
+          </div>
         </div>
       </li>
     </ul>

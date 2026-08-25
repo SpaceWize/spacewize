@@ -22,6 +22,8 @@ const panelTag   = document.getElementById('panelTag');
 const panelBtn   = document.getElementById('panelBtn');
 const panelBtnText = document.getElementById('panelBtnText');
 const liveRegion = document.getElementById('liveRegion');
+const panelWhen  = document.getElementById('panelWhen');
+const panelAlt   = document.getElementById('panelAlt');
 const keys       = document.getElementById('branchKeys');
 const hint       = document.getElementById('hint');
 
@@ -30,12 +32,31 @@ const hint       = document.getElementById('hint');
 const DIVISIONS = Array.from(
   document.querySelectorAll('#branchData > li')
 ).map((li) => ({
-  id:   li.dataset.id,
-  name: li.dataset.name,
-  line: li.dataset.line,
-  url:  li.dataset.url || '',
-  live: li.dataset.live === 'true',
+  id:     li.dataset.id,
+  name:   li.dataset.name,
+  line:   li.dataset.line,
+  url:    li.dataset.url || '',
+  live:   li.dataset.live === 'true',
+  stage:  li.dataset.stage || 'Planned',
+  when:   li.dataset.when || '',
+  notify: li.dataset.notify || '',
+  /* how far this branch's flowers can open — the tree doubles as the
+     progress board, so a division nearer to opening is further out of
+     bud even before anyone touches it */
+  bloom:  parseFloat(li.dataset.bloom || '0'),
 }));
+
+/* derived, not written by hand: the headline count cannot drift out of
+   step with the six entries above */
+{
+  const liveN = DIVISIONS.filter((d) => d.live).length;
+  const soon  = DIVISIONS.filter((d) => !d.live && d.when).length;
+  const el = document.querySelector('.status');
+  if (el) {
+    el.innerHTML = '<span class="dot" aria-hidden="true"></span> ' +
+      liveN + ' live' + (soon ? ' · ' + soon + ' opening in 2027' : '');
+  }
+}
 
 /* ---------- bail out cleanly if WebGL is unavailable ---------- */
 function webglAvailable() {
@@ -648,9 +669,11 @@ DIVISIONS.forEach((division, i) => {
   branchGroup.add(new THREE.Mesh(mergeGeometries(wood, false), barkMat));
   wood.forEach((g) => g.dispose());
 
+  /* the warmer the petal, the closer the division is to opening */
+  const near = division.bloom > 0;
   const petalMat = new THREE.MeshStandardMaterial({
-    color:     division.live ? 0xfbd3e0 : 0xcfc4e0,
-    emissive:  division.live ? 0xe36fa0 : 0x4a4266,
+    color:     division.live ? 0xfbd3e0 : (near ? 0xe4cfdd : 0xcfc4e0),
+    emissive:  division.live ? 0xe36fa0 : (near ? 0x6b4a63 : 0x4a4266),
     emissiveIntensity: 0.2,
     roughness: 0.82,
     side: THREE.DoubleSide,
@@ -697,7 +720,7 @@ DIVISIONS.forEach((division, i) => {
      smaller ones along the branch lights the whole spray instead. */
   const haloMat = new THREE.SpriteMaterial({
     map: haloTex,
-    color: division.live ? 0xe36fa0 : 0x8e85a3,
+    color: division.live ? 0xe36fa0 : (near ? 0xb98aa8 : 0x8e85a3),
     transparent: true, opacity: 0, depthWrite: false,
     blending: THREE.AdditiveBlending,
   });
@@ -724,9 +747,10 @@ DIVISIONS.forEach((division, i) => {
 
   tree.add(branchGroup);
 
-  /* A live division sits half-open even when nobody is looking at it,
-     so the tree actually shows one branch in bloom. */
-  const rest = division.live ? 0.45 : 0;
+  /* Every branch rests part-way into its own ceiling, so the tree
+     reads as a progress board at a glance rather than one live branch
+     and five identical dead ones. */
+  const rest = division.live ? 0.45 : division.bloom * 0.55;
   branches.push({
     division, blossoms, petals, cores, petalMat, halos, haloMat, anchor,
     rest, t: -1, target: rest,
@@ -824,10 +848,9 @@ const _s  = new THREE.Vector3();
 const AXIS_X = new THREE.Vector3(1, 0, 0);
 
 function writeBranchMatrices(b) {
-  /* Only a live division blooms. A dormant one keeps its buds shut and
-     answers with a flicker instead, so "in development" is something
-     you can read off the tree rather than only off the card. */
-  const ceiling = b.division.live ? 1 : 0;
+  /* How far this branch opens is its progress. Live goes all the way;
+     a dated division sits part-open; one with no date stays in bud. */
+  const ceiling = b.division.bloom;
   let p = 0;
   for (let i = 0; i < b.blossoms.length; i++) {
     const bl = b.blossoms[i];
@@ -990,23 +1013,34 @@ function select(index) {
   document.body.dataset.panel = 'open';
   panelName.textContent = d.name;
   panelLine.textContent = d.line;
-  panelTag.textContent  = d.live ? 'Live' : 'In development';
+  panelTag.textContent  = d.stage;
+
+  /* only the ones with a date carry one; a soft date on the far ones
+     would be worse than saying nothing */
+  panelWhen.textContent = d.when;
+  panelWhen.hidden = !d.when;
 
   if (d.live) {
     panelBtn.setAttribute('href', d.url);
-    panelBtn.removeAttribute('aria-disabled');
     panelBtn.classList.add('btn-live');
     panelBtnText.textContent = 'Enter site';
+    panelAlt.hidden = true;
   } else {
-    panelBtn.removeAttribute('href');
-    panelBtn.setAttribute('aria-disabled', 'true');
+    /* A disabled button is a dead end. A mailto is a real action, needs
+       no backend, and matches how the web-design site already takes
+       enquiries. */
+    panelBtn.setAttribute('href', d.notify);
     panelBtn.classList.remove('btn-live');
-    panelBtnText.textContent = 'Not open yet';
+    panelBtnText.textContent = 'Tell me when this opens';
+    /* someone poking at a shelf that is not open still wants something
+       built, and that is the division which is open today */
+    panelAlt.hidden = false;
   }
+  panelBtn.removeAttribute('aria-disabled');
 
   liveRegion.textContent = d.live
     ? `${d.name}. Live site.`
-    : `${d.name}. In development.`;
+    : `${d.name}. ${d.stage}${d.when ? '. ' + d.when : ''}.`;
   tagMetricsDirty = true;
   dismissHint();
 }
@@ -1029,7 +1063,7 @@ DIVISIONS.forEach((d, i) => {
   } else {
     el.type = 'button';
   }
-  el.textContent = d.live ? d.name : `${d.name} (in development)`;
+  el.textContent = d.live ? d.name : `${d.name} (${d.stage.toLowerCase()})`;
   el.addEventListener('focus', () => { select(i); locked = true; });
   el.addEventListener('mouseenter', () => select(i));
   if (!d.live) {

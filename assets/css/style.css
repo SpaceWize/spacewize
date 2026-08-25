@@ -476,6 +476,42 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   }
 }
 
+/* ---- stage, timing and the second action ---- */
+.panel-when{
+  margin:9px 0 0;
+  font-size:.76rem;
+  color:var(--cherry);
+  letter-spacing:.01em;
+}
+.panel-alt{
+  display:inline-block;margin-top:11px;
+  font-size:.76rem;color:var(--ink-faint);
+  border-bottom:1px solid rgba(244,238,246,.22);
+  padding-bottom:1px;
+  transition:color .2s var(--ease), border-color .2s var(--ease);
+}
+.panel-alt:hover{color:var(--ink);border-color:var(--ink)}
+
+.card-when{
+  margin:10px 0 0;
+  font-size:.78rem;color:var(--cherry);
+}
+.card-acts{
+  display:flex;flex-wrap:wrap;align-items:center;
+  gap:8px 16px;margin-top:16px;
+}
+.card-notify{
+  font-size:.8rem;font-weight:500;color:var(--ink);
+  border-bottom:1px solid var(--cherry);
+  padding-bottom:2px;
+  transition:color .2s var(--ease)}
+.card-notify:hover{color:var(--cherry)}
+.card-alt{
+  font-size:.78rem;color:var(--ink-faint);
+  transition:color .2s var(--ease)}
+.card-alt:hover{color:var(--ink)}
+.card-alt::after{content:" 92"}
+
 /* ============================================================
    arriving from the branch
    The circle that grew over the web-design site lands here still
