@@ -23,7 +23,6 @@ const panelBtn   = document.getElementById('panelBtn');
 const panelBtnText = document.getElementById('panelBtnText');
 const liveRegion = document.getElementById('liveRegion');
 const panelWhen  = document.getElementById('panelWhen');
-const panelAlt   = document.getElementById('panelAlt');
 const keys       = document.getElementById('branchKeys');
 const hint       = document.getElementById('hint');
 
@@ -168,6 +167,7 @@ let tagMetricsDirty = true;
 let composer = null;
 let bloomPass = null;
 let moonSprite = null;
+let fallenMat = null;
 function resize() {
   const w = canvas.clientWidth  || window.innerWidth;
   const h = canvas.clientHeight || window.innerHeight;
@@ -482,6 +482,8 @@ const rnd = mulberry32(20260823);
    branches — otherwise every density tweak silently regrows the tree
    and there is no way to judge the change you actually made. */
 const rndBloom = mulberry32(20260824);
+/* and one for the fallen drift, for the same reason */
+const rndFall = mulberry32(20260825);
 
 /* ============================================================
    tapered tubes — wood thins along its length
@@ -807,6 +809,211 @@ DIVISIONS.forEach((division, i) => {
   scene.updateMatrixWorld(true);
 }
 
+/* the same flower, in the air and on the ground — one texture, drawn
+   once. blossomSprite is a hoisted declaration, so this can be built
+   here even though the function reads further down. */
+/* How big a blossom is, wherever it happens to be. Both the falling
+   petals and the ones already down draw from this, because the moment
+   they stop matching a flower visibly changes size as it lands. */
+const PETAL_MIN  = 0.062;
+const PETAL_VARY = 0.088;
+const petalSize = (r) => PETAL_MIN + r * PETAL_VARY;
+
+/* Neither of these is sharp. Even at the focus distance a blossom
+   stays soft, so the field reads as drifting light first and resolves
+   into flowers only once you look at it. The pair still differ enough
+   to keep the depth-of-field falloff doing its work. */
+const petalSprite = blossomSprite(4);
+const petalSpriteSoft = blossomSprite(10);
+
+/* ============================================================
+   the fallen drift
+   Where the falling blossom ends up. A petal that reaches the ground
+   is written into this field at the spot it came down, so the ground
+   fills in as you watch rather than being decided up front.
+
+   The buffer is a fixed size and slots are recycled, so a page left
+   open all afternoon costs exactly what it costs in the first minute.
+   ============================================================ */
+const GROUND_Y = TREE_LIFT + TRUNK_FOOT;
+
+let landFlower = null;      // called by the falling petals when they arrive
+let updateFallen = null;
+
+{
+  const CAP  = isSmall ? 1100 : 3600;   // hard ceiling on the field
+  const SEED = isSmall ?  520 : 1400;   // already on the ground at load
+  const REACH = 20;
+
+  const FADE_SEC  = 10;   // how long a retiring flower takes to go
+  const CYCLE_SEC = 60;   // the minute
+
+  const fpos  = new Float32Array(CAP * 3);
+  const fsize = new Float32Array(CAP);
+  const frot  = new Float32Array(CAP);
+  const ftint = new Float32Array(CAP);
+  const ffade = new Float32Array(CAP);   // 0 = empty slot, 1 = fully there
+
+  const free = [];                 // slot indices ready for reuse
+  const alive = [];                // slot indices, oldest first
+  const fading = [];               // { idx, left } retiring gently
+  for (let i = CAP - 1; i >= 0; i--) free.push(i);
+
+  function write(idx, x, z, tint, size) {
+    fpos[idx * 3]     = x;
+    fpos[idx * 3 + 1] = GROUND_Y + rndFall() * 0.12;
+    fpos[idx * 3 + 2] = z;
+    /* the size it was in the air, not a new one — see the shader */
+    fsize[idx] = size;
+    frot[idx]  = rndFall() * Math.PI * 2;
+    ftint[idx] = tint;
+    ffade[idx] = 1;
+  }
+
+  /* what is already lying there when the page opens */
+  for (let i = 0; i < SEED; i++) {
+    const r = REACH * Math.sqrt(rndFall());
+    const a = rndFall() * Math.PI * 2;
+    const idx = free.pop();
+    /* seeded from the same range the falling petals use, so what is
+       already lying there matches what lands later */
+    write(idx, Math.cos(a) * r, Math.sin(a) * r, rndFall(),
+          petalSize(rndFall()));
+    alive.push(idx);
+  }
+
+  const fgeo = new THREE.BufferGeometry();
+  fgeo.setAttribute('position', new THREE.BufferAttribute(fpos, 3));
+  fgeo.setAttribute('aSize',    new THREE.BufferAttribute(fsize, 1));
+  fgeo.setAttribute('aRot',     new THREE.BufferAttribute(frot, 1));
+  fgeo.setAttribute('aTint',    new THREE.BufferAttribute(ftint, 1));
+  fgeo.setAttribute('aFade',    new THREE.BufferAttribute(ffade, 1));
+
+  fallenMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+      uMap:     { value: petalSprite },
+      /* the same pair the airborne petals use, so a flower is exactly
+         as sharp on the ground as it was the instant before it got
+         there */
+      uMapSoft: { value: petalSpriteSoft },
+      uScale:   { value: 600 },
+      uFocus:   { value: 12 },
+      uPale:    { value: new THREE.Color(0xf3e2ea) },
+      uPink:    { value: new THREE.Color(0xdcb2c8) },
+    },
+    vertexShader: `
+      attribute float aSize;
+      attribute float aRot;
+      attribute float aTint;
+      attribute float aFade;
+      uniform float uScale;
+      uniform float uFocus;
+      varying float vRot;
+      varying float vTint;
+      varying float vFade;
+      varying float vCoc;
+      void main(){
+        vRot = aRot;
+        vTint = aTint;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        float d = -mv.z;
+        /* Identical to the falling petals, down to the cap. They carry
+           a depth-of-field inflation of up to 1.7x; without the same
+           term here a petal visibly jumped size the moment it landed. */
+        vCoc = clamp(abs(d - uFocus) / 7.0, 0.0, 1.0);
+        float size = aSize * uScale / max(d, 0.001);
+        gl_PointSize = min(size * (1.0 + vCoc * 0.7), 40.0);
+        /* an empty slot is drawn at zero size rather than skipped, so
+           the field never has to be rebuilt or re-ranged */
+        if (aFade <= 0.0) gl_PointSize = 0.0;
+        vFade = aFade * (1.0 - smoothstep(15.0, 32.0, d));
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uMap;
+      uniform sampler2D uMapSoft;
+      uniform vec3 uPale;
+      uniform vec3 uPink;
+      varying float vRot;
+      varying float vTint;
+      varying float vFade;
+      varying float vCoc;
+      void main(){
+        if (vFade <= 0.001) discard;
+        vec2 uv = gl_PointCoord - 0.5;
+        float s = sin(vRot), c = cos(vRot);
+        uv = vec2(uv.x * c - uv.y * s, uv.x * s + uv.y * c) + 0.5;
+        /* blurred by exactly as much as it was on the way down */
+        float a = mix(texture2D(uMap, uv).a, texture2D(uMapSoft, uv).a, vCoc);
+        if (a < 0.015) discard;
+        gl_FragColor = vec4(mix(uPale, uPink, vTint), a * vFade * 0.58);
+      }
+    `,
+  });
+
+  const fallen = new THREE.Points(fgeo, fallenMat);
+  fallen.frustumCulled = false;
+  scene.add(fallen);
+
+  let cycleStart = 0;
+  let landedThisCycle = 0;
+  let posDirty = false;
+
+  landFlower = function (x, z, tint, size, time) {
+    /* Full is full: the petal simply does not stick. Overwriting the
+       oldest instead would pop a flower out of existence in plain
+       sight, and the retirement below frees slots soon enough. */
+    if (!free.length) return;
+    const idx = free.pop();
+    write(idx, x, z, tint, size);
+    alive.push(idx);
+    posDirty = true;
+    landedThisCycle++;
+  };
+
+  updateFallen = function (time, dt) {
+    if (!cycleStart) cycleStart = time;
+
+    /* Once a minute, retire as many as arrived during it — oldest
+       first, so the ground turns over rather than thinning at random.
+       Matching the count to the whole minute rather than half of it is
+       what makes the field settle instead of creeping up to its cap. */
+    if (time - cycleStart >= CYCLE_SEC) {
+      const n = Math.min(landedThisCycle, alive.length);
+      for (let i = 0; i < n; i++) fading.push({ idx: alive.shift(), left: FADE_SEC });
+      cycleStart = time;
+      landedThisCycle = 0;
+    }
+
+    if (fading.length) {
+      for (let i = fading.length - 1; i >= 0; i--) {
+        const f = fading[i];
+        f.left -= dt;
+        if (f.left <= 0) {
+          ffade[f.idx] = 0;
+          free.push(f.idx);
+          fading.splice(i, 1);
+        } else {
+          ffade[f.idx] = f.left / FADE_SEC;
+        }
+      }
+      fgeo.attributes.aFade.needsUpdate = true;
+    }
+
+    if (posDirty) {
+      fgeo.attributes.position.needsUpdate = true;
+      fgeo.attributes.aSize.needsUpdate = true;
+      fgeo.attributes.aRot.needsUpdate = true;
+      fgeo.attributes.aTint.needsUpdate = true;
+      fgeo.attributes.aFade.needsUpdate = true;
+      posDirty = false;
+    }
+  };
+}
+
 /* ============================================================
    ground mist
    Banks of soft haze at the foot of the frame. Pinned to the measured
@@ -1029,19 +1236,20 @@ function select(index) {
 
   if (d.live) {
     panelBtn.setAttribute('href', d.url);
+    panelBtn.removeAttribute('target');
+    panelBtn.removeAttribute('rel');
     panelBtn.classList.add('btn-live');
     panelBtnText.textContent = 'Enter site';
-    panelAlt.hidden = true;
   } else {
     /* A disabled button is a dead end. A mailto is a real action, needs
        no backend, and matches how the web-design site already takes
        enquiries. */
     panelBtn.setAttribute('href', d.notify);
+    /* the form lives elsewhere — send them there without losing the tree */
+    panelBtn.setAttribute('target', '_blank');
+    panelBtn.setAttribute('rel', 'noopener');
     panelBtn.classList.remove('btn-live');
     panelBtnText.textContent = 'Tell me when this opens';
-    /* someone poking at a shelf that is not open still wants something
-       built, and that is the division which is open today */
-    panelAlt.hidden = false;
   }
   panelBtn.removeAttribute('aria-disabled');
 
@@ -1209,11 +1417,20 @@ canvas.addEventListener('pointercancel', endDrag);
    the logo is.
    ============================================================ */
 function blossomSprite(blurPx) {
+  /* The flower itself reaches ~27px from centre. A blur needs roughly
+     3x its radius of clear margin to actually fade to zero rather than
+     being cut off by the canvas edge — and a canvas simply stops, it
+     does not fade, so whatever alpha the blur still has at the border
+     reads as a hard square. The canvas grows to give it that room; the
+     flower is always drawn at the same size, so this only adds empty
+     space around it, never changes how big it looks. */
+  const pad = blurPx * 3;
+  const size = 64 + pad * 2;
   const c = document.createElement('canvas');
-  c.width = c.height = 64;
+  c.width = c.height = size;
   const x = c.getContext('2d');
   if (blurPx) x.filter = `blur(${blurPx}px)`;
-  x.translate(32, 32);
+  x.translate(size / 2, size / 2);
   x.fillStyle = '#ffffff';
   for (let i = 0; i < 5; i++) {
     x.save();
@@ -1252,7 +1469,7 @@ for (let i = 0; i < PETALS; i++) {
   driftPos[i * 3 + 2] = Math.sin(a) * r;
   driftVel[i * 2]     = 0.25 + Math.random() * 0.45;
   driftVel[i * 2 + 1] = Math.random() * Math.PI * 2;
-  driftSize[i] = 0.045 + Math.random() * 0.07;
+  driftSize[i] = petalSize(Math.random());
   driftRot[i]  = Math.random() * Math.PI * 2;
   driftSpin[i] = (Math.random() - 0.5) * 1.4;
   driftTint[i] = Math.random() < 0.16 ? 1 : 0;
@@ -1268,8 +1485,8 @@ const driftMat = new THREE.ShaderMaterial({
   depthWrite: false,
   blending: THREE.AdditiveBlending,
   uniforms: {
-    uMap:     { value: blossomSprite(0) },
-    uMapSoft: { value: blossomSprite(5) },   // pre-blurred, for bokeh
+    uMap:     { value: petalSprite },
+    uMapSoft: { value: petalSpriteSoft },    // pre-blurred, for bokeh
     uTime:    { value: 0 },
     uScale:   { value: 600 },
     uSplit:   { value: 0.035 },
@@ -1298,7 +1515,7 @@ const driftMat = new THREE.ShaderMaterial({
          petals blur while the gate itself stays sharp */
       vCoc = clamp(abs(dist - uFocus) / 7.0, 0.0, 1.0);
       float size = aSize * uScale / max(dist, 0.001);
-      gl_PointSize = min(size * (1.0 + vCoc * 0.7), 30.0);
+      gl_PointSize = min(size * (1.0 + vCoc * 0.7), 40.0);
       gl_Position = projectionMatrix * mv;
     }
   `,
@@ -1329,7 +1546,7 @@ const driftMat = new THREE.ShaderMaterial({
       float g = mix(gSharp, gSoft, vCoc);
       float b = mix(bSharp, bSoft, vCoc);
       float a = max(r, max(g, b));
-      if (a < 0.02) discard;
+      if (a < 0.012) discard;
 
       vec3 base = mix(uSakura, uCyan, vTint);
       vec3 col  = base * g
@@ -1474,8 +1691,11 @@ function animate() {
   }
 
   /* falling blossoms */
-  driftMat.uniforms.uScale.value = renderer.domElement.height / (2 * HALF_FOV);
+  const pointScale = renderer.domElement.height / (2 * HALF_FOV);
+  driftMat.uniforms.uScale.value = pointScale;
+  if (fallenMat) fallenMat.uniforms.uScale.value = pointScale;
   driftMat.uniforms.uFocus.value = orbit.radius;
+  if (fallenMat) fallenMat.uniforms.uFocus.value = orbit.radius;
   if (!noMotion) {
     driftMat.uniforms.uTime.value = time;
     const pos = driftGeo.attributes.position.array;
@@ -1483,7 +1703,10 @@ function animate() {
       const y = i * 3 + 1;
       pos[y] -= driftVel[i * 2] * dt;
       pos[i * 3] += Math.sin(time * 0.6 + driftVel[i * 2 + 1]) * dt * 0.22;
-      if (pos[y] < -5.2) {
+      if (pos[y] < GROUND_Y + 0.1) {
+        /* it came down here, so leave it here — then send the sprite
+           back up to fall again as a different petal */
+        landFlower(pos[i * 3], pos[i * 3 + 2], driftTint[i], driftSize[i], time);
         pos[y] = 7;
         const r = 2 + Math.random() * 7;
         const a = Math.random() * Math.PI * 2;
@@ -1501,6 +1724,8 @@ function animate() {
       m.sprite.position.x = m.homeX + Math.sin(time * m.speed + m.phase) * m.drift;
     }
   }
+
+  updateFallen(time, dt);
 
   if (clearAtMs && performance.now() >= clearAtMs) {
     clearAtMs = 0;

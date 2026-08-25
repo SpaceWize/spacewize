@@ -150,6 +150,8 @@ body[data-scene="on"] .stage::after{
   background:
     /* a local scrim under the headline, rather than dimming the whole
        scene to make one corner readable */
+    /* a local scrim under the headline, rather than dimming the whole
+       scene to make one corner readable */
     radial-gradient(46% 42% at 6% 88%, rgba(6,7,15,.86) 0%, transparent 72%),
     radial-gradient(92% 78% at 50% 42%, transparent 48%, rgba(6,7,15,.30) 100%),
     linear-gradient(to bottom, rgba(6,7,15,.45) 0%, transparent 26%, transparent 70%, rgba(6,7,15,.5) 100%);
@@ -483,15 +485,6 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   color:var(--cherry);
   letter-spacing:.01em;
 }
-.panel-alt{
-  display:inline-block;margin-top:11px;
-  font-size:.76rem;color:var(--ink-faint);
-  border-bottom:1px solid rgba(244,238,246,.22);
-  padding-bottom:1px;
-  transition:color .2s var(--ease), border-color .2s var(--ease);
-}
-.panel-alt:hover{color:var(--ink);border-color:var(--ink)}
-
 .card-when{
   margin:10px 0 0;
   font-size:.78rem;color:var(--cherry);
@@ -506,12 +499,6 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   padding-bottom:2px;
   transition:color .2s var(--ease)}
 .card-notify:hover{color:var(--cherry)}
-.card-alt{
-  font-size:.78rem;color:var(--ink-faint);
-  transition:color .2s var(--ease)}
-.card-alt:hover{color:var(--ink)}
-.card-alt::after{content:" 92"}
-
 /* ============================================================
    arriving from the branch
    The circle that grew over the web-design site lands here still
