@@ -301,29 +301,30 @@ function leaperTexture() {
   };
 
   /* back to front, so the near arm lands on top of the chest. The
-     limbs are long and loose, and every joint is a curve rather than
-     a corner — the pose has to read before the shape does. */
-  limb(18, 114, 152,  78, 190,  40, 208);   // trailing leg, flung back
-  limb(11,  40, 208,  30, 204,  22, 200);   // trailing foot, toe behind it
-  limb(18, 128, 150, 170, 169, 158, 213);   // leading leg, an 80-degree arc
-  limb(11, 158, 213, 168, 217, 178, 220);   // leading foot, toe forward
-  limb(14, 148, 108, 118, 118, 102, 138);   // trailing arm, curving down
-  limb(32, 158, 100, 138, 124, 122, 150);   // torso
+     limbs are thrown out away from the body rather than tucked in —
+     at this size the figure has to read as a shape spread across the
+     disc, not a small runner passing over it. */
+  limb(20, 114, 156,  82, 178,  62, 206);   // trailing leg, flung wide back
+  limb(12,  62, 206,  50, 206,  40, 212);   // trailing foot
+  limb(20, 134, 150, 178, 160, 184, 212);   // leading leg, flung wide forward
+  limb(12, 184, 212, 200, 220, 214, 226);   // leading foot
+  limb(16, 152, 110, 128, 124, 100, 150);   // trailing arm, wide and down
+  limb(36, 160, 100, 140, 122, 122, 150);   // torso
 
   /* Two overlapping circles rather than one: the head and the mass of
      hair behind it read as a single rounded shape, which is what keeps
      the outline soft instead of spiked. */
   g.beginPath();
-  g.arc(142, 70, 25, 0, Math.PI * 2);
+  g.arc(166, 74, 26, 0, Math.PI * 2);
   g.fill();
   g.beginPath();
-  g.arc(162, 72, 22, 0, Math.PI * 2);
+  g.arc(144, 72, 28, 0, Math.PI * 2);
   g.fill();
 
-  limb(14, 130,  54, 114,  52, 104,  60);   // two tails, dragged by the speed
-  limb(14, 128,  88, 114,  94, 104,  96);
+  limb(15, 132,  60, 114,  60, 102,  72);   // two tails, dragged by the speed
+  limb(15, 130,  94, 114, 102, 104, 112);
 
-  limb(14, 166, 102, 206,  96, 222,  64);   // leading arm, curving up
+  limb(16, 172, 104, 214,  92, 246,  64);   // leading arm, wide and up
 
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
@@ -347,7 +348,7 @@ const leapMat = new THREE.SpriteMaterial({
 leapMat.color.setHex(0x05060e);
 
 const leaper = new THREE.Sprite(leapMat);
-leaper.scale.set(2.3, 2.3, 1);
+leaper.scale.set(3.0, 3.0, 1);
 leaper.position.copy(MOON_POS);
 leaper.renderOrder = 3;         // always over the moon, never sorted under it
 leaper.visible = false;
@@ -375,8 +376,8 @@ function updateLeap(dt) {
   _lu.setFromMatrixColumn(camera.matrixWorld, 1);
   _lf.subVectors(camera.position, MOON_POS).normalize();
 
-  const across = noMotion ? 0 : (t * 2 - 1) * 5.2;
-  const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 3.0 - 1.2;
+  const across = noMotion ? 0 : (t * 2 - 1) * 4.8;
+  const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 2.0 - 0.8;
 
   leaper.position.copy(MOON_POS)
     .addScaledVector(_lr, across)
