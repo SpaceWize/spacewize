@@ -453,6 +453,12 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   border-top:1px solid var(--line);
   font-size:.68rem;color:var(--ink-faint);opacity:.7;
 }
+/* the address sits with the location it belongs to, above the credit */
+.stage-contact{margin-top:2px;font-size:.74rem}
+.stage-contact a{color:var(--ink-faint)}
+.stage-contact a:hover{color:var(--ink)}
+.fallback-contact{margin-top:40px;font-size:.85rem;color:var(--ink-faint)}
+
 /* the no-JS/no-WebGL fallback is real, scrolling document flow */
 .fallback-copy{
   margin-top:44px;padding-top:22px;
