@@ -347,6 +347,27 @@ const leapMat = new THREE.SpriteMaterial({
    hole punched in the picture rather than a body in front of a light */
 leapMat.color.setHex(0x05060e);
 
+/* Point this at a PNG and it replaces the drawn figure — same sprite,
+   same arc, same colour, just a different shape. Square canvas, alpha
+   background, the figure solid white filling most of the frame with a
+   little margin. Empty means use the one drawn above; the file is only
+   fetched when there is a name here, so an unused hook costs nothing.
+   A failed load is not fatal — the drawn figure simply stays. */
+const LEAPER_IMAGE = '';
+
+if (LEAPER_IMAGE) {
+  new THREE.TextureLoader().load(
+    LEAPER_IMAGE,
+    (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      leapMat.map = tex;
+      leapMat.needsUpdate = true;
+    },
+    undefined,
+    () => {}
+  );
+}
+
 const leaper = new THREE.Sprite(leapMat);
 leaper.scale.set(3.0, 3.0, 1);
 leaper.position.copy(MOON_POS);
