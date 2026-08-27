@@ -274,6 +274,8 @@ body[data-scene="on"] .tag{display:flex}
    its frosted glass back, over a fill dark enough to stay legible
    against the moon. */
 .panel{
+  /* the whole card forwards to the button's destination */
+  cursor:pointer;
   position:relative;width:100%;
   padding:18px 20px;
   border-radius:var(--r-lg);
@@ -440,6 +442,23 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
 }
 .foot a:hover{color:var(--ink)}
+.foot-brand{display:flex;flex-direction:column;gap:4px}
+.foot-copy{font-size:.72rem;color:var(--ink-faint);opacity:.75}
+
+/* the tree view's only persistent chrome is .stage-meta, corner
+   bottom-right — a credit anywhere else in that view is invisible,
+   sitting behind the canvas */
+.stage-copy-line{
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--line);
+  font-size:.68rem;color:var(--ink-faint);opacity:.7;
+}
+/* the no-JS/no-WebGL fallback is real, scrolling document flow */
+.fallback-copy{
+  margin-top:44px;padding-top:22px;
+  border-top:1px solid var(--line);
+  font-size:.72rem;color:var(--ink-faint);opacity:.75;
+}
 
 /* ============================================================
    responsive
@@ -648,3 +667,110 @@ html[data-arrive="1"] .page-arrive[data-go="true"]{
   outline:2.5px solid var(--teal);
   outline-offset:3px;
 }
+
+/* ============================================================
+   404 — the snapped branch
+   ============================================================ */
+.lost{
+  min-height:100vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding-top:clamp(96px,14vh,150px);
+}
+.snapped{
+  width:min(430px,84%);height:auto;
+  margin-bottom:clamp(18px,4vh,38px);
+  overflow:visible;
+}
+/* the blossoms, in the same sakura the tree uses */
+.snapped circle{ fill:var(--sakura) }
+.snapped .core{ fill:#f6c96a }
+.snapped .held{ filter:drop-shadow(0 0 12px rgba(227,111,160,.4)) }
+
+.snapped .adrift{
+  filter:drop-shadow(0 0 10px rgba(227,111,160,.35));
+  animation:adriftFall 7s ease-in-out infinite;
+}
+/* the spin lives on an inner group so it cannot fight the drift
+   transform on the parent — two animations, one property, otherwise */
+.snapped .adrift-inner{
+  transform-origin:center;
+  animation:adriftTurn 7s linear infinite;
+}
+@keyframes adriftFall{
+  0%   { transform:translate(286px,96px); opacity:0 }
+  12%  { opacity:.95 }
+  70%  { opacity:.7 }
+  100% { transform:translate(324px,178px); opacity:0 }
+}
+@keyframes adriftTurn{
+  from{ transform:rotate(0deg) }
+  to  { transform:rotate(190deg) }
+}
+
+.lost-actions{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:14px 24px;margin:30px 0 0;
+}
+.lost-alt{
+  font-size:.82rem;color:var(--ink-faint);
+  border-bottom:1px solid rgba(244,238,246,.22);
+  padding-bottom:2px;
+  transition:color .2s var(--ease), border-color .2s var(--ease);
+}
+.lost-alt:hover{ color:var(--ink);border-color:var(--ink) }
+
+@media (prefers-reduced-motion: reduce){
+  .snapped .adrift{ animation:none;opacity:.85 }
+  .snapped .adrift-inner{ animation:none }
+}
+
+/* ============================================================
+   404
+   The tree's stage without the tree: moon, falling blossom, and the
+   copy sitting in the middle of the empty space where it would be.
+   ============================================================ */
+.stage.lost{ position:fixed;inset:0;min-height:0;overflow:hidden }
+.stage.lost #scene{ z-index:1 }
+/* same scrim logic as the tree, centred rather than tucked in a corner */
+.stage.lost::after{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:
+    /* centred on the copy, not below it — the scrim has to sit where
+       the text actually is to do anything for it */
+    radial-gradient(56% 40% at 50% 70%, rgba(6,7,15,.86) 0%, rgba(6,7,15,.5) 54%, transparent 80%),
+    linear-gradient(to bottom, rgba(6,7,15,.45) 0%, transparent 24%, transparent 68%, rgba(6,7,15,.55) 100%);
+}
+.lost-copy{
+  /* below the moon, not behind it */
+  position:absolute;left:0;right:0;top:58%;
+  z-index:20;
+  padding:0 clamp(18px,5vw,48px);
+  text-align:center;
+  -webkit-user-select:none;user-select:none;
+}
+.lost-copy .eyebrow{
+  letter-spacing:.32em;
+  margin-bottom:16px;
+}
+.lost-copy h1{
+  font-family:var(--display);
+  font-size:clamp(2.2rem,5.4vw,3.8rem);
+  font-weight:400;letter-spacing:-.02em;
+  text-shadow:
+    -1.4px 0 0 rgba(232,85,106,.5),
+     1.4px 0 0 rgba(79,195,247,.4),
+     0 0 40px rgba(227,111,160,.18);
+}
+.lost-copy .lede{ margin:16px auto 0;max-width:44ch }
+.lost-acts{
+  margin-top:30px;
+  display:flex;align-items:center;justify-content:center;
+  gap:12px 22px;flex-wrap:wrap;
+}
+.lost-alt{
+  font-size:.8rem;color:var(--ink-faint);
+  border-bottom:1px solid rgba(244,238,246,.22);
+  padding-bottom:2px;
+  transition:color .2s var(--ease), border-color .2s var(--ease);
+}
+.lost-alt:hover{ color:var(--ink);border-color:var(--ink) }

@@ -1,0 +1,10 @@
+# This file lives at spacewize.github.io/spacewize/robots.txt, not at
+# the domain root — spacewize.github.io itself is a different repo
+# (TenantGuard). Crawlers that follow the spec strictly only honour a
+# domain-root robots.txt, so this mainly helps tools that check the
+# path they were actually pointed at.
+User-agent: *
+Allow: /
+Disallow: /notify.html
+
+Sitemap: https://spacewize.github.io/spacewize/sitemap.xml

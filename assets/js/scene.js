@@ -10,6 +10,8 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+/* the moon and the blossom live in one place, shared with the 404 */
+import { moonTexture, blossomSprite } from './sprites.js';
 
 const canvas     = document.getElementById('scene');
 const stage      = document.getElementById('main');
@@ -152,7 +154,7 @@ const LOOK_AT = new THREE.Vector3(0, 1.3, 0);
    orbit.radius are then eased away from these toward whichever branch
    is open, which is the whole push-in effect. */
 const homeLook = new THREE.Vector3(0, 1.3, 0);
-const ZOOM_IN = 0.58;      // fraction of the framing distance when close
+const ZOOM_IN = 0.81;      // fraction of the framing distance when close
 let zoom = 1;
 
 /* Size from the canvas box, not the window. A tab that loads while
@@ -252,62 +254,7 @@ scene.add(glow);
    behind the tree on the bearing the page opens at — so turning the
    tree far enough genuinely leaves it behind you.
    ============================================================ */
-function moonTexture() {
-  const size = 512;
-  const cx = size / 2, cy = size / 2, r = size * 0.29;
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const x = c.getContext('2d');
 
-  const glow = x.createRadialGradient(cx, cy, r * 0.15, cx, cy, size * 0.62);
-  glow.addColorStop(0,   'rgba(232,85,106,0.55)');
-  glow.addColorStop(0.5, 'rgba(232,85,106,0.16)');
-  glow.addColorStop(1,   'rgba(232,85,106,0)');
-  x.fillStyle = glow;
-  x.fillRect(0, 0, size, size);
-
-  x.save();
-  x.beginPath();
-  x.arc(cx, cy, r, 0, Math.PI * 2);
-  x.clip();
-  const disc = x.createLinearGradient(0, cy - r, 0, cy + r);
-  disc.addColorStop(0,    '#E8556A');
-  disc.addColorStop(0.32, '#E8556A');
-  disc.addColorStop(0.56, '#EE7160');
-  disc.addColorStop(1,    '#F5A65B');
-  x.fillStyle = disc;
-  x.fillRect(cx - r, cy - r, r * 2, r * 2);
-  /* the CRT slicing, straight off the logo */
-  x.globalCompositeOperation = 'destination-out';
-  for (let y = cy - r; y < cy + r; y += 5) {
-    x.fillStyle = 'rgba(0,0,0,0.55)';
-    x.fillRect(cx - r, y, r * 2, 3);
-  }
-  x.restore();
-
-  /* the edge fringe the logo's channel split has */
-  x.globalCompositeOperation = 'source-over';
-  x.lineWidth = 2.2;
-  x.strokeStyle = 'rgba(232,85,106,0.5)';
-  x.beginPath(); x.arc(cx + 2, cy, r, 0, Math.PI * 2); x.stroke();
-  x.strokeStyle = 'rgba(79,195,247,0.4)';
-  x.beginPath(); x.arc(cx - 2, cy, r, 0, Math.PI * 2); x.stroke();
-
-  /* additive blending amplifies even near-zero alpha into a visible
-     bloom, so the gradient's soft fade isn't enough on its own — a
-     hard mask guarantees nothing paints outside a circle */
-  x.globalCompositeOperation = 'destination-in';
-  const mask = x.createRadialGradient(cx, cy, size * 0.26, cx, cy, size * 0.46);
-  mask.addColorStop(0, 'rgba(255,255,255,1)');
-  mask.addColorStop(1, 'rgba(255,255,255,0)');
-  x.fillStyle = mask;
-  x.fillRect(0, 0, size, size);
-  x.globalCompositeOperation = 'source-over';
-
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
 
 const moonMat = new THREE.SpriteMaterial({
   map: moonTexture(),
@@ -538,7 +485,7 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
   const curve = new THREE.CatmullRomCurve3([p0, m1, m2, end]);
   const seg    = depth >= 2 ? 14 : 8;
   const radial = depth >= 2 ? 8 : 5;
-  wood.push(taperedTube(curve, rad, rad * 0.58, seg, radial));
+  wood.push(taperedTube(curve, rad, rad * 0.62, seg, radial));
 
   /* A tube is an open sleeve with no end caps, so where a limb meets
      its parent at an angle the two flat ends leave an open wedge — a
@@ -578,7 +525,7 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
     const childDir = dir.clone().applyAxisAngle(axis, spread);
     childDir.y += 0.20;                       // twigs reach for light
     childDir.normalize();
-    grow(end, childDir, len * (0.60 + rnd() * 0.14), rad * 0.58,
+    grow(end, childDir, len * (0.60 + rnd() * 0.14), rad * 0.62,
          depth - 1, wood, tips, spurs);
   }
 }
@@ -632,9 +579,21 @@ function addHitTarget(group, at, radius, index) {
 
 /* one blossom, facing mostly upward off whatever wood it sits on */
 function addBlossom(list, at, along, jitter, scaleMul) {
-  const pos = at.clone().add(new THREE.Vector3(
-    (rndBloom() - 0.5) * jitter, (rndBloom() - 0.5) * jitter * 0.88, (rndBloom() - 0.5) * jitter
-  ));
+  /* Spread along the twig, barely across it. The scatter used to be
+     the same in every direction, which put blossoms up to eight times
+     the twig's own radius out to the side — floating in open air next
+     to wood far too thin to see. Cherry blossom grows in a line down a
+     spur anyway, so following the branch is both truer and fixes it. */
+  const axis = along.clone().normalize();
+  const perp = new THREE.Vector3(-axis.z, 0, axis.x);
+  if (perp.lengthSq() < 1e-6) perp.set(1, 0, 0);
+  perp.normalize();
+  const perp2 = new THREE.Vector3().crossVectors(axis, perp).normalize();
+
+  const pos = at.clone()
+    .addScaledVector(axis,  (rndBloom() - 0.5) * jitter)
+    .addScaledVector(perp,  (rndBloom() - 0.5) * jitter * 0.3)
+    .addScaledVector(perp2, (rndBloom() - 0.5) * jitter * 0.3);
   const face = new THREE.Vector3(
     along.x * 0.5 + (rndBloom() - 0.5) * 0.75,
     0.75 + rndBloom() * 0.55,
@@ -763,6 +722,10 @@ DIVISIONS.forEach((division, i) => {
   branches.push({
     division, blossoms, petals, cores, petalMat, coreMat, halos, haloMat, anchor,
     rest, t: -1, target: rest,
+    /* How far this branch is *allowed* to open, kept on the branch
+       rather than read off the division, so the full-bloom egg can
+       lift it and put it back without touching the source of truth. */
+    ceiling: division.bloom, ceilTarget: division.bloom, written: false,
     pulse: -1,          // seconds since this branch was woken, -1 = idle
   });
 });
@@ -1064,7 +1027,7 @@ const AXIS_X = new THREE.Vector3(1, 0, 0);
 function writeBranchMatrices(b) {
   /* How far this branch opens is its progress. Live goes all the way;
      a dated division sits part-open; one with no date stays in bud. */
-  const ceiling = b.division.bloom;
+  const ceiling = b.ceiling;
   let p = 0;
   for (let i = 0; i < b.blossoms.length; i++) {
     const bl = b.blossoms[i];
@@ -1211,7 +1174,9 @@ function select(index) {
   active = index;
   branches.forEach((b, i) => {
     const on = i === index;
-    b.target = on ? 1 : b.rest;
+    /* while the whole tree is open, the card still follows the pointer
+       but the branches do not close behind it */
+    if (fullBloom <= 0) b.target = on ? 1 : b.rest;
     if (!b.division.live) b.pulse = on ? 0 : -1;
   });
 
@@ -1282,6 +1247,19 @@ DIVISIONS.forEach((d, i) => {
   keys.appendChild(el);
 });
 
+/* The whole card is a target, not just the button inside it. Wrapping
+   it in an <a> is not open to us — it already contains one, and links
+   cannot nest — so the surface forwards to whatever the button points
+   at. The button stays the real control, so keyboard and right-click
+   still behave like the link it is. */
+panel.addEventListener('click', (e) => {
+  if (e.target.closest('a, button')) return;   // the real link handled it
+  const href = panelBtn.getAttribute('href');
+  if (!href) return;
+  if (panelBtn.target === '_blank') window.open(href, '_blank', 'noopener');
+  else window.location.href = href;
+});
+
 /* ============================================================
    pointer — drag to orbit, hover to bloom
    ============================================================ */
@@ -1343,6 +1321,7 @@ canvas.addEventListener('pointermove', (e) => {
     orbit.targetTheta -= dx * 0.005;
     orbit.targetPhi = clamp(orbit.targetPhi - dy * 0.004, 0.72, 1.78);
     orbit.velTheta = -dx * 0.005;
+    trackShake(dx);
     last = { x: e.clientX, y: e.clientY };
     if (dragDistance > 24) dismissHint();
     return;
@@ -1411,47 +1390,14 @@ canvas.addEventListener('pointercancel', endDrag);
    per-particle in the shader and split into colour channels the way
    the logo is.
    ============================================================ */
-function blossomSprite(blurPx) {
-  /* The flower itself reaches ~27px from centre. A blur needs roughly
-     3x its radius of clear margin to actually fade to zero rather than
-     being cut off by the canvas edge — and a canvas simply stops, it
-     does not fade, so whatever alpha the blur still has at the border
-     reads as a hard square. The canvas grows to give it that room; the
-     flower is always drawn at the same size, so this only adds empty
-     space around it, never changes how big it looks. */
-  const pad = blurPx * 3;
-  const size = 64 + pad * 2;
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const x = c.getContext('2d');
-  if (blurPx) x.filter = `blur(${blurPx}px)`;
-  x.translate(size / 2, size / 2);
-  x.fillStyle = '#ffffff';
-  for (let i = 0; i < 5; i++) {
-    x.save();
-    x.rotate((i / 5) * Math.PI * 2);
-    x.beginPath();
-    x.moveTo(0, -2);
-    x.bezierCurveTo(10, -7, 13, -21, 4, -27);
-    x.lineTo(0, -23);                            // the sakura notch
-    x.lineTo(-4, -27);
-    x.bezierCurveTo(-13, -21, -10, -7, 0, -2);
-    x.fill();
-    x.restore();
-  }
-  x.beginPath();
-  x.arc(0, 0, 4.5, 0, Math.PI * 2);
-  x.fill();
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
+
 
 const PETALS = isSmall ? 170 : 430;
 const driftGeo  = new THREE.BufferGeometry();
 const driftPos  = new Float32Array(PETALS * 3);
 const driftVel  = new Float32Array(PETALS * 2);
 const driftSize = new Float32Array(PETALS);
+const driftBoost = new Float32Array(PETALS);   // shaken loose, decays to 0
 const driftRot  = new Float32Array(PETALS);
 const driftSpin = new Float32Array(PETALS);
 const driftTint = new Float32Array(PETALS);
@@ -1558,6 +1504,83 @@ drift.frustumCulled = false;
 scene.add(drift);
 
 /* ============================================================
+   two things nobody is told about
+   Neither one is a feature: both reuse the petals, the ground and
+   the bloom that are already running, and both leave the tree exactly
+   as they found it.
+   ============================================================ */
+
+/* ---- shake the tree ---- */
+
+let shakeKick = 0;              // rings down through the wind
+let burstCursor = 0;
+const _shaken = new THREE.Vector3();
+
+/* Petals already in the air are the burst — they are picked up and
+   put back on the branches, so nothing new is allocated and they land
+   on the ground through the same path every other petal takes. */
+function shakeTree() {
+  shakeKick = 1;
+  if (noMotion) return;         // the fling is motion; the kick is enough
+  const n = isSmall ? 22 : 48;
+  const pos = driftGeo.attributes.position.array;
+  for (let k = 0; k < n; k++) {
+    const b = branches[Math.floor(Math.random() * branches.length)];
+    if (!b.blossoms.length) continue;
+    const bl = b.blossoms[Math.floor(Math.random() * b.blossoms.length)];
+    _shaken.copy(bl.pos);
+    b.petals.localToWorld(_shaken);   // matrixWorld is refreshed each frame
+
+    burstCursor = (burstCursor + 1) % PETALS;
+    const i = burstCursor;
+    pos[i * 3]     = _shaken.x + (Math.random() - 0.5) * 0.32;
+    pos[i * 3 + 1] = _shaken.y + (Math.random() - 0.5) * 0.32;
+    pos[i * 3 + 2] = _shaken.z + (Math.random() - 0.5) * 0.32;
+    driftBoost[i]  = 1.1 + Math.random() * 0.9;
+  }
+  driftGeo.attributes.position.needsUpdate = true;
+}
+
+/* One hard fling is somebody spinning the tree, so what counts is
+   changing your mind: three hard reversals inside about a second. */
+let shakeDir = 0, shakeCount = 0, shakeLastMs = 0, shakeReadyMs = 0;
+
+function trackShake(dx) {
+  if (Math.abs(dx) < 7) return;
+  const dir = dx > 0 ? 1 : -1;
+  if (dir === shakeDir) return;
+  const now = performance.now();
+  shakeCount = (now - shakeLastMs < 420) ? shakeCount + 1 : 1;
+  shakeDir = dir;
+  shakeLastMs = now;
+  if (shakeCount >= 3 && now > shakeReadyMs) {
+    shakeCount = 0;
+    shakeReadyMs = now + 1400;    // one burst per shake, not one per frame
+    shakeTree();
+  }
+}
+
+/* ---- the whole tree at once ---- */
+
+const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown',
+                'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+let konamiAt = 0;
+let fullBloom = 0;              // seconds left of every branch open
+
+window.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  konamiAt = (k === KONAMI[konamiAt]) ? konamiAt + 1 : (k === KONAMI[0] ? 1 : 0);
+  if (konamiAt < KONAMI.length) return;
+
+  konamiAt = 0;
+  fullBloom = 7;
+  branches.forEach((b) => { b.target = 1; b.ceilTarget = 1; });
+  dismissHint();
+  liveRegion.textContent = 'The whole tree is in bloom.';
+});
+
+/* ============================================================
    loop
    ============================================================ */
 const clock = new THREE.Clock();
@@ -1614,8 +1637,29 @@ function animate() {
       Math.sin(time * 0.62) * a + Math.sin(time * 1.43 + 1.3) * a * 0.38;
     treeSway.rotation.x =
       Math.sin(time * 0.51 + 2.1) * a * 0.55;
+    /* a shake rings out on top of the wind rather than replacing it */
+    if (shakeKick > 0) {
+      shakeKick = Math.max(0, shakeKick - dt * 1.4);
+      const k = shakeKick * shakeKick;
+      treeSway.rotation.z += Math.sin(time * 25) * 0.045 * k;
+      treeSway.rotation.x += Math.sin(time * 19 + 1.1) * 0.028 * k;
+    }
   } else {
     treeSway.rotation.set(0, 0, 0);
+    shakeKick = 0;
+  }
+
+  /* the full bloom is on a timer, and hands the branches back to
+     whatever the pointer was doing when it ends */
+  if (fullBloom > 0) {
+    fullBloom -= dt;
+    if (fullBloom <= 0) {
+      fullBloom = 0;
+      branches.forEach((b, i) => {
+        b.target = i === active ? 1 : b.rest;
+        b.ceilTarget = b.division.bloom;
+      });
+    }
   }
   /* anchors are read out of world space further down this same frame,
      and matrixWorld is otherwise not refreshed until render */
@@ -1631,19 +1675,34 @@ function animate() {
     /* Whether a branch opens is its progress, not whether it is live —
        the two divisions with dates sit part-open, which is the whole
        point of the tree doubling as the progress board. */
-    if (b.division.bloom > 0) {
-      const before = b.t;
+    {
+      const beforeT = b.t;
+      const beforeC = b.ceiling;
       if (noMotion || b.t < 0) {
         b.t = b.target;
       } else {
         b.t += (b.target - b.t) * Math.min(1, dt * 4.2);
+        if (Math.abs(b.t - b.target) < 0.0015) b.t = b.target;
       }
-      /* only rewrite instance matrices for branches actually moving */
-      if (Math.abs(b.t - before) > 0.0004) writeBranchMatrices(b);
-    } else if (b.t < 0) {
-      /* never opens, so the shut matrices are written once and left */
-      b.t = 0;
-      writeBranchMatrices(b);
+      /* the ceiling moves slower than the branch under it, so the
+         full bloom unfurls rather than snapping */
+      if (noMotion) {
+        b.ceiling = b.ceilTarget;
+      } else {
+        b.ceiling += (b.ceilTarget - b.ceiling) * Math.min(1, dt * 2.4);
+        if (Math.abs(b.ceiling - b.ceilTarget) < 0.0015) b.ceiling = b.ceilTarget;
+      }
+
+      /* Only rewrite instance matrices for branches actually moving —
+         and a branch whose ceiling is nailed shut cannot move at all,
+         however far its own bloom value travels. */
+      const moved = Math.abs(b.t - beforeT) > 0.0004
+                 || Math.abs(b.ceiling - beforeC) > 0.0004;
+      const shut = b.ceiling === 0 && beforeC === 0;
+      if (!b.written || (moved && !shut)) {
+        writeBranchMatrices(b);
+        b.written = true;
+      }
     }
 
     /* How brightly it burns is a separate question from how far it is
@@ -1659,6 +1718,13 @@ function animate() {
       lum = noMotion
         ? (b.pulse >= 0 ? PULSE_LOW : 0)
         : pulseLevel(b.pulse);
+      b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
+    }
+
+    /* during the full bloom the dormant five carry their own light —
+       the standby pulse alone would leave them open and dark */
+    if (fullBloom > 0 && !b.division.live) {
+      lum = Math.max(lum, b.t * b.ceiling * 0.6);
       b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
     }
     /* the centre of a flower must never sit darker than its petals */
@@ -1696,13 +1762,15 @@ function animate() {
     const pos = driftGeo.attributes.position.array;
     for (let i = 0; i < PETALS; i++) {
       const y = i * 3 + 1;
-      pos[y] -= driftVel[i * 2] * dt;
+      pos[y] -= (driftVel[i * 2] + driftBoost[i]) * dt;
+      if (driftBoost[i] > 0) driftBoost[i] = Math.max(0, driftBoost[i] - dt * 0.8);
       pos[i * 3] += Math.sin(time * 0.6 + driftVel[i * 2 + 1]) * dt * 0.22;
       if (pos[y] < GROUND_Y + 0.1) {
         /* it came down here, so leave it here — then send the sprite
            back up to fall again as a different petal */
         landFlower(pos[i * 3], pos[i * 3 + 2], driftTint[i], driftSize[i], time);
         pos[y] = 7;
+        driftBoost[i] = 0;      // it fell as a shaken petal, not as this one
         const r = 2 + Math.random() * 7;
         const a = Math.random() * Math.PI * 2;
         pos[i * 3]     = Math.cos(a) * r;
@@ -1739,3 +1807,4 @@ document.body.dataset.scene = 'on';
 document.body.dataset.panel = 'closed';
 measureTag();
 animate();
+
