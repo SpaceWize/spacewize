@@ -333,7 +333,7 @@ function leaperTexture() {
 
 /* Long enough to register, short enough to be a "did I just see
    that". It started at 0.38, which was too fast to read at all. */
-const LEAP_SEC = 1;
+const LEAP_SEC = 0.7;
 let leapLeft = 0;
 
 const leapMat = new THREE.SpriteMaterial({
