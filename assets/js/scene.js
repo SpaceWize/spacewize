@@ -301,36 +301,38 @@ function leaperTexture() {
   };
 
   /* back to front, so the near arm lands on top of the chest. The
-     limbs are deliberately long and loose — at a third of a second
-     the pose has to read before the shape does. */
+     limbs are long and loose, and every joint is a curve rather than
+     a corner — the pose has to read before the shape does. */
   limb(18, 114, 152,  78, 190,  40, 208);   // trailing leg, flung back
-  limb(18, 128, 150, 170, 166, 154, 208);   // leading leg, tucked under
-  limb(14, 142, 104, 108, 114,  84, 104);   // trailing arm
+  limb(11,  40, 208,  30, 204,  22, 200);   // trailing foot, toe behind it
+  limb(18, 128, 150, 170, 169, 158, 213);   // leading leg, an 80-degree arc
+  limb(11, 158, 213, 168, 217, 178, 220);   // leading foot, toe forward
+  limb(14, 148, 108, 118, 118, 102, 138);   // trailing arm, curving down
   limb(32, 158, 100, 138, 124, 122, 150);   // torso
 
+  /* Two overlapping circles rather than one: the head and the mass of
+     hair behind it read as a single rounded shape, which is what keeps
+     the outline soft instead of spiked. */
   g.beginPath();
-  g.arc(162, 72, 22, 0, Math.PI * 2);       // head
+  g.arc(142, 70, 25, 0, Math.PI * 2);
+  g.fill();
+  g.beginPath();
+  g.arc(162, 72, 22, 0, Math.PI * 2);
   g.fill();
 
-  g.beginPath();                            // hair, dragged by the speed
-  g.moveTo(162, 50);
-  g.lineTo(128, 38); g.lineTo(146, 60);
-  g.lineTo(110, 62); g.lineTo(140, 80);
-  g.lineTo(116, 96); g.lineTo(148, 94);
-  g.closePath();
-  g.fill();
+  limb(14, 130,  54, 114,  52, 104,  60);   // two tails, dragged by the speed
+  limb(14, 128,  88, 114,  94, 104,  96);
 
-  limb(14, 166, 100, 208,  82, 234,  88);   // leading arm, reaching out
+  limb(14, 166, 102, 206,  96, 222,  64);   // leading arm, curving up
 
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
-/* Turned right down from 0.38 so the crossing can actually be looked
-   at. At a glance-length it is a flicker; at this length it is a
-   character walking through the shot. */
-const LEAP_SEC = 10;
+/* Long enough to watch rather than catch. The glimpse-length version
+   this started as was 0.38. */
+const LEAP_SEC = 6.5;
 let leapLeft = 0;
 
 const leapMat = new THREE.SpriteMaterial({
