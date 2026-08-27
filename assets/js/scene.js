@@ -953,6 +953,12 @@ DIVISIONS.forEach((division, i) => {
    so this projection will not be off by the time the veil lifts. */
 function placeLoadMoon() {
   if (!loadMoon) return;
+  /* the exact canvas the WebGL sprite's own texture is drawn from —
+     reusing its pixels rather than approximating them in CSS */
+  const src = moonMat.map && moonMat.map.image;
+  if (src && src.toDataURL) {
+    loadMoon.style.backgroundImage = `url(${src.toDataURL()})`;
+  }
   const p = (moonSprite ? moonSprite.position : MOON_POS).clone();
   p.project(camera);
   if (p.z > 1) return;   // behind the camera — leave it hidden
@@ -2009,7 +2015,7 @@ if (loadVeil) {
      covered anything. Held for at least this long — on a slow
      connection the real load already exceeds it, so this never adds
      to the wait, only floors it. */
-  const MIN_VEIL_MS = 700;
+  const MIN_VEIL_MS = 4000;
   const elapsed = performance.now() - (window.__loadStart || 0);
   const wait = Math.max(0, MIN_VEIL_MS - elapsed);
 

@@ -561,18 +561,19 @@ html[data-js="1"] #loadVeil{ display:block }
 
 /* Positioned in script as a percentage of the viewport, matched to
    the real moon's projected screen position rather than guessed —
-   see scene.js. Same warm tint as the WebGL sprite so the handoff
-   from this to the real one has no visible jump. */
+   see scene.js. The image itself is a data URL taken straight off the
+   same canvas the WebGL sprite's texture is drawn from — not a CSS
+   approximation of it — so the handoff has no visible jump. */
 #loadMoon{
   position:absolute;
-  width:9vmax;height:9vmax;
-  border-radius:50%;
+  width:16vmax;height:16vmax;
   transform:translate(-50%,-50%);
   opacity:0;
   transition:opacity 400ms var(--ease);
-  background:radial-gradient(circle at 42% 40%,
-    rgba(255,214,186,.95), rgba(232,110,100,.85) 55%, rgba(232,110,100,0) 72%);
-  filter:blur(1px);
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  filter:brightness(1.35) saturate(1.15);
 }
 #loadMoon[data-shown="true"]{ opacity:1 }
 
