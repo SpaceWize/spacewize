@@ -334,6 +334,7 @@ function leaperTexture() {
 /* Long enough to register, short enough to be a "did I just see
    that". It started at 0.38, which was too fast to read at all. */
 const LEAP_SEC = 0.7;
+const LEAP_SIZE = 3.0;
 let leapLeft = 0;
 
 const leapMat = new THREE.SpriteMaterial({
@@ -369,7 +370,7 @@ if (LEAPER_IMAGE) {
 }
 
 const leaper = new THREE.Sprite(leapMat);
-leaper.scale.set(3.0, 3.0, 1);
+leaper.scale.set(LEAP_SIZE, LEAP_SIZE, 1);
 leaper.position.copy(MOON_POS);
 leaper.renderOrder = 3;         // always over the moon, never sorted under it
 leaper.visible = false;
@@ -397,9 +398,11 @@ function updateLeap(dt) {
   _lu.setFromMatrixColumn(camera.matrixWorld, 1);
   _lf.subVectors(camera.position, MOON_POS).normalize();
 
-  /* right to left, because that is the way the figure is drawn to
-     face — mirroring the art to suit the arc would lose the pose */
-  const across = noMotion ? 0 : (1 - t * 2) * 4.8;
+  /* leapDir flips every click, so the figure alternates which way it
+     crosses — mirroring both the travel and the sprite (scale.x, so
+     the pose still faces the way it is walking) rather than just the
+     arc, which would have it walking backwards */
+  const across = noMotion ? 0 : leapDir * (1 - t * 2) * 4.8;
   const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 2.0 - 0.8;
 
   leaper.position.copy(MOON_POS)
@@ -407,12 +410,16 @@ function updateLeap(dt) {
     .addScaledVector(_lu, hop)
     .addScaledVector(_lf, 1.6);      // in front of the disc, not inside it
 
-  leapMat.rotation = noMotion ? 0 : t * 0.44 - 0.22;
+  leaper.scale.x = LEAP_SIZE * leapDir;
+  leapMat.rotation = noMotion ? 0 : leapDir * (t * 0.44 - 0.22);
   /* on and off at the edges of the arc rather than popping */
   leapMat.opacity = Math.min(1, Math.sin(Math.PI * t) * 4);
 }
 
+let leapDir = -1;  // flipped on each click; -1 so the first run goes right to left
+
 function leap() {
+  leapDir = -leapDir;
   leapLeft = LEAP_SEC;
   leaper.visible = true;
 }
@@ -1956,5 +1963,6 @@ document.body.dataset.scene = 'on';
 document.body.dataset.panel = 'closed';
 measureTag();
 animate();
+
 
 
