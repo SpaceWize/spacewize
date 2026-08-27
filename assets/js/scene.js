@@ -327,7 +327,10 @@ function leaperTexture() {
   return t;
 }
 
-const LEAP_SEC = 0.38;
+/* Turned right down from 0.38 so the crossing can actually be looked
+   at. At a glance-length it is a flicker; at this length it is a
+   character walking through the shot. */
+const LEAP_SEC = 10;
 let leapLeft = 0;
 
 const leapMat = new THREE.SpriteMaterial({
