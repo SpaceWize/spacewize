@@ -44,6 +44,9 @@ try {
    the wrong page loading before the right one. Hide it while script
    is running, and put it straight back if the scene never arrives. */
 document.documentElement.dataset.js = '1';
+/* stamped here, not inside scene.js, so it covers the CDN fetch too —
+   the veil has a minimum hold time, and that clock has to start now */
+window.__loadStart = performance.now();
 setTimeout(function () {
   if (document.body && document.body.dataset.scene !== 'on') {
     document.documentElement.removeAttribute('data-js');

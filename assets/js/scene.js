@@ -2004,10 +2004,23 @@ animate();
 /* the moon on the veil is already sitting where this first frame just
    drew the real one — the fade is a handoff, not a reveal */
 if (loadVeil) {
-  loadVeil.dataset.go = 'true';
-  const dropVeil = () => { loadVeil.style.display = 'none'; };
-  if (noMotion) dropVeil();
-  else setTimeout(dropVeil, 600);   // covers the 550ms CSS transition
+  /* On a fast connection everything above finishes fast enough that
+     the veil would flash and be gone before it registers as having
+     covered anything. Held for at least this long — on a slow
+     connection the real load already exceeds it, so this never adds
+     to the wait, only floors it. */
+  const MIN_VEIL_MS = 700;
+  const elapsed = performance.now() - (window.__loadStart || 0);
+  const wait = Math.max(0, MIN_VEIL_MS - elapsed);
+
+  const lift = () => {
+    loadVeil.dataset.go = 'true';
+    const dropVeil = () => { loadVeil.style.display = 'none'; };
+    if (noMotion) dropVeil();
+    else setTimeout(dropVeil, 600);   // covers the 550ms CSS transition
+  };
+  if (noMotion || wait <= 0) lift();
+  else setTimeout(lift, wait);
 }
 
 
