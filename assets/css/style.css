@@ -540,6 +540,47 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
 /* hidden while script runs; restored if the scene never starts */
 html[data-js="1"] #fallback{ display:none }
 
+/* ============================================================
+   the loading veil
+   Sits over the whole stage from the very first paint, gated by the
+   same html[data-js] flag as the fallback above — a no-JS visitor
+   never sees it, and the WebGL bail-out (which clears that flag)
+   removes it the same way it restores the static list. Just under
+   the arrive-cover's z-index: both are solid var(--void), so if they
+   ever overlap there is no visible seam either way round.
+   ============================================================ */
+#loadVeil{
+  display:none;
+  position:fixed;inset:0;z-index:199;
+  background:var(--void);
+  opacity:1;
+  transition:opacity 550ms var(--ease);
+}
+html[data-js="1"] #loadVeil{ display:block }
+#loadVeil[data-go="true"]{ opacity:0;pointer-events:none }
+
+/* Positioned in script as a percentage of the viewport, matched to
+   the real moon's projected screen position rather than guessed —
+   see scene.js. Same warm tint as the WebGL sprite so the handoff
+   from this to the real one has no visible jump. */
+#loadMoon{
+  position:absolute;
+  width:9vmax;height:9vmax;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  opacity:0;
+  transition:opacity 400ms var(--ease);
+  background:radial-gradient(circle at 42% 40%,
+    rgba(255,214,186,.95), rgba(232,110,100,.85) 55%, rgba(232,110,100,0) 72%);
+  filter:blur(1px);
+}
+#loadMoon[data-shown="true"]{ opacity:1 }
+
+@media (prefers-reduced-motion: reduce){
+  #loadVeil{ transition:none }
+  #loadMoon{ transition:none }
+}
+
 html[data-arrive="1"] .page-arrive{
   display:block;
   position:fixed;z-index:200;

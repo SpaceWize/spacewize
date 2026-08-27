@@ -77,6 +77,18 @@ setTimeout(function () {
 
   <canvas id="scene"></canvas>
 
+  <!-- Covers the gap between "blank tab" and "tree actually running" —
+       otherwise the topbar paints, then everything else pops in at once
+       whenever the CDN fetch and tree build finish. Gated purely by
+       html[data-js], the same flag the fallback list uses, so a no-JS
+       visitor never sees it and it self-removes if the scene never
+       arrives. The moon appears here the instant its real screen
+       position is known, and the WebGL moon takes over from exactly
+       that spot when the veil lifts. -->
+  <div id="loadVeil" aria-hidden="true">
+    <span id="loadMoon"></span>
+  </div>
+
   <!-- keyboard route into every branch; revealed on focus -->
   <nav id="branchKeys" class="branch-keys" aria-label="Divisions" hidden></nav>
 

@@ -27,6 +27,8 @@ const liveRegion = document.getElementById('liveRegion');
 const panelWhen  = document.getElementById('panelWhen');
 const keys       = document.getElementById('branchKeys');
 const hint       = document.getElementById('hint');
+const loadVeil   = document.getElementById('loadVeil');
+const loadMoon   = document.getElementById('loadMoon');
 
 /* ---------- the divisions come from the DOM, so the page still
               works with no JS and no WebGL ---------- */
@@ -934,9 +936,29 @@ DIVISIONS.forEach((division, i) => {
 
   sizedW = 0;   // force resize() to recompute with the real numbers
   resize();
+  /* resize() only recomputes orbit.radius — the camera itself does not
+     move until this is called, and the veil below needs the real
+     position, not the rough one the very first frame used */
+  applyCamera();
   /* anchors get read out of world space during the first frame, before
      the renderer has refreshed any matrices */
   scene.updateMatrixWorld(true);
+
+  placeLoadMoon();
+}
+
+/* The loading veil's moon is positioned here rather than guessed in
+   CSS, so it lands exactly where the WebGL one will draw its first
+   frame — the framing is now final (real tree extents, real camera),
+   so this projection will not be off by the time the veil lifts. */
+function placeLoadMoon() {
+  if (!loadMoon) return;
+  const p = (moonSprite ? moonSprite.position : MOON_POS).clone();
+  p.project(camera);
+  if (p.z > 1) return;   // behind the camera — leave it hidden
+  loadMoon.style.left = ((p.x * 0.5 + 0.5) * 100).toFixed(2) + '%';
+  loadMoon.style.top  = ((1 - (p.y * 0.5 + 0.5)) * 100).toFixed(2) + '%';
+  loadMoon.dataset.shown = 'true';
 }
 
 /* the same flower, in the air and on the ground — one texture, drawn
@@ -1978,6 +2000,15 @@ document.body.dataset.scene = 'on';
 document.body.dataset.panel = 'closed';
 measureTag();
 animate();
+
+/* the moon on the veil is already sitting where this first frame just
+   drew the real one — the fade is a handoff, not a reveal */
+if (loadVeil) {
+  loadVeil.dataset.go = 'true';
+  const dropVeil = () => { loadVeil.style.display = 'none'; };
+  if (noMotion) dropVeil();
+  else setTimeout(dropVeil, 600);   // covers the 550ms CSS transition
+}
 
 
 
