@@ -331,9 +331,9 @@ function leaperTexture() {
   return t;
 }
 
-/* Long enough to watch rather than catch. The glimpse-length version
-   this started as was 0.38. */
-const LEAP_SEC = 6.5;
+/* Long enough to register, short enough to be a "did I just see
+   that". It started at 0.38, which was too fast to read at all. */
+const LEAP_SEC = 1;
 let leapLeft = 0;
 
 const leapMat = new THREE.SpriteMaterial({
