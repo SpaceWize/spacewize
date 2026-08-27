@@ -353,7 +353,7 @@ leapMat.color.setHex(0x05060e);
    little margin. Empty means use the one drawn above; the file is only
    fetched when there is a name here, so an unused hook costs nothing.
    A failed load is not fatal — the drawn figure simply stays. */
-const LEAPER_IMAGE = '';
+const LEAPER_IMAGE = 'assets/img/leaper.png';
 
 if (LEAPER_IMAGE) {
   new THREE.TextureLoader().load(
@@ -397,7 +397,9 @@ function updateLeap(dt) {
   _lu.setFromMatrixColumn(camera.matrixWorld, 1);
   _lf.subVectors(camera.position, MOON_POS).normalize();
 
-  const across = noMotion ? 0 : (t * 2 - 1) * 4.8;
+  /* right to left, because that is the way the figure is drawn to
+     face — mirroring the art to suit the arc would lose the pose */
+  const across = noMotion ? 0 : (1 - t * 2) * 4.8;
   const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 2.0 - 0.8;
 
   leaper.position.copy(MOON_POS)
@@ -405,7 +407,7 @@ function updateLeap(dt) {
     .addScaledVector(_lu, hop)
     .addScaledVector(_lf, 1.6);      // in front of the disc, not inside it
 
-  leapMat.rotation = noMotion ? 0 : 0.22 - t * 0.44;
+  leapMat.rotation = noMotion ? 0 : t * 0.44 - 0.22;
   /* on and off at the edges of the arc rather than popping */
   leapMat.opacity = Math.min(1, Math.sin(Math.PI * t) * 4);
 }
