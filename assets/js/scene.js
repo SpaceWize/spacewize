@@ -363,6 +363,7 @@ if (LEAPER_IMAGE) {
       tex.colorSpace = THREE.SRGBColorSpace;
       leapMat.map = tex;
       leapMat.needsUpdate = true;
+      faceLeaper();          // it may land mid-crossing
     },
     undefined,
     () => {}
@@ -399,9 +400,8 @@ function updateLeap(dt) {
   _lf.subVectors(camera.position, MOON_POS).normalize();
 
   /* leapDir flips every click, so the figure alternates which way it
-     crosses — mirroring both the travel and the sprite (scale.x, so
-     the pose still faces the way it is walking) rather than just the
-     arc, which would have it walking backwards */
+     crosses. Both the travel and the artwork mirror — see faceLeaper
+     for why the artwork cannot be flipped with the sprite's scale. */
   const across = noMotion ? 0 : leapDir * (1 - t * 2) * 4.8;
   const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 2.0 - 0.8;
 
@@ -410,16 +410,31 @@ function updateLeap(dt) {
     .addScaledVector(_lu, hop)
     .addScaledVector(_lf, 1.6);      // in front of the disc, not inside it
 
-  leaper.scale.x = LEAP_SIZE * leapDir;
   leapMat.rotation = noMotion ? 0 : leapDir * (t * 0.44 - 0.22);
   /* on and off at the edges of the arc rather than popping */
   leapMat.opacity = Math.min(1, Math.sin(Math.PI * t) * 4);
 }
 
-let leapDir = -1;  // flipped on each click; -1 so the first run goes right to left
+/* -1 so the first flip below lands on +1 — right to left across the
+   disc, the way the artwork is drawn facing, which is the one to
+   open on. */
+let leapDir = -1;
+
+/* A Sprite takes the LENGTH of its scale columns, so a negative
+   scale.x is thrown away without complaint: the figure would cross
+   both ways while always facing the same one. Mirroring the map's own
+   UVs is what actually turns it around. Kept inside [0,1] so the
+   default clamped wrapping never repeats an edge. */
+function faceLeaper() {
+  const map = leapMat.map;
+  if (!map) return;
+  map.repeat.x = leapDir;
+  map.offset.x = leapDir < 0 ? 1 : 0;
+}
 
 function leap() {
   leapDir = -leapDir;
+  faceLeaper();
   leapLeft = LEAP_SEC;
   leaper.visible = true;
 }
