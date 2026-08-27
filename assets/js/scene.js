@@ -273,6 +273,122 @@ moonSprite.position.copy(MOON_POS);
 scene.add(moonSprite);
 
 /* ============================================================
+   something crosses the moon
+   Click the moon and a figure bounds over it, once, for about a third
+   of a second. It only ever reads against the disc — off the moon it
+   is dark on dark — so the moment is the composition rather than the
+   figure, and the figure is drawn here rather than borrowed.
+   ============================================================ */
+
+function leaperTexture() {
+  const S = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff';
+  g.strokeStyle = '#fff';
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+
+  /* limbs are strokes rather than outlines — round caps at this width
+     give the loose, rubbery line the pose needs */
+  const limb = (w, x1, y1, cx, cy, x2, y2) => {
+    g.lineWidth = w;
+    g.beginPath();
+    g.moveTo(x1, y1);
+    g.quadraticCurveTo(cx, cy, x2, y2);
+    g.stroke();
+  };
+
+  /* back to front, so the near arm lands on top of the chest. The
+     limbs are deliberately long and loose — at a third of a second
+     the pose has to read before the shape does. */
+  limb(18, 114, 152,  78, 190,  40, 208);   // trailing leg, flung back
+  limb(18, 128, 150, 170, 166, 154, 208);   // leading leg, tucked under
+  limb(14, 142, 104, 108, 114,  84, 104);   // trailing arm
+  limb(32, 158, 100, 138, 124, 122, 150);   // torso
+
+  g.beginPath();
+  g.arc(162, 72, 22, 0, Math.PI * 2);       // head
+  g.fill();
+
+  g.beginPath();                            // hair, dragged by the speed
+  g.moveTo(162, 50);
+  g.lineTo(128, 38); g.lineTo(146, 60);
+  g.lineTo(110, 62); g.lineTo(140, 80);
+  g.lineTo(116, 96); g.lineTo(148, 94);
+  g.closePath();
+  g.fill();
+
+  limb(14, 166, 100, 208,  82, 234,  88);   // leading arm, reaching out
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+const LEAP_SEC = 0.38;
+let leapLeft = 0;
+
+const leapMat = new THREE.SpriteMaterial({
+  map: leaperTexture(),
+  transparent: true,
+  depthWrite: false,
+  fog: false,
+  opacity: 0,
+});
+/* not pure black: the sky is not either, and a true void reads as a
+   hole punched in the picture rather than a body in front of a light */
+leapMat.color.setHex(0x05060e);
+
+const leaper = new THREE.Sprite(leapMat);
+leaper.scale.set(2.3, 2.3, 1);
+leaper.position.copy(MOON_POS);
+leaper.renderOrder = 3;         // always over the moon, never sorted under it
+leaper.visible = false;
+scene.add(leaper);
+
+const _lr = new THREE.Vector3();
+const _lu = new THREE.Vector3();
+const _lf = new THREE.Vector3();
+
+function updateLeap(dt) {
+  if (leapLeft <= 0) return;
+  leapLeft -= dt;
+  if (leapLeft <= 0) {
+    leapLeft = 0;
+    leapMat.opacity = 0;
+    leaper.visible = false;
+    return;
+  }
+
+  const t = 1 - leapLeft / LEAP_SEC;
+  /* screen-aligned, read fresh every frame: the moon is fixed in the world
+     but the camera is not, so "across it" is only meaningful relative
+     to where the camera is standing right now */
+  _lr.setFromMatrixColumn(camera.matrixWorld, 0);
+  _lu.setFromMatrixColumn(camera.matrixWorld, 1);
+  _lf.subVectors(camera.position, MOON_POS).normalize();
+
+  const across = noMotion ? 0 : (t * 2 - 1) * 5.2;
+  const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 3.0 - 1.2;
+
+  leaper.position.copy(MOON_POS)
+    .addScaledVector(_lr, across)
+    .addScaledVector(_lu, hop)
+    .addScaledVector(_lf, 1.6);      // in front of the disc, not inside it
+
+  leapMat.rotation = noMotion ? 0 : 0.22 - t * 0.44;
+  /* on and off at the edges of the arc rather than popping */
+  leapMat.opacity = Math.min(1, Math.sin(Math.PI * t) * 4);
+}
+
+function leap() {
+  leapLeft = LEAP_SEC;
+  leaper.visible = true;
+}
+
+/* ============================================================
    post-processing — real bloom, not a fake halo sprite
    ============================================================ */
 composer = new EffectComposer(renderer);
@@ -1369,6 +1485,9 @@ function endDrag(e) {
   if (dragDistance < 8) {
     const index = pick(e.clientX, e.clientY);
     if (index === null) {
+      /* nothing on the tree was hit, so the moon behind it gets a look
+         in — the branches always win the click */
+      if (raycaster.intersectObject(moonSprite, false).length) leap();
       locked = false;
       select(null);
     } else if (canHover) {
@@ -1796,6 +1915,7 @@ function animate() {
     select(null);
   }
 
+  updateLeap(dt);
   updateTag(dt, time);
   composer.render();
 }
@@ -1807,4 +1927,5 @@ document.body.dataset.scene = 'on';
 document.body.dataset.panel = 'closed';
 measureTag();
 animate();
+
 
