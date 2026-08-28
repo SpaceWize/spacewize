@@ -1628,6 +1628,11 @@ const driftPos  = new Float32Array(PETALS * 3);
 const driftVel  = new Float32Array(PETALS * 2);
 const driftSize = new Float32Array(PETALS);
 const driftBoost = new Float32Array(PETALS);   // shaken loose, decays to 0
+/* A burst is not just a faster fall — it throws the petal somewhere.
+   These carry that throw and let drag eat it, after which the petal is
+   back to drifting down like any other. */
+const burstVel  = new Float32Array(PETALS * 3);
+const burstLife = new Float32Array(PETALS);   // seconds left of being flung
 const driftRot  = new Float32Array(PETALS);
 const driftSpin = new Float32Array(PETALS);
 const driftTint = new Float32Array(PETALS);
@@ -1752,8 +1757,11 @@ const _shaken = new THREE.Vector3();
 function shakeTree() {
   shakeKick = 1;
   if (noMotion) return;         // the fling is motion; the kick is enough
-  const n = isSmall ? 22 : 48;
+  /* a third of the field, so it reads as the canopy letting go rather
+     than a few extra petals coming down */
+  const n = isSmall ? 60 : 150;
   const pos = driftGeo.attributes.position.array;
+  const spin = driftGeo.attributes.aSpin.array;
   for (let k = 0; k < n; k++) {
     const b = branches[Math.floor(Math.random() * branches.length)];
     if (!b.blossoms.length) continue;
@@ -1766,9 +1774,27 @@ function shakeTree() {
     pos[i * 3]     = _shaken.x + (Math.random() - 0.5) * 0.32;
     pos[i * 3 + 1] = _shaken.y + (Math.random() - 0.5) * 0.32;
     pos[i * 3 + 2] = _shaken.z + (Math.random() - 0.5) * 0.32;
-    driftBoost[i]  = 1.1 + Math.random() * 0.9;
+
+    /* Thrown out and away from the trunk, which stands on the world
+       axis, so the petal's own x and z are already the direction it
+       should leave in. Every one gets some lift as well, so the cloud
+       opens upward first and only then starts to come down. */
+    const rad = Math.hypot(_shaken.x, _shaken.z) || 1;
+    const speed = 4.5 + Math.random() * 7.5;
+    burstVel[i * 3]     = (_shaken.x / rad) * speed * 0.85
+                        + (Math.random() - 0.5) * speed * 0.75;
+    burstVel[i * 3 + 1] = (0.30 + Math.random() * 0.95) * speed;
+    burstVel[i * 3 + 2] = (_shaken.z / rad) * speed * 0.85
+                        + (Math.random() - 0.5) * speed * 0.75;
+    burstLife[i] = 1.1 + Math.random() * 0.5;
+
+    /* tumbling hard is most of what makes it read as confetti rather
+       than as snow going the wrong way */
+    spin[i] = (Math.random() - 0.5) * 9;
+    driftBoost[i] = 0.5 + Math.random() * 0.7;
   }
   driftGeo.attributes.position.needsUpdate = true;
+  driftGeo.attributes.aSpin.needsUpdate = true;
 }
 
 /* One hard fling is somebody spinning the tree, so what counts is
@@ -2233,12 +2259,33 @@ function animate() {
       pos[y] -= (driftVel[i * 2] + driftBoost[i]) * dt;
       if (driftBoost[i] > 0) driftBoost[i] = Math.max(0, driftBoost[i] - dt * 0.8);
       pos[i * 3] += Math.sin(time * 0.6 + driftVel[i * 2 + 1]) * dt * 0.22;
+
+      /* the throw, on top of the ordinary fall, with drag eating it —
+         exponential in dt so the decay does not change with framerate */
+      if (burstLife[i] > 0) {
+        pos[i * 3]     += burstVel[i * 3]     * dt;
+        pos[y]         += burstVel[i * 3 + 1] * dt;
+        pos[i * 3 + 2] += burstVel[i * 3 + 2] * dt;
+        const drag = Math.pow(0.06, dt);
+        burstVel[i * 3]     *= drag;
+        burstVel[i * 3 + 1] *= drag;
+        burstVel[i * 3 + 2] *= drag;
+        burstLife[i] -= dt;
+        if (burstLife[i] <= 0) {
+          burstLife[i] = 0;
+          /* back to an ordinary tumble once it is drifting again */
+          driftGeo.attributes.aSpin.array[i] = (Math.random() - 0.5) * 1.4;
+          driftGeo.attributes.aSpin.needsUpdate = true;
+        }
+      }
       if (pos[y] < GROUND_Y + 0.1) {
         /* it came down here, so leave it here — then send the sprite
            back up to fall again as a different petal */
         landFlower(pos[i * 3], pos[i * 3 + 2], driftTint[i], driftSize[i], time);
         pos[y] = 7;
         driftBoost[i] = 0;      // it fell as a shaken petal, not as this one
+        burstLife[i] = 0;
+        burstVel[i * 3] = burstVel[i * 3 + 1] = burstVel[i * 3 + 2] = 0;
         const r = 2 + Math.random() * 7;
         const a = Math.random() * Math.PI * 2;
         pos[i * 3]     = Math.cos(a) * r;
@@ -2298,6 +2345,7 @@ if (loadVeil) {
   if (noMotion || wait <= 0) lift();
   else setTimeout(lift, wait);
 }
+
 
 
 
