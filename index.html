@@ -270,16 +270,32 @@ setTimeout(function () {
   <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
 </main>
 
-<!-- One screen below the tree. Nothing scrolls to it: the stage is a
-     locked viewport with no overflow, so a wheel or a trackbar cannot
-     reach it. The ways down are the About link, the s key, and a
-     two-finger swipe up. Filled at runtime from about.html so that
-     page stays the single source of the copy — with no JS this stays
-     empty and the About link navigates there normally instead. -->
+<!-- Two screens stacked below the tree: About one down, Sites one
+     below that. Nothing scrolls to either — the stage is a locked
+     viewport with no overflow, so a wheel or a trackbar reaches
+     neither. The ways down are the two links in the bar, the s and w
+     keys, and a two-finger swipe. Both are filled at runtime from
+     about.html and sites.html so those pages stay the single source
+     of their content; with no JS these stay empty and the links in
+     the bar navigate to them normally instead. -->
 <section id="under" class="under" aria-hidden="true" aria-label="About">
   <div class="under-inner">
-    <div class="under-body prose" id="underBody"></div>
-    <button class="under-back" id="underBack" type="button">
+    <div class="under-body" id="underBody"></div>
+    <button class="under-back" type="button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 19V5M6 11l6-6 6 6"/>
+      </svg>
+      <span>Back to the tree</span>
+    </button>
+  </div>
+</section>
+
+<section id="underSites" class="under" data-wide aria-hidden="true" aria-label="Sites">
+  <div class="under-inner">
+    <div class="under-body" id="underSitesBody"></div>
+    <button class="under-back" type="button">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2" stroke-linecap="round"
            stroke-linejoin="round" aria-hidden="true">

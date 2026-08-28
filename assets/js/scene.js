@@ -1782,117 +1782,168 @@ window.addEventListener('keydown', (e) => {
 });
 
 /* ============================================================
-   the screen under the tree
-   about.html stays the one place the copy lives; this borrows it at
-   runtime so the two can never drift apart. Until that arrives (or if
-   it never does) the About link keeps doing what it does with no
-   script at all — navigating there.
+   the screens under the tree
+   About sits one screen down, Sites one below that. Neither is a copy:
+   both are borrowed from about.html and sites.html at runtime, so
+   those two files stay the only place their content lives. With no
+   script the links in the bar navigate to them the way they always
+   did, which is also the fallback if a fetch fails.
+
+   Nothing here is a scroll region. The stage has no overflow, so a
+   wheel reaches none of it — the ways down are the two links, the s
+   and w keys, and a two-finger swipe.
    ============================================================ */
 
+const underSites     = document.getElementById('underSites');
+const underSitesBody = document.getElementById('underSitesBody');
 const aboutLink = document.querySelector('.topnav a[href="about.html"]');
+const sitesLink = document.querySelector('.topnav a[href="sites.html"]');
 
-let underOpen = false;
-let underCopy = null;      // the fetched prose, once
-let underPending = null;   // the in-flight request, so it is asked for once
+/* index is depth: 0 is the tree itself, so it has no panel */
+const SCREENS = [
+  null,
+  { el: under,      body: underBody,      src: 'about.html', link: aboutLink, said: 'About.' },
+  { el: underSites, body: underSitesBody, src: 'sites.html', link: sitesLink, said: 'Sites.' },
+];
+const DEEPEST = SCREENS.length - 1;
 
-function loadUnderCopy() {
-  if (underCopy) return Promise.resolve(underCopy);
-  if (underPending) return underPending;
-  underPending = fetch('about.html', { credentials: 'same-origin' })
+let level = 0;
+const fetched = new Map();   // src -> Promise of its html, asked for once
+
+/* Both pages are built the same way — a .shell holding the content and
+   a footer — so one reader serves both. The footer belongs to that
+   page's chrome rather than to the content, and its heading has to
+   step down a rank because this page already has an h1. */
+function loadScreenHTML(src) {
+  if (fetched.has(src)) return fetched.get(src);
+  const job = fetch(src, { credentials: 'same-origin' })
     .then((r) => {
-      if (!r.ok) throw new Error('about.html ' + r.status);
+      if (!r.ok) throw new Error(src + ' ' + r.status);
       return r.text();
     })
     .then((html) => {
-      /* parsed rather than regexed, and out of a detached document, so
-         nothing in it runs or loads while being read */
+      /* parsed out of a detached document, so nothing in it runs or
+         fetches while being read */
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const prose = doc.querySelector('.prose');
-      if (!prose) throw new Error('no .prose in about.html');
-      /* the page's own footer and heading are the shell's, not the
-         copy's — this screen brings its own */
-      underCopy = '<h2 class="under-title">About</h2>' + prose.innerHTML;
-      return underCopy;
+      const shell = doc.querySelector('.shell');
+      if (!shell) throw new Error('no .shell in ' + src);
+      shell.querySelectorAll('footer').forEach((f) => f.remove());
+      const h1 = shell.querySelector('h1');
+      if (h1) {
+        const h2 = doc.createElement('h2');
+        h2.className = 'under-title';
+        h2.innerHTML = h1.innerHTML;
+        h1.replaceWith(h2);
+      }
+      return shell.innerHTML;
     });
-  return underPending;
+  fetched.set(src, job);
+  return job;
 }
 
-function openUnder() {
-  if (underOpen) return;
-  return loadUnderCopy().then((html) => {
-    if (!underBody.childElementCount) underBody.innerHTML = html;
-    underOpen = true;
-    document.body.dataset.under = 'open';
-    under.setAttribute('aria-hidden', 'false');
-    if (aboutLink) aboutLink.setAttribute('aria-expanded', 'true');
-    under.scrollTop = 0;
-    dismissHint();
-    /* focus lands inside so a keyboard is already in the right place,
-       without yanking the view — the panel is animating in */
-    underBack.focus({ preventScroll: true });
-    liveRegion.textContent = 'About.';
-  });
-}
-
-function closeUnder() {
-  if (!underOpen) return;
-  underOpen = false;
-  /* focus moves out first: leaving it inside an aria-hidden subtree,
-     even for a moment, is exactly what that attribute must not do */
-  if (aboutLink) {
-    aboutLink.focus({ preventScroll: true });
-    aboutLink.setAttribute('aria-expanded', 'false');
+function applyLevel(n) {
+  level = n;
+  document.body.dataset.level = String(n);
+  document.body.style.setProperty('--level', String(n));
+  for (let i = 1; i <= DEEPEST; i++) {
+    const s = SCREENS[i];
+    s.el.setAttribute('aria-hidden', i === n ? 'false' : 'true');
+    if (s.link) s.link.setAttribute('aria-expanded', i === n ? 'true' : 'false');
   }
-  document.body.dataset.under = 'closed';
-  under.setAttribute('aria-hidden', 'true');
-  liveRegion.textContent = 'Back to the tree.';
 }
 
-function toggleUnder() {
-  if (underOpen) closeUnder();
-  else openUnder();
-}
+function goTo(n) {
+  n = Math.max(0, Math.min(DEEPEST, n));
+  if (n === level) return Promise.resolve();
 
-underBack.addEventListener('click', closeUnder);
+  if (n === 0) {
+    const from = SCREENS[level];
+    /* focus leaves before the panel is hidden from assistive tech —
+       never the other way round */
+    const home = (from && from.link) || aboutLink;
+    if (home) home.focus({ preventScroll: true });
+    applyLevel(0);
+    liveRegion.textContent = 'Back to the tree.';
+    return Promise.resolve();
+  }
 
-/* The About link in the bar goes here instead of navigating — but only
-   on a plain left click. Modified clicks and middle clicks still open
-   about.html the way any link should, and if the copy cannot be
-   fetched the navigation is simply allowed to proceed. */
-if (aboutLink) {
-  aboutLink.setAttribute('aria-expanded', 'false');
-  aboutLink.addEventListener('click', (e) => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (underOpen) { e.preventDefault(); closeUnder(); return; }
-    e.preventDefault();
-    const go = openUnder();
-    if (go) go.catch(() => { window.location.href = 'about.html'; });
+  const s = SCREENS[n];
+  return loadScreenHTML(s.src).then((html) => {
+    if (!s.body.childElementCount) {
+      s.body.innerHTML = html;
+      wireInnerLinks(s.body);
+    }
+    applyLevel(n);
+    s.el.scrollTop = 0;
+    dismissHint();
+    /* a keyboard lands somewhere real inside, without yanking the view
+       while the panel is still moving */
+    s.el.querySelector('.under-back').focus({ preventScroll: true });
+    liveRegion.textContent = s.said;
   });
-  /* warmed while the visitor is still looking at the tree, so the
-     first open does not wait on the network */
-  const warm = () => loadUnderCopy().catch(() => {});
+}
+
+/* A borrowed page carries its own links to the other one — those
+   should move between these screens rather than leave the tree. */
+function wireInnerLinks(root) {
+  SCREENS.forEach((s, i) => {
+    if (!s) return;
+    root.querySelectorAll('a[href="' + s.src + '"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        goTo(i).catch(() => { window.location.href = s.src; });
+      });
+    });
+  });
+}
+
+document.querySelectorAll('.under-back').forEach((b) => {
+  b.addEventListener('click', () => goTo(0));
+});
+
+/* The links in the bar reach their screen from wherever you are. Only
+   a plain left click is taken — a modified or middle click still opens
+   the real page, the way any link must. */
+SCREENS.forEach((s, i) => {
+  if (!s || !s.link) return;
+  s.link.setAttribute('aria-expanded', 'false');
+  s.link.addEventListener('click', (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (level === i) { goTo(0); return; }
+    goTo(i).catch(() => { window.location.href = s.src; });
+  });
+});
+
+/* warmed while the visitor is still looking at the tree, so the first
+   open does not wait on the network */
+{
+  const warm = () => SCREENS.forEach((s) => { if (s) loadScreenHTML(s.src).catch(() => {}); });
   if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 4000 });
   else setTimeout(warm, 2500);
 }
 
 /* ---- the ways down that nobody is told about ---- */
 
+const SCREEN_KEYS = { s: 1, w: 2 };
+
 window.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const el = document.activeElement;
   if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
 
-  if (e.key === 'Escape' && underOpen) { closeUnder(); return; }
-  if (e.key.toLowerCase() !== 's') return;
+  if (e.key === 'Escape' && level !== 0) { goTo(0); return; }
+  const want = SCREEN_KEYS[e.key.toLowerCase()];
+  if (!want) return;
   e.preventDefault();
-  const go = toggleUnder();
-  if (go) go.catch(() => {});
+  goTo(level === want ? 0 : want).catch(() => {});
 });
 
 /* Two fingers, because one is already how the tree is turned. Tracked
    through the same pointer events the drag uses rather than a second
-   touch listener, so the two can never disagree about how many
-   fingers are down. */
+   touch listener, so the two can never disagree about how many fingers
+   are down. Up goes a screen further down, down comes back up. */
 const gesturePoints = new Map();
 let gestureFrom = 0;
 let gestureFired = false;
@@ -1920,28 +1971,23 @@ function gestureMove(e) {
   gesturePoints.set(e.pointerId, e.clientY);
   if (gesturePoints.size !== 2 || gestureFired) return;
   const travelled = gestureFrom - gestureCentroidY();
-  if (travelled > 70) {                 // up: down the page
+  if (travelled > 70) {
     gestureFired = true;
-    const go = openUnder();
-    if (go) go.catch(() => {});
-  } else if (travelled < -70 && underOpen) {
+    goTo(level + 1).catch(() => {});
+  } else if (travelled < -70) {
     gestureFired = true;
-    closeUnder();
+    goTo(level - 1);
   }
 }
 
 function gestureUp(e) { gesturePoints.delete(e.pointerId); }
 
-canvas.addEventListener('pointerdown', gestureDown);
-canvas.addEventListener('pointermove', gestureMove);
-canvas.addEventListener('pointerup', gestureUp);
-canvas.addEventListener('pointercancel', gestureUp);
-/* the same two fingers the other way closes it again, from anywhere
-   in the panel — one finger still scrolls the copy normally */
-under.addEventListener('pointerdown', gestureDown);
-under.addEventListener('pointermove', gestureMove);
-under.addEventListener('pointerup', gestureUp);
-under.addEventListener('pointercancel', gestureUp);
+[canvas, under, underSites].forEach((el) => {
+  el.addEventListener('pointerdown', gestureDown);
+  el.addEventListener('pointermove', gestureMove);
+  el.addEventListener('pointerup', gestureUp);
+  el.addEventListener('pointercancel', gestureUp);
+});
 
 /* ============================================================
    loop

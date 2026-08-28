@@ -541,17 +541,22 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
 html[data-js="1"] #fallback{ display:none }
 
 /* ============================================================
-   the screen under the tree
-   Sits exactly one viewport below and slides up over it. It is not a
-   scroll region — the stage above has no overflow to scroll — so the
-   only routes down are the ones script opens deliberately. Hidden by
-   visibility rather than display, so it stays out of the tab order
-   while closed but can still transition.
+   the screens under the tree
+   A stack: the tree is level 0, About is one viewport below it, Sites
+   one below that. Everything is placed off its own depth against the
+   current level, so each screen slides the same distance and the tree
+   leaves the way it would if you really had scrolled past it. None of
+   it is a scroll region — the stage above has no overflow to scroll —
+   so the only routes down are the ones script opens deliberately.
+   Hidden by visibility rather than display, so a closed screen stays
+   out of the tab order but can still transition out.
    ============================================================ */
 .under{
+  --depth:1;
   position:fixed;inset:0;z-index:30;
   visibility:hidden;
-  transform:translateY(100%);
+  transform:translateY(calc((var(--depth) - var(--level, 0)) * 100%));
+  /* the delay is what keeps a screen on show while it slides away */
   transition:transform 900ms var(--ease), visibility 0s linear 900ms;
   overflow-y:auto;
   /* a flick inside the panel must not turn into a page-level scroll */
@@ -561,21 +566,27 @@ html[data-js="1"] #fallback{ display:none }
     radial-gradient(120% 80% at 50% 0%, var(--dusk) 0%, transparent 62%),
     var(--void);
 }
-body[data-under="open"] .under{
+#underSites{ --depth:2 }
+
+body[data-level="1"] #under,
+body[data-level="2"] #underSites{
   visibility:visible;
-  transform:translateY(0);
   transition:transform 900ms var(--ease), visibility 0s linear 0s;
 }
-/* the tree leaves the way it would if you really had scrolled past it */
-body[data-scene="on"] .stage{ transition:transform 900ms var(--ease) }
-body[data-under="open"] .stage{ transform:translateY(-100%) }
+
+body[data-scene="on"] .stage{
+  transition:transform 900ms var(--ease);
+  transform:translateY(calc(var(--level, 0) * -100%));
+}
 
 .under-inner{
   max-width:860px;margin:0 auto;
   padding:clamp(96px,14vh,150px) clamp(18px,4vw,48px) clamp(60px,10vh,110px);
 }
-/* the borrowed copy arrives without about.html's page furniture, so
-   this screen supplies its own heading */
+/* the six cards need the room the Sites page itself gives them */
+.under[data-wide] .under-inner{ max-width:var(--shell) }
+
+/* the borrowed page's own h1, stepped down a rank on arrival */
 .under-title{
   font-family:var(--display);
   font-size:clamp(2.4rem,6vw,3.4rem);font-weight:400;
@@ -593,7 +604,8 @@ body[data-under="open"] .stage{ transform:translateY(-100%) }
 
 @media (prefers-reduced-motion: reduce){
   .under, body[data-scene="on"] .stage{ transition:none }
-  body[data-under="open"] .under{ transition:none }
+  body[data-level="1"] #under,
+  body[data-level="2"] #underSites{ transition:none }
 }
 
 /* ============================================================
