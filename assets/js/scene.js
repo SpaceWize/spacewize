@@ -29,6 +29,9 @@ const keys       = document.getElementById('branchKeys');
 const hint       = document.getElementById('hint');
 const loadVeil   = document.getElementById('loadVeil');
 const loadMoon   = document.getElementById('loadMoon');
+const under      = document.getElementById('under');
+const underBody  = document.getElementById('underBody');
+const underBack  = document.getElementById('underBack');
 
 /* ---------- the divisions come from the DOM, so the page still
               works with no JS and no WebGL ---------- */
@@ -1777,6 +1780,168 @@ window.addEventListener('keydown', (e) => {
   dismissHint();
   liveRegion.textContent = 'The whole tree is in bloom.';
 });
+
+/* ============================================================
+   the screen under the tree
+   about.html stays the one place the copy lives; this borrows it at
+   runtime so the two can never drift apart. Until that arrives (or if
+   it never does) the About link keeps doing what it does with no
+   script at all — navigating there.
+   ============================================================ */
+
+const aboutLink = document.querySelector('.topnav a[href="about.html"]');
+
+let underOpen = false;
+let underCopy = null;      // the fetched prose, once
+let underPending = null;   // the in-flight request, so it is asked for once
+
+function loadUnderCopy() {
+  if (underCopy) return Promise.resolve(underCopy);
+  if (underPending) return underPending;
+  underPending = fetch('about.html', { credentials: 'same-origin' })
+    .then((r) => {
+      if (!r.ok) throw new Error('about.html ' + r.status);
+      return r.text();
+    })
+    .then((html) => {
+      /* parsed rather than regexed, and out of a detached document, so
+         nothing in it runs or loads while being read */
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const prose = doc.querySelector('.prose');
+      if (!prose) throw new Error('no .prose in about.html');
+      /* the page's own footer and heading are the shell's, not the
+         copy's — this screen brings its own */
+      underCopy = '<h2 class="under-title">About</h2>' + prose.innerHTML;
+      return underCopy;
+    });
+  return underPending;
+}
+
+function openUnder() {
+  if (underOpen) return;
+  return loadUnderCopy().then((html) => {
+    if (!underBody.childElementCount) underBody.innerHTML = html;
+    underOpen = true;
+    document.body.dataset.under = 'open';
+    under.setAttribute('aria-hidden', 'false');
+    if (aboutLink) aboutLink.setAttribute('aria-expanded', 'true');
+    under.scrollTop = 0;
+    dismissHint();
+    /* focus lands inside so a keyboard is already in the right place,
+       without yanking the view — the panel is animating in */
+    underBack.focus({ preventScroll: true });
+    liveRegion.textContent = 'About.';
+  });
+}
+
+function closeUnder() {
+  if (!underOpen) return;
+  underOpen = false;
+  /* focus moves out first: leaving it inside an aria-hidden subtree,
+     even for a moment, is exactly what that attribute must not do */
+  if (aboutLink) {
+    aboutLink.focus({ preventScroll: true });
+    aboutLink.setAttribute('aria-expanded', 'false');
+  }
+  document.body.dataset.under = 'closed';
+  under.setAttribute('aria-hidden', 'true');
+  liveRegion.textContent = 'Back to the tree.';
+}
+
+function toggleUnder() {
+  if (underOpen) closeUnder();
+  else openUnder();
+}
+
+underBack.addEventListener('click', closeUnder);
+
+/* The About link in the bar goes here instead of navigating — but only
+   on a plain left click. Modified clicks and middle clicks still open
+   about.html the way any link should, and if the copy cannot be
+   fetched the navigation is simply allowed to proceed. */
+if (aboutLink) {
+  aboutLink.setAttribute('aria-expanded', 'false');
+  aboutLink.addEventListener('click', (e) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (underOpen) { e.preventDefault(); closeUnder(); return; }
+    e.preventDefault();
+    const go = openUnder();
+    if (go) go.catch(() => { window.location.href = 'about.html'; });
+  });
+  /* warmed while the visitor is still looking at the tree, so the
+     first open does not wait on the network */
+  const warm = () => loadUnderCopy().catch(() => {});
+  if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 4000 });
+  else setTimeout(warm, 2500);
+}
+
+/* ---- the ways down that nobody is told about ---- */
+
+window.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const el = document.activeElement;
+  if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+
+  if (e.key === 'Escape' && underOpen) { closeUnder(); return; }
+  if (e.key.toLowerCase() !== 's') return;
+  e.preventDefault();
+  const go = toggleUnder();
+  if (go) go.catch(() => {});
+});
+
+/* Two fingers, because one is already how the tree is turned. Tracked
+   through the same pointer events the drag uses rather than a second
+   touch listener, so the two can never disagree about how many
+   fingers are down. */
+const gesturePoints = new Map();
+let gestureFrom = 0;
+let gestureFired = false;
+
+function gestureCentroidY() {
+  let sum = 0;
+  gesturePoints.forEach((p) => { sum += p; });
+  return sum / gesturePoints.size;
+}
+
+function gestureDown(e) {
+  if (e.pointerType === 'mouse') return;
+  gesturePoints.set(e.pointerId, e.clientY);
+  if (gesturePoints.size === 2) {
+    /* the second finger cancels the turn the first one started */
+    dragging = false;
+    canvas.dataset.grabbing = 'false';
+    gestureFrom = gestureCentroidY();
+    gestureFired = false;
+  }
+}
+
+function gestureMove(e) {
+  if (!gesturePoints.has(e.pointerId)) return;
+  gesturePoints.set(e.pointerId, e.clientY);
+  if (gesturePoints.size !== 2 || gestureFired) return;
+  const travelled = gestureFrom - gestureCentroidY();
+  if (travelled > 70) {                 // up: down the page
+    gestureFired = true;
+    const go = openUnder();
+    if (go) go.catch(() => {});
+  } else if (travelled < -70 && underOpen) {
+    gestureFired = true;
+    closeUnder();
+  }
+}
+
+function gestureUp(e) { gesturePoints.delete(e.pointerId); }
+
+canvas.addEventListener('pointerdown', gestureDown);
+canvas.addEventListener('pointermove', gestureMove);
+canvas.addEventListener('pointerup', gestureUp);
+canvas.addEventListener('pointercancel', gestureUp);
+/* the same two fingers the other way closes it again, from anywhere
+   in the panel — one finger still scrolls the copy normally */
+under.addEventListener('pointerdown', gestureDown);
+under.addEventListener('pointermove', gestureMove);
+under.addEventListener('pointerup', gestureUp);
+under.addEventListener('pointercancel', gestureUp);
 
 /* ============================================================
    loop

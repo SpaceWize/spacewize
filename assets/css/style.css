@@ -541,6 +541,62 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
 html[data-js="1"] #fallback{ display:none }
 
 /* ============================================================
+   the screen under the tree
+   Sits exactly one viewport below and slides up over it. It is not a
+   scroll region — the stage above has no overflow to scroll — so the
+   only routes down are the ones script opens deliberately. Hidden by
+   visibility rather than display, so it stays out of the tab order
+   while closed but can still transition.
+   ============================================================ */
+.under{
+  position:fixed;inset:0;z-index:30;
+  visibility:hidden;
+  transform:translateY(100%);
+  transition:transform 900ms var(--ease), visibility 0s linear 900ms;
+  overflow-y:auto;
+  /* a flick inside the panel must not turn into a page-level scroll */
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--dusk) 0%, transparent 62%),
+    var(--void);
+}
+body[data-under="open"] .under{
+  visibility:visible;
+  transform:translateY(0);
+  transition:transform 900ms var(--ease), visibility 0s linear 0s;
+}
+/* the tree leaves the way it would if you really had scrolled past it */
+body[data-scene="on"] .stage{ transition:transform 900ms var(--ease) }
+body[data-under="open"] .stage{ transform:translateY(-100%) }
+
+.under-inner{
+  max-width:860px;margin:0 auto;
+  padding:clamp(96px,14vh,150px) clamp(18px,4vw,48px) clamp(60px,10vh,110px);
+}
+/* the borrowed copy arrives without about.html's page furniture, so
+   this screen supplies its own heading */
+.under-title{
+  font-family:var(--display);
+  font-size:clamp(2.4rem,6vw,3.4rem);font-weight:400;
+  margin:0 0 30px;color:var(--ink);
+}
+.under-back{
+  display:inline-flex;align-items:center;gap:9px;
+  margin-top:10px;padding:11px 18px;
+  border:1px solid var(--line);border-radius:999px;
+  background:transparent;color:var(--ink-soft);
+  font:inherit;font-size:.82rem;cursor:pointer;
+  transition:background 200ms var(--ease), color 200ms var(--ease);
+}
+.under-back:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+
+@media (prefers-reduced-motion: reduce){
+  .under, body[data-scene="on"] .stage{ transition:none }
+  body[data-under="open"] .under{ transition:none }
+}
+
+/* ============================================================
    the loading veil
    Sits over the whole stage from the very first paint, gated by the
    same html[data-js] flag as the fallback above — a no-JS visitor
