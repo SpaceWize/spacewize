@@ -2226,7 +2226,7 @@ if (loadVeil) {
      covered anything. Held for at least this long — on a slow
      connection the real load already exceeds it, so this never adds
      to the wait, only floors it. */
-  const MIN_VEIL_MS = 4000;
+  const MIN_VEIL_MS = 2400;
   const elapsed = performance.now() - (window.__loadStart || 0);
   const wait = Math.max(0, MIN_VEIL_MS - elapsed);
 
