@@ -676,7 +676,11 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
     /* On the scaffold itself keep the spray to its outer end, so
        flowers do not sprout straight out of the trunk. */
     const u = depth === MAX_DEPTH ? 0.2 + 0.66 * (k / n) : k / (n + 1);
-    spurs.push({ pos: curve.getPointAt(u), dir: curve.getTangentAt(u) });
+    spurs.push({
+      pos: curve.getPointAt(u), dir: curve.getTangentAt(u),
+      /* the tube tapers rad -> rad*0.62 along its length */
+      r: rad * (1 - 0.38 * u),
+    });
   }
 
   if (depth === 0) {
@@ -684,7 +688,7 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
     const cap = new THREE.SphereGeometry(rad * 0.6, 7, 5);
     cap.translate(end.x, end.y, end.z);
     wood.push(cap);
-    tips.push({ pos: end, dir: dir.clone() });
+    tips.push({ pos: end, dir: dir.clone(), r: rad * 0.62 });
     return;
   }
 
@@ -750,7 +754,7 @@ function addHitTarget(group, at, radius, index) {
 }
 
 /* one blossom, facing mostly upward off whatever wood it sits on */
-function addBlossom(list, at, along, jitter, scaleMul) {
+function addBlossom(list, at, along, jitter, scaleMul, woodR) {
   /* Spread along the twig, barely across it. The scatter used to be
      the same in every direction, which put blossoms up to eight times
      the twig's own radius out to the side — floating in open air next
@@ -771,6 +775,16 @@ function addBlossom(list, at, along, jitter, scaleMul) {
     0.75 + rndBloom() * 0.55,
     along.z * 0.5 + (rndBloom() - 0.5) * 0.75
   ).normalize();
+  /* Sitting on the twig's centre line is fine while the twig is
+     thinner than a petal, but the same rule on a limb buries half the
+     flower inside the wood. Lift it clear along the way it already
+     faces — applied after `face` is drawn so the random sequence, and
+     with it the shape of the whole tree, is untouched. */
+  if (woodR) {
+    const out = face.clone().addScaledVector(axis, -face.dot(axis));
+    if (out.lengthSq() > 1e-6) pos.addScaledVector(out.normalize(), woodR);
+  }
+
   const yaws = [];
   for (let j = 0; j < 5; j++) {
     yaws.push((j / 5) * Math.PI * 2 + (rndBloom() - 0.5) * 0.2);
@@ -827,7 +841,7 @@ DIVISIONS.forEach((division, i) => {
     anchor.add(tip.pos);
     const count = isSmall ? 3 + Math.floor(rndBloom() * 3) : 4 + Math.floor(rndBloom() * 3);
     for (let n = 0; n < count; n++) {
-      addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1);
+      addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1, tip.r);
     }
     addHitTarget(branchGroup, tip.pos, 0.62, i);
   });
@@ -836,7 +850,7 @@ DIVISIONS.forEach((division, i) => {
   spurs.forEach((spur) => {
     const count = isSmall ? 1 + Math.floor(rndBloom() * 3) : 2 + Math.floor(rndBloom() * 3);
     for (let n = 0; n < count; n++) {
-      addBlossom(blossoms, spur.pos, spur.dir, 0.24, 0.84);
+      addBlossom(blossoms, spur.pos, spur.dir, 0.24, 0.84, spur.r);
     }
     addHitTarget(branchGroup, spur.pos, 0.42, i);
   });
@@ -894,6 +908,11 @@ DIVISIONS.forEach((division, i) => {
   branches.push({
     division, blossoms, petals, cores, petalMat, coreMat, halos, haloMat, anchor,
     rest, t: -1, target: rest,
+    /* its own colours, kept so the full bloom can be blended away
+       again rather than left overwritten */
+    restPetal:    petalMat.color.clone(),
+    restEmissive: petalMat.emissive.clone(),
+    restHalo:     haloMat.color.clone(),
     /* How far this branch is *allowed* to open, kept on the branch
        rather than read off the division, so the full-bloom egg can
        lift it and put it back without touching the source of truth. */
@@ -1263,6 +1282,16 @@ const PULSE_PERIOD = 6.5;   // seconds for one full breath
 const PULSE_LOW    = 0.08;
 const PULSE_HIGH   = 0.26;
 const PULSE_WAKE   = 1.6;   // eases up from dark rather than snapping on
+
+/* What the live branch looks like. The full bloom is meant to be the
+   whole tree as if every division had already opened, so the dormant
+   five are blended all the way to these rather than merely lit. */
+const LIVE_PETAL    = new THREE.Color(0xfbd3e0);
+const LIVE_EMISSIVE = new THREE.Color(0xe36fa0);
+const LIVE_HALO     = new THREE.Color(0xe36fa0);
+const LIVE_GLOW     = new THREE.Color(0xe36fa0);
+const DORMANT_GLOW  = new THREE.Color(0x9c8fd0);
+const _glowCol = new THREE.Color();
 
 function pulseLevel(t) {
   if (t < 0) return 0;
@@ -1767,6 +1796,7 @@ const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown',
                 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
 let konamiAt = 0;
 let fullBloom = 0;              // seconds left of every branch open
+let fullMix = 0;                // 0..1, eased — how live the tree looks
 
 window.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2060,6 +2090,14 @@ function animate() {
 
   /* the full bloom is on a timer, and hands the branches back to
      whatever the pointer was doing when it ends */
+  /* eased separately from the countdown so the colour arrives and
+     leaves smoothly instead of snapping at both ends */
+  {
+    const want = fullBloom > 0 ? 1 : 0;
+    fullMix += (want - fullMix) * (noMotion ? 1 : Math.min(1, dt * 2.4));
+    if (Math.abs(fullMix - want) < 0.002) fullMix = want;
+  }
+
   if (fullBloom > 0) {
     fullBloom -= dt;
     if (fullBloom <= 0) {
@@ -2127,21 +2165,37 @@ function animate() {
       lum = noMotion
         ? (b.pulse >= 0 ? PULSE_LOW : 0)
         : pulseLevel(b.pulse);
-      b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
+
+      /* Under the full bloom a dormant branch stops being dormant: its
+         light, its petal colour and its halo are all carried over to
+         the live branch's, so the tree reads as six open divisions
+         rather than one lit and five pale. Blended by fullMix, which
+         is what lets it come back afterwards. */
+      if (fullMix > 0) {
+        lum += (b.t - lum) * fullMix;
+        const dormant = 0.12 + lum * 0.5;
+        b.petalMat.emissiveIntensity = dormant + ((0.16 + lum * 0.4) - dormant) * fullMix;
+      } else {
+        b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
+      }
     }
 
-    /* during the full bloom the dormant five carry their own light —
-       the standby pulse alone would leave them open and dark */
-    if (fullBloom > 0 && !b.division.live) {
-      lum = Math.max(lum, b.t * b.ceiling * 0.6);
-      b.petalMat.emissiveIntensity = 0.12 + lum * 0.5;
+    /* the colours only need touching while the blend is somewhere
+       between the two, or on the frame it finally lands */
+    if (!b.division.live && (fullMix > 0 || b.tinted)) {
+      b.petalMat.color.copy(b.restPetal).lerp(LIVE_PETAL, fullMix);
+      b.petalMat.emissive.copy(b.restEmissive).lerp(LIVE_EMISSIVE, fullMix);
+      b.haloMat.color.copy(b.restHalo).lerp(LIVE_HALO, fullMix);
+      b.tinted = fullMix > 0;
     }
+
     /* the centre of a flower must never sit darker than its petals */
     b.coreMat.emissiveIntensity = b.petalMat.emissiveIntensity * 1.2;
 
     /* several overlapping additive sprites stack, so each is fainter
        than the single halo was — the total reads about the same */
-    b.haloMat.opacity = lum * (b.division.live ? 0.17 : 0.2);
+    const haloK = b.division.live ? 0.17 : 0.2 + (0.17 - 0.2) * fullMix;
+    b.haloMat.opacity = lum * haloK;
     const haloGrow = 1 + lum * 0.3;
     for (let h = 0; h < b.halos.length; h++) {
       b.halos[h].scale.setScalar(b.halos[h].userData.base * haloGrow);
@@ -2154,8 +2208,13 @@ function animate() {
     anchorWorld.copy(glowBranch.anchor);
     tree.localToWorld(anchorWorld);
     glow.position.copy(anchorWorld);
-    glow.color.set(glowBranch.division.live ? 0xe36fa0 : 0x9c8fd0);
-    glow.intensity = glowLum * (glowBranch.division.live ? 8 : 11);
+    if (glowBranch.division.live) {
+      glow.color.copy(LIVE_GLOW);
+      glow.intensity = glowLum * 8;
+    } else {
+      glow.color.copy(_glowCol.copy(DORMANT_GLOW).lerp(LIVE_GLOW, fullMix));
+      glow.intensity = glowLum * (11 + (8 - 11) * fullMix);
+    }
   } else {
     glow.intensity = 0;
   }
@@ -2239,6 +2298,7 @@ if (loadVeil) {
   if (noMotion || wait <= 0) lift();
   else setTimeout(lift, wait);
 }
+
 
 
 
