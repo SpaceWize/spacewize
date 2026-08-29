@@ -25,6 +25,7 @@ const panelBtn   = document.getElementById('panelBtn');
 const panelBtnText = document.getElementById('panelBtnText');
 const liveRegion = document.getElementById('liveRegion');
 const panelWhen  = document.getElementById('panelWhen');
+const panelAlt   = document.getElementById('panelAlt');
 const keys       = document.getElementById('branchKeys');
 const hint       = document.getElementById('hint');
 const loadVeil   = document.getElementById('loadVeil');
@@ -1431,6 +1432,8 @@ function select(index) {
     panelBtn.classList.add('btn-live');
     panelBtnText.textContent = 'Enter site';
   } else {
+    /* only the open division takes work, so the second action goes
+       with it rather than sitting under a notify button */
     /* A disabled button is a dead end. A mailto is a real action, needs
        no backend, and matches how the web-design site already takes
        enquiries. */
@@ -1439,6 +1442,7 @@ function select(index) {
     panelBtnText.textContent = 'Tell me when this opens';
   }
   panelBtn.removeAttribute('aria-disabled');
+  if (panelAlt) panelAlt.hidden = !d.live;
 
   liveRegion.textContent = d.live
     ? `${d.name}. Live site.`
