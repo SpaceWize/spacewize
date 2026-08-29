@@ -658,13 +658,16 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
   const curve = new THREE.CatmullRomCurve3([p0, m1, m2, end]);
   const seg    = depth >= 2 ? 14 : 8;
   const radial = depth >= 2 ? 8 : 5;
-  /* 0.72 rather than a finer taper: a blossom spans about 0.77 and a
-     twig at 0.62 came out near 0.03 across, so the flower was ~25x the
-     wood holding it and clusters read as hanging in mid-air. They were
-     not — every blossom sits within 0.16 of wood, median 0.03 — the
-     support was simply too thin to see. 0.80 goes stubby and loses the
-     taper that makes it read as cherry. */
-  wood.push(taperedTube(curve, rad, rad * 0.72, seg, radial));
+  /* A blossom spans about 0.77, so the taper decides whether it looks
+     attached. Nothing here was ever loose — every blossom sits within
+     0.16 of wood, median 0.03 — but at 0.62 the twig came out near
+     0.03 across, twenty-five times narrower than the flower on it, and
+     wood that fine disappears at any distance. Measured across the
+     range: 0.62 gives a 0.0139 edge and the clusters float, 0.66 is
+     0.0168 and still thins out, 0.72 is 0.0218 and reads chunky, 0.80
+     goes stubby. 0.68 is the one that keeps visible wood under every
+     spray without losing the fineness that makes it a cherry. */
+  wood.push(taperedTube(curve, rad, rad * 0.68, seg, radial));
 
   /* A tube is an open sleeve with no end caps, so where a limb meets
      its parent at an angle the two flat ends leave an open wedge — a
@@ -695,7 +698,7 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
     const cap = new THREE.SphereGeometry(rad * 0.6, 7, 5);
     cap.translate(end.x, end.y, end.z);
     wood.push(cap);
-    tips.push({ pos: end, dir: dir.clone(), r: rad * 0.72 });
+    tips.push({ pos: end, dir: dir.clone(), r: rad * 0.68 });
     return;
   }
 
@@ -708,7 +711,7 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
     const childDir = dir.clone().applyAxisAngle(axis, spread);
     childDir.y += 0.20;                       // twigs reach for light
     childDir.normalize();
-    grow(end, childDir, len * (0.60 + rnd() * 0.14), rad * 0.72,
+    grow(end, childDir, len * (0.60 + rnd() * 0.14), rad * 0.68,
          depth - 1, wood, tips, spurs);
   }
 }
@@ -2355,6 +2358,7 @@ if (loadVeil) {
   if (noMotion || wait <= 0) lift();
   else setTimeout(lift, wait);
 }
+
 
 
 
