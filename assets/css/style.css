@@ -445,14 +445,6 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   font-family:var(--display);font-size:1.9rem;font-weight:500;
   margin:44px 0 16px;
 }
-.placeholder{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:7px 14px;border-radius:var(--r-pill);
-  border:1px dashed rgba(244,238,246,.24);
-  font-size:.7rem;font-weight:600;text-transform:uppercase;
-  letter-spacing:.16em;color:var(--ink-faint);
-  margin-bottom:26px;
-}
 
 .foot{
   border-top:1px solid var(--line);
@@ -805,59 +797,14 @@ html[data-arrive="1"] .page-arrive[data-go="true"]{
 }
 
 /* ============================================================
-   404 — the snapped branch
+   404
    ============================================================ */
 .lost{
   min-height:100vh;
   display:flex;flex-direction:column;justify-content:center;
   padding-top:clamp(96px,14vh,150px);
 }
-.snapped{
-  width:min(430px,84%);height:auto;
-  margin-bottom:clamp(18px,4vh,38px);
-  overflow:visible;
-}
-/* the blossoms, in the same sakura the tree uses */
-.snapped circle{ fill:var(--sakura) }
-.snapped .core{ fill:#f6c96a }
-.snapped .held{ filter:drop-shadow(0 0 12px rgba(227,111,160,.4)) }
 
-.snapped .adrift{
-  filter:drop-shadow(0 0 10px rgba(227,111,160,.35));
-  animation:adriftFall 7s ease-in-out infinite;
-}
-/* the spin lives on an inner group so it cannot fight the drift
-   transform on the parent — two animations, one property, otherwise */
-.snapped .adrift-inner{
-  transform-origin:center;
-  animation:adriftTurn 7s linear infinite;
-}
-@keyframes adriftFall{
-  0%   { transform:translate(286px,96px); opacity:0 }
-  12%  { opacity:.95 }
-  70%  { opacity:.7 }
-  100% { transform:translate(324px,178px); opacity:0 }
-}
-@keyframes adriftTurn{
-  from{ transform:rotate(0deg) }
-  to  { transform:rotate(190deg) }
-}
-
-.lost-actions{
-  display:flex;align-items:center;flex-wrap:wrap;
-  gap:14px 24px;margin:30px 0 0;
-}
-.lost-alt{
-  font-size:.82rem;color:var(--ink-faint);
-  border-bottom:1px solid rgba(244,238,246,.22);
-  padding-bottom:2px;
-  transition:color .2s var(--ease), border-color .2s var(--ease);
-}
-.lost-alt:hover{ color:var(--ink);border-color:var(--ink) }
-
-@media (prefers-reduced-motion: reduce){
-  .snapped .adrift{ animation:none;opacity:.85 }
-  .snapped .adrift-inner{ animation:none }
 }
 
 /* ============================================================
