@@ -168,6 +168,12 @@ let zoom = 1;
    never recovers on its own. */
 let sizedW = 0;
 let sizedH = 0;
+
+/* Found by accident: zooming the browser leaves the renderer on a
+   stale pixel ratio and the whole scene comes back as chunky pixel
+   art. It looked good, so it is a switch now rather than a bug. */
+const PIXEL_RATIO = 0.14;
+let pixelated = false;
 /* declared up here because resize() runs before the tag section */
 let tagMetricsDirty = true;
 /* assembled further down, once the scene exists to render — resize()
@@ -186,7 +192,9 @@ function resize() {
   const aspect = w / h;
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(pixelated
+    ? PIXEL_RATIO
+    : Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(w, h, false);
   if (composer) {
     composer.setSize(w, h);
@@ -2027,11 +2035,31 @@ window.addEventListener('keydown', (e) => {
   if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
 
   if (e.key === 'Escape' && level !== 0) { goTo(0); return; }
+
+  if (e.key.toLowerCase() === 'p') {
+    e.preventDefault();
+    setPixelated(!pixelated);
+    return;
+  }
+
   const want = SCREEN_KEYS[e.key.toLowerCase()];
   if (!want) return;
   e.preventDefault();
   goTo(level === want ? 0 : want).catch(() => {});
 });
+
+/* ---- the accident, kept ---- */
+
+function setPixelated(on) {
+  pixelated = on;
+  /* Without this the browser smooths the upscale and it reads as a
+     blurry mistake rather than as pixel art — the crisp blocks are the
+     whole point. */
+  canvas.style.imageRendering = on ? 'pixelated' : '';
+  sizedW = 0;            // resize() skips unless it thinks the box moved
+  resize();
+  liveRegion.textContent = on ? 'Pixelated.' : 'Back to normal.';
+}
 
 /* Two fingers, because one is already how the tree is turned. Tracked
    through the same pointer events the drag uses rather than a second
