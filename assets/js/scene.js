@@ -1855,9 +1855,11 @@ const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown',
 let konamiAt = 0;
 let fullBloom = 0;              // seconds left of every branch open
 let fullMix = 0;                // 0..1, eased — how live the tree looks
-/* seconds on the clock before the idle turn is allowed to start; set
-   when the veil lifts so the hold is counted from the reveal */
-let driftFrom = 0;
+/* Seconds on the clock before the idle turn may start. Infinity until
+   the veil lifts and sets it: at 0 the turn would run through the whole
+   loading hold, so the moon the veil is covering would already have
+   moved out from under it by the time anyone saw either. */
+let driftFrom = Infinity;
 
 window.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2385,7 +2387,11 @@ if (loadVeil) {
   };
   if (noMotion || wait <= 0) lift();
   else setTimeout(lift, wait);
+} else {
+  /* no veil to wait on, so nothing to hold still for */
+  driftFrom = 0;
 }
+
 
 
 
