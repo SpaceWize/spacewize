@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Space Wize Enterprise — Six divisions under one name</title>
+<title>Space Wize Enterprise - Six divisions under one name</title>
 <meta name="description" content="Space Wize Enterprise runs six divisions: web development, 3D printing, dropshipping, real estate development, game development, and books. Each one has its own site.">
 <meta name="theme-color" content="#06070F">
 <link rel="canonical" href="https://spacewize.github.io/spacewize/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Space Wize Enterprise">
 <meta property="og:url" content="https://spacewize.github.io/spacewize/">
-<meta property="og:title" content="Space Wize Enterprise — Six divisions under one name">
+<meta property="og:title" content="Space Wize Enterprise - Six divisions under one name">
 <meta property="og:description" content="Space Wize Enterprise runs six divisions: web development, 3D printing, dropshipping, real estate development, game development, and books. Each one has its own site.">
 <meta property="og:image" content="https://spacewize.github.io/spacewize/assets/og/card.png">
 <meta property="og:image:alt" content="A cherry tree in blossom against a glowing moon, at night.">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Space Wize Enterprise — Six divisions under one name">
+<meta name="twitter:title" content="Space Wize Enterprise - Six divisions under one name">
 <meta name="twitter:description" content="Space Wize Enterprise runs six divisions: web development, 3D printing, dropshipping, real estate development, game development, and books. Each one has its own site.">
 <meta name="twitter:image" content="https://spacewize.github.io/spacewize/assets/og/card.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,11 +41,11 @@ try {
 
 /* The static division list is the no-JS fallback, not the front door.
    Left visible it paints first and the tree replaces it a moment
-   later — which on a phone, where three.js comes off a CDN, reads as
+   later - which on a phone, where three.js comes off a CDN, reads as
    the wrong page loading before the right one. Hide it while script
    is running, and put it straight back if the scene never arrives. */
 document.documentElement.dataset.js = '1';
-/* stamped here, not inside scene.js, so it covers the CDN fetch too —
+/* stamped here, not inside scene.js, so it covers the CDN fetch too -
    the veil has a minimum hold time, and that clock has to start now */
 window.__loadStart = performance.now();
 setTimeout(function () {
@@ -81,7 +81,7 @@ setTimeout(function () {
 
   <canvas id="scene"></canvas>
 
-  <!-- Covers the gap between "blank tab" and "tree actually running" —
+  <!-- Covers the gap between "blank tab" and "tree actually running" -
        otherwise the topbar paints, then everything else pops in at once
        whenever the CDN fetch and tree build finish. Gated purely by
        html[data-js], the same flag the fallback list uses, so a no-JS
@@ -277,7 +277,7 @@ setTimeout(function () {
 </main>
 
 <!-- Two screens stacked below the tree: About one down, Sites one
-     below that. Nothing scrolls to either — the stage is a locked
+     below that. Nothing scrolls to either - the stage is a locked
      viewport with no overflow, so a wheel or a trackbar reaches
      neither. The ways down are the two links in the bar, the s and w
      keys, and a two-finger swipe. Both are filled at runtime from
@@ -315,7 +315,7 @@ setTimeout(function () {
 <div class="page-arrive" id="pageArrive" aria-hidden="true"></div>
 <script>
 /* The shrink itself is a CSS animation that runs on its own; this only
-   clears up after it. Deliberately not part of scene.js — if WebGL is
+   clears up after it. Deliberately not part of scene.js - if WebGL is
    unavailable the visitor still has to get out from behind this. */
 (function () {
   var el = document.getElementById('pageArrive');
@@ -345,7 +345,7 @@ setTimeout(function () {
     setTimeout(ready, 60);
   })();
 
-  /* animations are suspended in a hidden tab — never strand the
+  /* animations are suspended in a hidden tab - never strand the
      visitor behind an opaque cover waiting for a frame */
   setTimeout(done, 7000);
 })();
