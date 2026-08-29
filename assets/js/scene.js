@@ -968,10 +968,15 @@ DIVISIONS.forEach((division, i) => {
 
   sizedW = 0;   // force resize() to recompute with the real numbers
   resize();
-  /* resize() only recomputes orbit.radius — the camera itself does not
-     move until this is called, and the veil below needs the real
-     position, not the rough one the very first frame used */
+  /* Aim where the scene comes to rest rather than easing into it. The
+     opening ease happened entirely behind the veil anyway, so all it
+     did was guarantee the moon had moved by the time anyone saw it. */
+  LOOK_AT.copy(homeLook);
   applyCamera();
+  /* lookAt() sets the rotation but leaves matrixWorldInverse stale, and
+     that inverse is exactly what project() reads — without this the
+     veil's moon is placed through the camera's previous orientation */
+  camera.updateMatrixWorld(true);
   /* anchors get read out of world space during the first frame, before
      the renderer has refreshed any matrices */
   scene.updateMatrixWorld(true);
@@ -991,11 +996,25 @@ function placeLoadMoon() {
   if (src && src.toDataURL) {
     loadMoon.style.backgroundImage = `url(${src.toDataURL()})`;
   }
-  const p = (moonSprite ? moonSprite.position : MOON_POS).clone();
-  p.project(camera);
+  const centre = (moonSprite ? moonSprite.position : MOON_POS).clone();
+  const p = centre.clone().project(camera);
   if (p.z > 1) return;   // behind the camera — leave it hidden
   loadMoon.style.left = ((p.x * 0.5 + 0.5) * 100).toFixed(2) + '%';
   loadMoon.style.top  = ((1 - (p.y * 0.5 + 0.5)) * 100).toFixed(2) + '%';
+
+  /* Size it the way the renderer will, rather than guessing in vmax: a
+     second point one sprite-height up the camera's own up axis,
+     projected too, and the gap between them is exactly how tall the
+     moon comes out in pixels. */
+  if (moonSprite && sizedH) {
+    const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+    const edge = centre.addScaledVector(up, moonSprite.scale.y).project(camera);
+    const px = Math.abs(edge.y - p.y) * 0.5 * sizedH;
+    if (px > 1) {
+      loadMoon.style.width  = px.toFixed(1) + 'px';
+      loadMoon.style.height = px.toFixed(1) + 'px';
+    }
+  }
   loadMoon.dataset.shown = 'true';
 }
 
@@ -1836,6 +1855,9 @@ const KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown',
 let konamiAt = 0;
 let fullBloom = 0;              // seconds left of every branch open
 let fullMix = 0;                // 0..1, eased — how live the tree looks
+/* seconds on the clock before the idle turn is allowed to start; set
+   when the veil lifts so the hold is counted from the reveal */
+let driftFrom = 0;
 
 window.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2074,7 +2096,10 @@ function animate() {
   /* Slow: the moon is a fixed landmark now, so a brisk idle spin would
      quietly carry the opening composition off-screen while nobody is
      touching it. This is a drift, not a turntable. */
-  if (!noMotion && !dragging && active === null) {
+  /* Nothing turns until the hold expires: the moon has to sit exactly
+     where the veil left it for long enough to read as the same moon,
+     not as one that jumped and then wandered. */
+  if (!noMotion && !dragging && active === null && time > driftFrom) {
     orbit.targetTheta += dt * 0.012;
   }
   if (!dragging && Math.abs(orbit.velTheta) > 0.0001) {
@@ -2346,11 +2371,14 @@ if (loadVeil) {
      connection the real load already exceeds it, so this never adds
      to the wait, only floors it. */
   const MIN_VEIL_MS = 2000;
+  /* long enough to see that the moon did not move when the veil went */
+  const HOLD_STILL_SEC = 3;
   const elapsed = performance.now() - (window.__loadStart || 0);
   const wait = Math.max(0, MIN_VEIL_MS - elapsed);
 
   const lift = () => {
     loadVeil.dataset.go = 'true';
+    driftFrom = clock.getElapsedTime() + HOLD_STILL_SEC;
     const dropVeil = () => { loadVeil.style.display = 'none'; };
     if (noMotion) dropVeil();
     else setTimeout(dropVeil, 600);   // covers the 550ms CSS transition
@@ -2358,6 +2386,7 @@ if (loadVeil) {
   if (noMotion || wait <= 0) lift();
   else setTimeout(lift, wait);
 }
+
 
 
 
