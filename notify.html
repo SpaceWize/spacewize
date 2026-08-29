@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tell me when it opens — Space Wize Enterprise</title>
+<title>Tell me when it opens - Space Wize Enterprise</title>
 <meta name="description" content="Get a note when a Space Wize Enterprise division opens.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#06070F">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Space Wize Enterprise">
-<meta property="og:title" content="Tell me when it opens — Space Wize Enterprise">
+<meta property="og:title" content="Tell me when it opens - Space Wize Enterprise">
 <meta property="og:description" content="Get a note when a Space Wize Enterprise division opens.">
 <meta property="og:image" content="https://spacewize.github.io/spacewize/assets/og/card.png">
 <meta property="og:image:alt" content="A cherry tree in blossom against a glowing moon, at night.">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tell me when it opens — Space Wize Enterprise">
+<meta name="twitter:title" content="Tell me when it opens - Space Wize Enterprise">
 <meta name="twitter:description" content="Get a note when a Space Wize Enterprise division opens.">
 <meta name="twitter:image" content="https://spacewize.github.io/spacewize/assets/og/card.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,12 +158,12 @@
     }
   }
   which.textContent = matched || 'the division you pick';
-  if (matched) document.title = matched + ' — Space Wize Enterprise';
+  if (matched) document.title = matched + ' - Space Wize Enterprise';
 
   /* A cross-origin POST cannot be read back, so the answer is aimed at a
      hidden frame and the frame loading is the signal it went. Without
      script the form posts normally and Google shows its own confirmation
-     — worse, but never broken. */
+     - worse, but never broken. */
   var sink = document.createElement('iframe');
   sink.name = 'swz-form-sink';
   sink.setAttribute('aria-hidden', 'true');
@@ -188,7 +188,7 @@
     btn.disabled = true;
     btnTxt.textContent = 'Sending…';
     /* the frame's load event is the only confirmation available, and it
-       can be missed — never leave the button dead */
+       can be missed - never leave the button dead */
     setTimeout(finish, 2500);
   });
 })();
