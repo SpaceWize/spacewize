@@ -755,7 +755,7 @@ function addHitTarget(group, at, radius, index) {
 }
 
 /* one blossom, facing mostly upward off whatever wood it sits on */
-function addBlossom(list, at, along, jitter, scaleMul, woodR, atTip) {
+function addBlossom(list, at, along, jitter, scaleMul, woodR) {
   /* Spread along the twig, barely across it. The scatter used to be
      the same in every direction, which put blossoms up to eight times
      the twig's own radius out to the side — floating in open air next
@@ -767,13 +767,8 @@ function addBlossom(list, at, along, jitter, scaleMul, woodR, atTip) {
   perp.normalize();
   const perp2 = new THREE.Vector3().crossVectors(axis, perp).normalize();
 
-  /* At a tip there is no wood past `at` — the branch ends there — so a
-     symmetric spread puts half the cluster out beyond the last twig,
-     hanging on nothing. Running it backwards instead keeps the same
-     spread and the same draw, and lands all of it against wood. */
-  const alongJit = atTip ? -rndBloom() * jitter : (rndBloom() - 0.5) * jitter;
   const pos = at.clone()
-    .addScaledVector(axis,  alongJit)
+    .addScaledVector(axis,  (rndBloom() - 0.5) * jitter)
     .addScaledVector(perp,  (rndBloom() - 0.5) * jitter * 0.3)
     .addScaledVector(perp2, (rndBloom() - 0.5) * jitter * 0.3);
   const face = new THREE.Vector3(
@@ -847,7 +842,7 @@ DIVISIONS.forEach((division, i) => {
     anchor.add(tip.pos);
     const count = isSmall ? 3 + Math.floor(rndBloom() * 3) : 4 + Math.floor(rndBloom() * 3);
     for (let n = 0; n < count; n++) {
-      addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1, tip.r, true);
+      addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1, tip.r);
     }
     addHitTarget(branchGroup, tip.pos, 0.62, i);
   });
@@ -2354,7 +2349,6 @@ if (loadVeil) {
   if (noMotion || wait <= 0) lift();
   else setTimeout(lift, wait);
 }
-
 
 
 
