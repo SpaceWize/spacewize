@@ -384,8 +384,14 @@ body[data-scene="on"] .tag{display:flex}
   padding:clamp(110px,16vh,150px) clamp(18px,4vw,48px) 70px;
 }
 .tree-list{
-  list-style:none;margin:0;padding:0;
+  list-style:none;margin:0 auto;padding:0;
   display:grid;gap:14px;
+  /* Three across, centred, without hard-coding the count: capped at a
+     width where a fourth column cannot meet the 268px minimum and a
+     third comfortably can. So it is three on a desktop and still falls
+     to two and then one on its own as the window narrows — no
+     breakpoints to keep in step with anything. */
+  max-width:1020px;
   grid-template-columns:repeat(auto-fit,minmax(268px,1fr));
 }
 .tree-list li{margin:0}
