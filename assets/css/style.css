@@ -30,6 +30,9 @@
 
   /* system */
   --shell:     1240px;
+  /* the six-card grid needs more room than the reading column; the bar
+     is not allowed to grow with it */
+  --shell-wide:1420px;
   --r-lg:      22px;
   --r-md:      14px;
   --r-pill:    999px;
@@ -380,7 +383,7 @@ body[data-scene="on"] .tag{display:flex}
    ============================================================ */
 .fallback{
   position:relative;z-index:20;
-  max-width:var(--shell);margin:0 auto;
+  max-width:var(--shell-wide);margin:0 auto;
   padding:clamp(110px,16vh,150px) clamp(18px,4vw,48px) 70px;
 }
 .tree-list{
@@ -394,26 +397,26 @@ body[data-scene="on"] .tag{display:flex}
      330/1160 rather than 268/1020 because at 372px per card the two
      longest lines wrap to three rather than four, which is what makes
      every card in the grid come out the same height. */
-  max-width:1160px;
+  max-width:1312px;
   grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
 }
 .tree-list li{margin:0}
 .branch-card{
   display:block;height:100%;
-  padding:22px 24px;border-radius:var(--r-lg);
+  padding:24px 26px;border-radius:var(--r-lg);
   transition:transform .3s var(--ease), border-color .3s var(--ease);
 }
 a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45)}
 .branch-card h3{
-  font-family:var(--display);font-size:1.5rem;font-weight:500;
-  margin-bottom:9px;
+  font-family:var(--display);font-size:clamp(1.55rem,1.9vw,1.7rem);font-weight:500;
+  margin-bottom:11px;
 }
-.branch-card p{margin:0;color:var(--ink-soft);font-size:.88rem}
+.branch-card p{margin:0;color:var(--ink-soft);font-size:clamp(.9rem,1.1vw,1rem)}
 .branch-card .tag{
   display:inline-flex;align-items:center;gap:7px;
-  font-size:.62rem;font-weight:600;text-transform:uppercase;
+  font-size:.70rem;font-weight:600;text-transform:uppercase;
   letter-spacing:.16em;color:var(--ink-faint);
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 .branch-card[data-live="true"] .tag{color:var(--cherry)}
 .branch-card .pip{width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -428,7 +431,7 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
     var(--void);
 }
 .shell{max-width:860px;margin:0 auto;padding:0 clamp(18px,4vw,48px)}
-.wide{max-width:var(--shell)}
+.wide{max-width:var(--shell-wide)}
 .page-head{padding:clamp(120px,18vh,190px) 0 clamp(40px,7vh,68px)}
 .page-head h1{
   font-family:var(--display);
@@ -526,15 +529,15 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   letter-spacing:.01em;
 }
 .card-when{
-  margin:10px 0 0;
-  font-size:.78rem;color:var(--cherry);
+  margin:12px 0 0;
+  font-size:.88rem;color:var(--cherry);
 }
 .card-acts{
   display:flex;flex-wrap:wrap;align-items:center;
-  gap:8px 16px;margin-top:16px;
+  gap:8px 16px;margin-top:18px;
 }
 .card-notify{
-  font-size:.8rem;font-weight:500;color:var(--ink);
+  font-size:.9rem;font-weight:500;color:var(--ink);
   border-bottom:1px solid var(--cherry);
   padding-bottom:2px;
   transition:color .2s var(--ease)}
@@ -601,7 +604,7 @@ body[data-scene="on"] .stage{
   padding:clamp(96px,14vh,150px) clamp(18px,4vw,48px) clamp(60px,10vh,110px);
 }
 /* the six cards need the room the Sites page itself gives them */
-.under[data-wide] .under-inner{ max-width:var(--shell) }
+.under[data-wide] .under-inner{ max-width:var(--shell-wide) }
 
 /* the borrowed page's own h1, stepped down a rank on arrival */
 .under-title{
