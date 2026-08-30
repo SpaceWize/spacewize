@@ -172,7 +172,7 @@ let sizedH = 0;
 /* Found by accident: zooming the browser leaves the renderer on a
    stale pixel ratio and the whole scene comes back as chunky pixel
    art. It looked good, so it is a switch now rather than a bug. */
-const PIXEL_RATIO = 0.14;
+const PIXEL_RATIO = 0.19;
 let pixelated = false;
 /* declared up here because resize() runs before the tag section */
 let tagMetricsDirty = true;
