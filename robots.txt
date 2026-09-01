@@ -1,10 +1,7 @@
-# This file lives at spacewize.github.io/spacewize/robots.txt, not at
-# the domain root — spacewize.github.io itself is a different repo
-# (TenantGuard). Crawlers that follow the spec strictly only honour a
-# domain-root robots.txt, so this mainly helps tools that check the
-# path they were actually pointed at.
+# At the domain root now that the site has its own name, so crawlers
+# that only honour a root robots.txt actually read this one.
 User-agent: *
 Allow: /
 Disallow: /notify.html
 
-Sitemap: https://spacewize.github.io/spacewize/sitemap.xml
+Sitemap: https://spacewize.dev/sitemap.xml

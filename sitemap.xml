@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://spacewize.github.io/spacewize/</loc></url>
-  <url><loc>https://spacewize.github.io/spacewize/about.html</loc></url>
-  <url><loc>https://spacewize.github.io/spacewize/sites.html</loc></url>
-  <url><loc>https://spacewize.github.io/spacewize/web-dev/</loc></url>
+  <url><loc>https://spacewize.dev/</loc></url>
+  <url><loc>https://spacewize.dev/about.html</loc></url>
+  <url><loc>https://spacewize.dev/sites.html</loc></url>
+  <url><loc>https://spacewize.dev/webdev/</loc></url>
 </urlset>
