@@ -1901,14 +1901,20 @@ window.addEventListener('keydown', (e) => {
 
 const underSites     = document.getElementById('underSites');
 const underSitesBody = document.getElementById('underSitesBody');
-const aboutLink = document.querySelector('.topnav a[href="about.html"]');
-const sitesLink = document.querySelector('.topnav a[href="sites.html"]');
+const aboutLink = document.querySelector('.topnav a[href="/about"]');
+const sitesLink = document.querySelector('.topnav a[href="/sites"]');
 
 /* index is depth: 0 is the tree itself, so it has no panel */
 const SCREENS = [
   null,
-  { el: under,      body: underBody,      src: 'about.html', link: aboutLink, said: 'About.' },
-  { el: underSites, body: underSitesBody, src: 'sites.html', link: sitesLink, said: 'Sites.' },
+  /* Two addresses on purpose. `href` is what the links say and what
+     this matches them by — the extensionless form the host serves.
+     `src` is the file itself, which any static server can hand over,
+     so borrowing the copy does not depend on that rewriting. */
+  { el: under,      body: underBody,      src: 'about.html', href: '/about',
+    link: aboutLink, said: 'About.' },
+  { el: underSites, body: underSitesBody, src: 'sites.html', href: '/sites',
+    link: sitesLink, said: 'Sites.' },
 ];
 const DEEPEST = SCREENS.length - 1;
 
@@ -1993,11 +1999,11 @@ function goTo(n) {
 function wireInnerLinks(root) {
   SCREENS.forEach((s, i) => {
     if (!s) return;
-    root.querySelectorAll('a[href="' + s.src + '"]').forEach((a) => {
+    root.querySelectorAll('a[href="' + s.href + '"]').forEach((a) => {
       a.addEventListener('click', (e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
-        goTo(i).catch(() => { window.location.href = s.src; });
+        goTo(i).catch(() => { window.location.href = s.href; });
       });
     });
   });
@@ -2017,7 +2023,7 @@ SCREENS.forEach((s, i) => {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     if (level === i) { goTo(0); return; }
-    goTo(i).catch(() => { window.location.href = s.src; });
+    goTo(i).catch(() => { window.location.href = s.href; });
   });
 });
 
