@@ -214,6 +214,35 @@
     });
   }
 
+  /* "Add site care" already jumps to the form; it also says so in the
+     message now, because the jump on its own leaves the visitor to
+     explain what they just clicked. Appended rather than assigned, so
+     anything already typed survives, and only once however many times
+     the button is pressed. */
+  var careBtn = document.getElementById('careBtn');
+  if (careBtn) {
+    careBtn.addEventListener('click', function(){
+      var box = document.getElementById('cf-message');
+      if (!box) return;
+      var line = 'I would like to add Site Care to my website.';
+      if (box.value.indexOf(line) === -1) {
+        var had = box.value.replace(/\s+$/, '');
+        box.value = had ? had + '\n\n' + line : line;
+      }
+      /* the budget line should agree with what they just asked for,
+         but not overwrite a project they had already picked */
+      var budget = document.getElementById('cf-budget');
+      if (budget && budget.selectedIndex === budget.options.length - 1) {
+        for (var i = 0; i < budget.options.length; i++) {
+          if (budget.options[i].value.indexOf('Site care') === 0) {
+            budget.selectedIndex = i; break;
+          }
+        }
+      }
+      status.textContent = 'Added to your message below - tell me about the site and send it over.';
+    });
+  }
+
   var copyBtn = document.getElementById('copyBtn');
   copyBtn.addEventListener('click', function(){
     withDraft(function(f, d){
