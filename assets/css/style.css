@@ -857,3 +857,28 @@ html[data-arrive="1"] .page-arrive[data-go="true"]{
   transition:color .2s var(--ease), border-color .2s var(--ease);
 }
 .lost-alt:hover{ color:var(--ink);border-color:var(--ink) }
+
+/* ============================================================
+   Part of the enterprise, but not one of the six: it has an end
+   date. Deliberately not a branch-card: no pip, no tag, no lift on
+   hover, and it sits outside the tree-list so it never reads as
+   a seventh division.
+   ============================================================ */
+.aside-note{
+  max-width:500px;
+  margin:clamp(84px,14vh,150px) auto 0;
+  padding:18px 20px;
+  border-radius:var(--r-md);
+}
+.aside-note .eyebrow{font-size:.62rem;margin:0 0 9px}
+.aside-note h2{
+  font-family:var(--display);
+  font-size:1.25rem;
+  font-weight:500;
+  margin:0 0 8px;
+}
+.aside-note p{
+  margin:0;color:var(--ink-soft);
+  font-size:.84rem;line-height:1.6;
+}
+.aside-note .card-acts{margin-top:14px}

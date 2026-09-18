@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en" data-palette="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a1a">
+<title>YEPS — Young Entrepreneur Peer Squadron</title>
+<meta name="description" content="YEPS is a weekly peer group for students in Grades 8-12 in Langley, BC. Communication skills, industry research, and building real businesses together. First session free.">
+
+<!-- link previews: this page will mostly be shared by text and group chat,
+     so it needs to render as something other than a bare URL -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="YEPS">
+<meta property="og:title" content="YEPS — Young Entrepreneur Peer Squadron">
+<meta property="og:description" content="A weekly peer group for Grades 8-12 in Langley, BC. Communication skills, industry research, and building real businesses together. First session free.">
+<link rel="canonical" href="https://spacewize.dev/yeps/">
+<meta property="og:url" content="https://spacewize.dev/yeps/">
+<meta property="og:image" content="https://spacewize.dev/assets/og/card.png">
+<meta property="og:image:alt" content="A cherry tree in blossom against a glowing moon, at night.">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:image" content="https://spacewize.dev/assets/og/card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="YEPS — Young Entrepreneur Peer Squadron">
+<meta name="twitter:description" content="A weekly peer group for Grades 8-12 in Langley, BC. First session free.">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e07a5f'/%3E%3Ctext x='16' y='24' font-family='Georgia,serif' font-size='21' font-weight='700' text-anchor='middle' fill='%231a1a1a'%3EY%3C/text%3E%3C/svg%3E">
+<script>
+/* Runs before first paint: mark JS as available and settle the palette from
+   the visitor's saved choice, falling back to their system setting, so the
+   page never flashes the wrong theme. */
+(function () {
+  var d = document.documentElement;
+  d.classList.add('js');
+  var saved = null;
+  try { saved = localStorage.getItem('yeps-palette'); } catch (e) {}
+  if (saved !== 'light' && saved !== 'dark') {
+    saved = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+      ? 'light' : 'dark';
+  }
+  d.setAttribute('data-palette', saved);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Hina+Mincho&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a1a1a;
+  --card: #242424;
+  --card-border: #2e2e2e;
+  --accent: #e07a5f;
+  --accent-hover: #d46a4f;
+  --accent-ink: #1a1a1a;
+  --text: #f0e9e4;
+  --text-strong: #ffffff;
+  --text-dim: #b8a9a0;
+  --rule: #333333;
+  --field: #1c1c1c;
+  --glow: rgba(224, 122, 95, 0.16);
+  --grain-opacity: 0.17;
+  /* one continuous ramp for the timeline rail */
+  --rail-top: #f0a184;
+  --rail-bot: #6e2f1c;
+}
+:root[data-palette="light"] {
+  --bg: #f7f3ee;
+  --card: #fffdfa;
+  --card-border: #e6ddd2;
+  --accent: #a8431f;
+  --accent-hover: #8e3617;
+  --accent-ink: #fffdfa;
+  --text: #2a2320;
+  --text-strong: #171310;
+  --text-dim: #6b5f57;
+  --rule: #ddd2c4;
+  --field: #f7f3ee;
+  --glow: rgba(168, 67, 31, 0.10);
+  --grain-opacity: 0.09;
+  --rail-top: #d9633c;
+  --rail-bot: #58210f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  position: relative;
+  font-family: 'Karla', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  margin: 0;
+  padding-block: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  display: flex;
+  justify-content: center;
+  transition: background-color .35s ease, color .35s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- grain: absolute, so it is part of the page and scrolls with it --- */
+.grain {
+  position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 220px 220px;
+}
+
+/* --- parallax highlights -------------------------------------
+   Anchored to the document (like the grain) and overscanned top and
+   bottom, so highlights sit all the way down the page and drift as
+   you scroll instead of sliding off after the first screen.        */
+.glow {
+  position: absolute;
+  top: -240px; bottom: -420px; left: 0; right: 0;
+  z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(460px 320px at 82%  4%, var(--glow), transparent 70%),
+    radial-gradient(400px 300px at 12% 17%, var(--glow), transparent 70%),
+    radial-gradient(520px 340px at 88% 33%, var(--glow), transparent 70%),
+    radial-gradient(420px 300px at  8% 49%, var(--glow), transparent 70%),
+    radial-gradient(480px 330px at 78% 66%, var(--glow), transparent 70%),
+    radial-gradient(430px 310px at 16% 82%, var(--glow), transparent 70%),
+    radial-gradient(460px 320px at 84% 95%, var(--glow), transparent 70%);
+  will-change: transform;
+}
+
+.container { max-width: 660px; width: 100%; position: relative; z-index: 1; }
+
+/* --- palette toggle ---------------------------------------- */
+.palette-toggle {
+  position: fixed; top: 14px; right: 14px; z-index: 5;
+  font-family: 'Karla', sans-serif; font-size: .8rem; font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--text-dim);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 10px 16px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, background .35s ease;
+}
+.palette-toggle:hover, .palette-toggle:focus-visible { color: var(--accent); border-color: var(--accent); }
+
+/* --- header ------------------------------------------------ */
+header { padding-top: 34px; padding-bottom: 22px; margin-bottom: 32px; position: relative; }
+header::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 1px;
+  width: 100%; background: var(--rule);
+  transform: scaleX(0); transform-origin: left;
+  animation: draw 1.1s cubic-bezier(.22,.61,.36,1) .15s forwards;
+}
+@keyframes draw { to { transform: scaleX(1); } }
+
+h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 700; color: var(--text-strong);
+  margin: 0 0 6px 0; font-size: clamp(2.6rem, 11vw, 3.4rem);
+  letter-spacing: .04em; line-height: 1.05;
+}
+.tagline {
+  font-family: 'Hina Mincho', 'Cormorant Garamond', serif;
+  color: var(--accent); font-size: clamp(1.05rem, 4.4vw, 1.25rem);
+  font-weight: 400; letter-spacing: .02em;
+  min-height: 1.7em;
+}
+.caret {
+  display: inline-block; width: 2px; height: 1em;
+  background: var(--accent); vertical-align: -.12em; margin-left: 2px;
+  animation: blink 1s step-end infinite;
+}
+.caret.done { animation: blink 1s step-end 3; opacity: 0; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --- cards ------------------------------------------------- */
+.card {
+  background: var(--card);
+  padding: 24px;
+  border-radius: 10px;
+  margin-bottom: 22px;
+  border: 1px solid var(--card-border);
+  transition: background .35s ease, border-color .35s ease;
+}
+.js .card {
+  opacity: 0;
+  transform: perspective(1000px) rotateX(-14deg) translateY(28px);
+  transform-origin: top center;
+  transition: opacity .55s ease, transform .8s cubic-bezier(.16,1.02,.3,1),
+              background .35s ease, border-color .35s ease;
+}
+.js .card.in { opacity: 1; transform: perspective(1000px) rotateX(0deg) translateY(0); }
+
+h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--text-strong); margin-top: 0; margin-bottom: .6em;
+  font-size: 1.6rem; font-weight: 600; letter-spacing: .01em;
+}
+h2.tight { margin-bottom: .18em; }
+.sub {
+  font-size: .74rem; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.4em;
+}
+h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--text-strong); font-size: 1.15rem; font-weight: 600;
+  margin: 26px 0 .4em 0;
+}
+p { font-size: 1.02rem; margin: 0 0 1em 0; }
+p:last-child { margin-bottom: 0; }
+strong { color: var(--text-strong); font-weight: 700; }
+a { color: var(--accent); }
+
+/* --- schedule with a scroll-filled gradient rail ------------ */
+.schedule { list-style: none; margin: 4px 0 0 0; padding: 0; }
+.schedule li {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 18px;
+  padding: 0 0 20px 0;
+}
+.rail-track {
+  border-radius: 6px;
+  background: var(--rule);
+  overflow: hidden;
+}
+.rail {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background-color: var(--accent);
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--rail-top), var(--rail-bot) var(--p0)),
+    color-mix(in oklab, var(--rail-top), var(--rail-bot) var(--p1))
+  );
+  transform: scaleY(0);
+  transform-origin: top center;
+}
+.slot-time {
+  display: block;
+  font-family: 'Karla', sans-serif; font-size: .74rem; font-weight: 700;
+  letter-spacing: .13em; text-transform: uppercase;
+  /* the gradient lives in the rail; the label stays at full accent so the
+     later blocks don't fall below contrast on either palette */
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.slot-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.24rem; font-weight: 600; color: var(--text-strong);
+  display: block; line-height: 1.3; margin-bottom: 3px;
+}
+.slot-desc { font-size: .98rem; color: var(--text); margin: 0; }
+
+/* --- practical details ------------------------------------- */
+.details { list-style: none; margin: 0; padding: 0; }
+.details li { padding: 12px 0; border-top: 1px solid var(--rule); font-size: 1.02rem; }
+.details li:first-child { border-top: none; padding-top: 0; }
+.details .label {
+  display: block;
+  font-size: .74rem; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px;
+}
+
+/* --- form ---------------------------------------------------- */
+.field { margin-bottom: 18px; }
+.field label, .legend {
+  display: block;
+  padding: 0;
+  font-size: .74rem; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
+}
+.req { color: var(--accent); }
+input[type=text], input[type=email], input[type=number], select, textarea {
+  width: 100%;
+  font-family: 'Karla', sans-serif; font-size: 1rem;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 12px 13px;
+  min-height: 46px;
+  transition: border-color .2s ease, background .35s ease;
+}
+select { appearance: none; background-image: none; }
+textarea { resize: vertical; min-height: 92px; line-height: 1.55; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+fieldset { border: 0; padding: 0; margin: 0 0 18px 0; }
+.choices { display: flex; flex-wrap: wrap; gap: 10px; }
+.choice {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px; min-height: 46px;
+  border: 1px solid var(--card-border); border-radius: 6px;
+  background: var(--field); cursor: pointer; font-size: .96rem;
+  transition: border-color .2s ease, color .2s ease;
+}
+.choice:hover { border-color: var(--accent); }
+.choice input { accent-color: var(--accent); width: 16px; height: 16px; }
+.choice:has(input:checked) { border-color: var(--accent); color: var(--text-strong); }
+
+.honey { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.btn {
+  display: inline-block;
+  background: var(--accent); color: var(--accent-ink);
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%);
+  background-size: 240% 100%; background-position: 130% 0;
+  background-repeat: no-repeat;
+  padding: 15px 28px; border-radius: 6px; text-decoration: none;
+  font-family: 'Karla', sans-serif; font-weight: 700;
+  font-size: 1.02rem; letter-spacing: .01em;
+  border: 0; cursor: pointer; min-height: 48px;
+  transition: background-color .2s ease, background-position .55s ease, transform .2s ease;
+}
+.btn:hover, .btn:focus-visible {
+  background-color: var(--accent-hover);
+  background-position: -30% 0;
+  transform: translateY(-1px);
+}
+.btn[disabled] { opacity: .6; cursor: default; transform: none; }
+
+.form-note { font-size: .86rem; color: var(--text-dim); margin-top: 14px; }
+.form-note a { color: var(--text-dim); }
+.form-note a:hover { color: var(--accent); }
+.form-status { margin-top: 14px; font-size: .95rem; color: var(--accent); min-height: 1.4em; }
+.thanks { display: none; }
+.thanks.show { display: block; }
+.sent .form-body { display: none; }
+
+/* --- footer -------------------------------------------------- */
+footer {
+  text-align: center; color: var(--text-dim);
+  font-size: .88rem; margin-top: 45px; padding-bottom: 30px;
+}
+footer p { font-size: .88rem; margin: 0 0 6px 0; }
+footer a { color: var(--text-dim); text-decoration-color: var(--rule); }
+footer a:hover, footer a:focus-visible { color: var(--accent); }
+.origin { font-size: .8rem; opacity: .75; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+@media (max-width: 480px) {
+  .card { padding: 20px 18px; }
+  body { padding-left: 16px; padding-right: 16px; }
+  .schedule li { gap: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::after { animation: none !important; transition: none !important; }
+  header::after { transform: scaleX(1); }
+  .glow { transform: none !important; }
+  .js .card { opacity: 1 !important; transform: none !important; }
+  .rail { transform: scaleY(1) !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<button class="palette-toggle" id="paletteToggle" type="button">Light</button>
+
+<div class="container">
+
+  <header>
+    <h1>YEPS</h1>
+    <div class="tagline">
+      <span class="sr-only">Young Entrepreneur Peer Squadron</span>
+      <span id="typed" aria-hidden="true"></span><span class="caret" id="caret" aria-hidden="true"></span>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="card">
+      <h2>What is YEPS?</h2>
+      <p>YEPS is a close-knit, weekly peer group (4&ndash;7 members) for students in <strong>Grades 8&ndash;12</strong> in Langley, BC. We focus on developing communication skills, analyzing real industry trends, and building hands-on mini businesses together.</p>
+    </section>
+
+    <section class="card">
+      <h2>These aren't kid businesses</h2>
+      <p>If you want to make jewellery, don't go buy a crafting kit &mdash; work your way toward being an actual jeweller. If you're into robots, don't buy a robot kit &mdash; work your way toward a robotics company that stands on its own.</p>
+      <p>Starting this young is harder in places. There are things you can't legally do yet, and we work around them instead of pretending they aren't there. But it's easier in every way that lasts: you get to set it up properly from the beginning, you have years to learn, and you have room to make mistakes that someone starting at thirty with a mortgage simply doesn't have.</p>
+    </section>
+
+    <section class="card" id="structure">
+      <h2 class="tight">Session Structure</h2>
+      <div class="sub">2 hours &middot; weekly</div>
+
+      <ul class="schedule" id="schedule">
+        <li style="--p0: 0%; --p1: 20%">
+          <span class="rail-track" aria-hidden="true"><span class="rail"></span></span>
+          <div>
+            <span class="slot-time">0:00 &ndash; 0:15</span>
+            <span class="slot-name">Settle &amp; Dream Check-In</span>
+            <p class="slot-desc">Arrive, connect to Wi-Fi, and open up. Each member restates their long-term target out loud to lock in focus and build momentum.</p>
+          </div>
+        </li>
+        <li style="--p0: 20%; --p1: 40%">
+          <span class="rail-track" aria-hidden="true"><span class="rail"></span></span>
+          <div>
+            <span class="slot-time">0:15 &ndash; 1:00</span>
+            <span class="slot-name">Industry Deep Dive &amp; Market Research</span>
+            <p class="slot-desc">15 minutes of hands-on research on laptops/tablets exploring the week's voted topic, followed by 30 minutes of breakdown: market gaps, trends, and real-world micro/macro impacts.</p>
+          </div>
+        </li>
+        <li style="--p0: 40%; --p1: 60%">
+          <span class="rail-track" aria-hidden="true"><span class="rail"></span></span>
+          <div>
+            <span class="slot-time">1:00 &ndash; 1:15</span>
+            <span class="slot-name">Task Selection &amp; Accountability</span>
+            <p class="slot-desc">Each member selects two specific, actionable tasks they commit to finishing for their personal project before the next meeting.</p>
+          </div>
+        </li>
+        <li style="--p0: 60%; --p1: 80%">
+          <span class="rail-track" aria-hidden="true"><span class="rail"></span></span>
+          <div>
+            <span class="slot-time">1:15 &ndash; 1:55</span>
+            <span class="slot-name">Social Decompress &amp; Free Time</span>
+            <p class="slot-desc">35&ndash;40 minutes to decompress, collaborate on ideas, play games, or keep building. This is where real trust, friendships, and organic networking form.</p>
+          </div>
+        </li>
+        <li style="--p0: 80%; --p1: 100%">
+          <span class="rail-track" aria-hidden="true"><span class="rail"></span></span>
+          <div>
+            <span class="slot-time">1:55 &ndash; 2:00</span>
+            <span class="slot-name">Final Re-Commitment</span>
+            <p class="slot-desc">Quick circle back to restate weekly commitments before heading out.</p>
+          </div>
+        </li>
+      </ul>
+
+      <h3>Why this structure?</h3>
+      <p>I structured the typical day this way because restating dreams at the beginning helps people remember them and keeps the research and tasks pointed toward making them real. Looking at different industries builds knowledge and can spark ideas for anyone who doesn't have a business yet. Choosing two concrete tasks creates accountability and real momentum. Free time near the end lets the learning settle while people build trust and friendship with each other.</p>
+    </section>
+
+    <section class="card">
+      <h2>Practical Details</h2>
+      <ul class="details">
+        <li><span class="label">Who it's for</span>This group is designed for the grade range of Grades 8&ndash;12.</li>
+        <li><span class="label">Group size</span>The group size is 4&ndash;7 people max.</li>
+        <li><span class="label">Session length</span>The session length is always about 2 hours.</li>
+        <li><span class="label">How long it runs</span>YEPS runs while I&rsquo;m a teen, and wraps up just before I turn 20. Everyone gets plenty of notice before the last session &mdash; <a href="/yeps/rules#ending">here&rsquo;s what happens then</a>.</li>
+        <li><span class="label">What to bring</span>Laptop or tablet preferred (phones not used during research); if you don't have one, you can share with someone. Feel free to bring a card game or something for the free period.</li>
+        <li><span class="label">Location</span>We meet at a small family restaurant around Langley City &mdash; a place my own family has been eating at for years, so the staff know us. We're in the main dining room during normal business hours. The exact spot is shared with those who will participate.</li>
+        <li><span class="label">Cost</span>The first session of YEPS is free, to garner interest in the program and test feasibility. After that it's <strong>$50/month</strong> &mdash; that's four sessions, and snacks at every one of them.</li>
+        <li><span class="label">What's included</span>We meet at a restaurant, and snacks are included: fries, fruit, maybe toast. If you want anything beyond that &mdash; a full meal, a specialty drink &mdash; you order and pay for it yourself.</li>
+        <li><span class="label">Paying</span>Stripe is preferred &mdash; set it up once and it renews automatically each month, so nobody has to remember. If you'd rather pay cash, bring it to the first session of the month.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>About</h2>
+      <p>Hi, I'm Sophia, and I'm a homeschooled teen in Langley, BC. I created YEPS because I wanted to build a tight-knit space for teens to practice real-world communication skills, analyze modern business trends, and create real businesses that create real profit, and could be scaled throughout a YEPS member's life (although I can't guarantee success &mdash; business is business after all!).</p>
+      <p>I focus on keeping our weekly sessions practical, low-drama, and high-value so everyone in the squad can sharpen their confidence and move their personal projects forward. If you (the teen) or your child (parent of the teen) are entrepreneurial but are stuck in a loop of planning and prep, or a kid with a dream and feeling the 9 to 5 just won't cut it, then YEPS is for you! I myself am a kid with a dream, who knows the 9 to 5 won't work, <em>and</em> usually stuck in the planning loop. Join me on a wealth building journey to our dream!</p>
+    </section>
+
+    <section class="card" id="signup">
+      <h2>Free Preview Session</h2>
+      <p>Interested in seeing how a session runs? The first group meeting is <strong>100% free</strong> for anyone looking to check out if this is right for them.</p>
+
+      <div class="form-body">
+        <form id="signupForm"
+              action="https://docs.google.com/forms/d/e/1FAIpQLSfNLv3KY-B9WcB9Ki3tvYW9lZUGlT27X34AH9X67sEVw1lTYA/formResponse"
+              method="POST" target="gformSink">
+
+          <div class="field">
+            <label for="f-name">First &amp; last name <span class="req">*</span></label>
+            <input type="text" id="f-name" name="entry.1000308126" required autocomplete="name">
+          </div>
+
+          <div class="field">
+            <label for="f-grade">Grade <span class="req">*</span></label>
+            <select id="f-grade" name="entry.807465951" required>
+              <option value="">Choose a grade</option>
+              <option value="8">Grade 8</option>
+              <option value="9">Grade 9</option>
+              <option value="10">Grade 10</option>
+              <option value="11">Grade 11</option>
+              <option value="12">Grade 12</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="f-age">Age <span class="req">*</span></label>
+            <input type="number" id="f-age" name="entry.402019445" required min="11" max="20" inputmode="numeric">
+          </div>
+
+          <div class="field">
+            <label for="f-email">Parent/student email <span class="req">*</span></label>
+            <input type="email" id="f-email" name="entry.931312052" required autocomplete="email">
+          </div>
+
+          <fieldset>
+            <legend class="legend">School / Homeschool</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="entry.369923858" value="Homeschool"> Homeschool</label>
+              <label class="choice"><input type="radio" name="entry.369923858" value="Public/Private school"> Public/Private school</label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="f-idea">Do you have a current business idea or chosen industry interest?</label>
+            <textarea id="f-idea" name="entry.1209675111" rows="3"></textarea>
+          </div>
+
+          <div class="honey" aria-hidden="true">
+            <label for="f-site">Leave this empty</label>
+            <input type="text" id="f-site" name="website" tabindex="-1" autocomplete="off">
+          </div>
+
+          <p class="form-note" style="margin-top:0;margin-bottom:16px">
+            Before you sign up, have a read of the <a href="/yeps/rules">group rules</a> &mdash; they're short, and they cover how the group actually runs.
+          </p>
+
+          <button type="submit" class="btn" id="submitBtn">Claim a free spot</button>
+          <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
+        </form>
+
+        <p class="form-note">
+          Your answers go straight to my Google Form &mdash; nothing is stored on this site.
+          Having trouble? <a href="https://forms.gle/eXnkf6wYXCLQYUFU8" target="_blank" rel="noopener">Open the Google form instead</a>.
+        </p>
+      </div>
+
+      <div class="thanks" id="thanks">
+        <h3>You're on the list.</h3>
+        <p>Thanks for signing up &mdash; I'll email you at the address you gave with the exact Langley location and the date of the next free session. If you don't hear back within a few days, reach me at <a href="mailto:thespacewize@gmail.com">thespacewize@gmail.com</a>.</p>
+      </div>
+
+      <iframe name="gformSink" id="gformSink" title="Form submission target" style="display:none" aria-hidden="true"></iframe>
+    </section>
+
+  </main>
+
+  <footer>
+    <p><a href="/yeps/rules">Group rules</a></p>
+    <p>Langley, BC &bull; Hosted by Sophia &bull; <a href="mailto:thespacewize@gmail.com">thespacewize@gmail.com</a></p>
+    <p class="origin">YEPS and <a href="/">Space Wize Enterprise</a> are both founded by Sophia.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  /* ---------- palette toggle ---------- */
+  var btn = document.getElementById('paletteToggle');
+  function applyPalette(p) {
+    root.setAttribute('data-palette', p);
+    btn.textContent = p === 'dark' ? 'Light' : 'Dark';
+    btn.setAttribute('aria-label', 'Switch to ' + (p === 'dark' ? 'light' : 'dark') + ' palette');
+  }
+  // the early inline script already set data-palette; just sync the button
+  applyPalette(root.getAttribute('data-palette') === 'light' ? 'light' : 'dark');
+
+  var chosen = null;
+  try { chosen = localStorage.getItem('yeps-palette'); } catch (e) {}
+  var hasChoice = (chosen === 'light' || chosen === 'dark');
+
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-palette') === 'dark' ? 'light' : 'dark';
+    applyPalette(next);
+    hasChoice = true;
+    try { localStorage.setItem('yeps-palette', next); } catch (e) {}
+  });
+
+  // follow the system setting live, but only until the visitor picks for themselves
+  var scheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
+  if (scheme && scheme.addEventListener) {
+    scheme.addEventListener('change', function (e) {
+      if (!hasChoice) applyPalette(e.matches ? 'light' : 'dark');
+    });
+  }
+
+  /* ---------- typing tagline ---------- */
+  var TAG = 'Young Entrepreneur Peer Squadron';
+  var typed = document.getElementById('typed');
+  var caret = document.getElementById('caret');
+  if (reduce.matches) {
+    typed.textContent = TAG;
+    caret.classList.add('done');
+  } else {
+    var i = 0;
+    (function tick() {
+      typed.textContent = TAG.slice(0, i);
+      if (i++ <= TAG.length) setTimeout(tick, i < 3 ? 260 : 46);
+      else caret.classList.add('done');
+    })();
+  }
+
+  /* ---------- scroll-driven: card unfold, rail fill, glow, progress ---------- */
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var slots = Array.prototype.slice.call(document.querySelectorAll('.schedule li'));
+  var rails = Array.prototype.slice.call(document.querySelectorAll('.rail'));
+  var glow = document.querySelector('.glow');
+
+  var px = 0, py = 0, tx = 0, ty = 0, ticking = false, pending = 0;
+  var finePointer = window.matchMedia('(pointer: fine)').matches;
+
+  function revealAll() {
+    cards.forEach(function (c) { c.classList.add('in'); });
+    rails.forEach(function (r) { r.style.transform = 'scaleY(1)'; });
+  }
+
+  function frame() {
+    ticking = false;
+    if (reduce.matches) return;
+    var vh = window.innerHeight;
+
+    for (var i = 0; i < cards.length; i++) {
+      if (!cards[i].classList.contains('in') &&
+          cards[i].getBoundingClientRect().top < vh * 0.88) cards[i].classList.add('in');
+    }
+
+    // each rail fills downward in proportion to how far the block has passed
+    // the read line, so the whole column reads as one continuous progress bar
+    var line = vh * 0.45;
+    for (var j = 0; j < slots.length; j++) {
+      var r = slots[j].getBoundingClientRect();
+      var f = r.height > 0 ? (line - r.top) / r.height : 0;
+      f = f < 0 ? 0 : (f > 1 ? 1 : f);
+      rails[j].style.transform = 'scaleY(' + f.toFixed(4) + ')';
+    }
+
+    px += (tx - px) * 0.08;
+    py += (ty - py) * 0.08;
+    // the layer is document-anchored now, so the drift factor is small —
+    // enough for the highlights to shift against the content, not slide away
+    glow.style.transform = 'translate3d(' + px + 'px,' + (window.scrollY * -0.08 + py) + 'px,0)';
+    if (Math.abs(tx - px) > 0.4 || Math.abs(ty - py) > 0.4) request();
+  }
+
+  function request() {
+    if (ticking) return;
+    ticking = true;
+    pending = requestAnimationFrame(function () { pending = 0; frame(); });
+  }
+
+  if (reduce.matches) revealAll();
+
+  window.addEventListener('scroll', request, { passive: true });
+  window.addEventListener('resize', request);
+  // a tab loaded in the background has its rAF callbacks dropped, which would
+  // otherwise leave `ticking` stuck true and kill scrolling for good
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    if (pending) cancelAnimationFrame(pending);
+    pending = 0; ticking = false;
+    request();
+  });
+  if (finePointer) {
+    window.addEventListener('pointermove', function (e) {
+      tx = (e.clientX / window.innerWidth - 0.5) * 46;
+      ty = (e.clientY / window.innerHeight - 0.5) * 32;
+      request();
+    }, { passive: true });
+  }
+  request();
+  // safety net: if the loop never ran, never leave the page blank
+  setTimeout(function () {
+    if (!cards[0].classList.contains('in')) revealAll();
+  }, 2500);
+
+  /* ---------- native form -> Google Forms ---------- */
+  var form = document.getElementById('signupForm');
+  var status = document.getElementById('formStatus');
+  var submitBtn = document.getElementById('submitBtn');
+  var sink = document.getElementById('gformSink');
+  var sent = false;
+
+  form.addEventListener('submit', function (e) {
+    if (document.getElementById('f-site').value !== '') { e.preventDefault(); return; }
+    sent = true;
+    submitBtn.disabled = true;
+    status.textContent = 'Sending…';
+    setTimeout(finish, 2500); // the iframe load event is unreliable cross-origin
+  });
+
+  sink.addEventListener('load', function () { if (sent) finish(); });
+
+  function finish() {
+    if (!sent) return;
+    sent = false;
+    document.getElementById('signup').classList.add('sent');
+    document.getElementById('thanks').classList.add('show');
+    document.getElementById('thanks').scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth', block: 'center' });
+  }
+})();
+</script>
+
+</body>
+</html>
