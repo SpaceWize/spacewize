@@ -41,11 +41,11 @@ try {
 
 /* The static division list is the no-JS fallback, not the front door.
    Left visible it paints first and the tree replaces it a moment
-   later - which on a phone, where three.js comes off a CDN, reads as
+   later - which on a phone, where three.js is a 1.3 MB fetch, reads as
    the wrong page loading before the right one. Hide it while script
    is running, and put it straight back if the scene never arrives. */
 document.documentElement.dataset.js = '1';
-/* stamped here, not inside scene.js, so it covers the CDN fetch too -
+/* stamped here, not inside scene.js, so it covers the three.js fetch too -
    the veil has a minimum hold time, and that clock has to start now */
 window.__loadStart = performance.now();
 setTimeout(function () {
@@ -57,8 +57,8 @@ setTimeout(function () {
 <script type="importmap">
 {
   "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    "three": "/assets/vendor/three/build/three.module.js",
+    "three/addons/": "/assets/vendor/three/examples/jsm/"
   }
 }
 </script>
@@ -83,7 +83,7 @@ setTimeout(function () {
 
   <!-- Covers the gap between "blank tab" and "tree actually running" -
        otherwise the topbar paints, then everything else pops in at once
-       whenever the CDN fetch and tree build finish. Gated purely by
+       whenever the three.js fetch and tree build finish. Gated purely by
        html[data-js], the same flag the fallback list uses, so a no-JS
        visitor never sees it and it self-removes if the scene never
        arrives. The moon appears here the instant its real screen
