@@ -282,7 +282,7 @@ a { color: var(--accent); }
   text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
 }
 .req { color: var(--accent); }
-input[type=text], input[type=email], input[type=number], select, textarea {
+input[type=text], input[type=email], input[type=number], input[type=tel], select, textarea {
   width: 100%;
   font-family: 'Karla', sans-serif; font-size: 1rem;
   color: var(--text);
@@ -500,22 +500,67 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
             <input type="number" id="f-age" name="entry.402019445" required min="11" max="20" inputmode="numeric">
           </div>
 
-          <div class="field">
-            <label for="f-email">Parent/student email <span class="req">*</span></label>
-            <input type="email" id="f-email" name="entry.931312052" required autocomplete="email">
-          </div>
-
           <fieldset>
-            <legend class="legend">School / Homeschool</legend>
+            <legend class="legend">School / Homeschool <span class="req">*</span></legend>
             <div class="choices">
-              <label class="choice"><input type="radio" name="entry.369923858" value="Homeschool"> Homeschool</label>
+              <label class="choice"><input type="radio" name="entry.369923858" value="Homeschool" required> Homeschool</label>
               <label class="choice"><input type="radio" name="entry.369923858" value="Public/Private school"> Public/Private school</label>
             </div>
           </fieldset>
 
           <div class="field">
+            <label for="f-semail">Student email</label>
+            <input type="email" id="f-semail" name="entry.931312052" autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="f-pemail">Parent/guardian email <span class="req">*</span></label>
+            <input type="email" id="f-pemail" name="entry.122577133" required>
+          </div>
+
+          <div class="field">
+            <label for="f-pphone">Parent/guardian phone number <span class="req">*</span></label>
+            <input type="tel" id="f-pphone" name="entry.1477349607" required autocomplete="tel">
+          </div>
+
+          <fieldset>
+            <legend class="legend">Any food allergies or dietary restrictions?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="entry.1691270090" value="Yes"> Yes</label>
+              <label class="choice"><input type="radio" name="entry.1691270090" value="No"> No</label>
+            </div>
+          </fieldset>
+
+          <fieldset id="allergyMore">
+            <div class="field">
+              <label for="f-allergy">If yes, what are they?</label>
+              <input type="text" id="f-allergy" name="entry.1763834955">
+            </div>
+            <fieldset>
+              <legend class="legend">Do they carry an epinephrine auto-injector?</legend>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="entry.336024456" value="Yes"> Yes</label>
+                <label class="choice"><input type="radio" name="entry.336024456" value="No"> No</label>
+              </div>
+            </fieldset>
+          </fieldset>
+
+          <fieldset>
+            <legend class="legend">Which times could you usually make?</legend>
+            <div class="choices">
+              <label class="choice"><input type="checkbox" name="entry.1083290182" value="Saturday 1:30–3:30"> Saturday 1:30&ndash;3:30</label>
+              <label class="choice"><input type="checkbox" name="entry.1083290182" value="Saturday 3:30–5:30"> Saturday 3:30&ndash;5:30</label>
+              <label class="choice"><input type="checkbox" id="f-time-other" name="entry.1083290182" value="__other_option__"> Other</label>
+            </div>
+            <div class="field" id="timeOtherWrap" style="margin-top:10px;margin-bottom:0">
+              <label for="f-time-other-text">Other time</label>
+              <input type="text" id="f-time-other-text" name="entry.1083290182.other_option_response">
+            </div>
+          </fieldset>
+
+          <div class="field">
             <label for="f-idea">Do you have a current business idea or chosen industry interest?</label>
-            <textarea id="f-idea" name="entry.1209675111" rows="3"></textarea>
+            <textarea id="f-idea" name="entry.1299957947" rows="3"></textarea>
           </div>
 
           <div class="honey" aria-hidden="true">
@@ -533,7 +578,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
 
         <p class="form-note">
           Your answers go straight to my Google Form &mdash; nothing is stored on this site.
-          Having trouble? <a href="https://forms.gle/eXnkf6wYXCLQYUFU8" target="_blank" rel="noopener">Open the Google form instead</a>.
+          Having trouble? <a href="https://forms.gle/mwkSYvAPB5KciyWP9" target="_blank" rel="noopener">Open the Google form instead</a>.
         </p>
       </div>
 
@@ -684,6 +729,29 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
   var submitBtn = document.getElementById('submitBtn');
   var sink = document.getElementById('gformSink');
   var sent = false;
+
+  // allergy details only when the answer is Yes; disabled so a "No" never
+  // sends stale details. Without JS everything simply stays visible.
+  var allergyMore = document.getElementById('allergyMore');
+  function syncAllergy() {
+    var yes = !!form.querySelector('input[name="entry.1691270090"][value="Yes"]:checked');
+    allergyMore.hidden = !yes;
+    allergyMore.disabled = !yes;
+  }
+  form.querySelectorAll('input[name="entry.1691270090"]').forEach(function (r) {
+    r.addEventListener('change', syncAllergy);
+  });
+  syncAllergy();
+
+  var timeOther = document.getElementById('f-time-other');
+  var timeOtherWrap = document.getElementById('timeOtherWrap');
+  var timeOtherText = document.getElementById('f-time-other-text');
+  function syncTimeOther() {
+    timeOtherWrap.hidden = !timeOther.checked;
+    timeOtherText.disabled = !timeOther.checked;
+  }
+  timeOther.addEventListener('change', syncTimeOther);
+  syncTimeOther();
 
   form.addEventListener('submit', function (e) {
     if (document.getElementById('f-site').value !== '') { e.preventDefault(); return; }
