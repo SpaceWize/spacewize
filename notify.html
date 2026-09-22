@@ -100,6 +100,17 @@
              visitor's rather than a default they did not notice. -->
       </fieldset>
 
+      <!-- Bait. A person never sees this and never tabs into it, so anything
+           typed here came from a script filling every input it found. Not a
+           real defence on its own: the form's address and entry names are in
+           this page's source, and a bot that posts straight to Google never
+           loads this field at all. -->
+      <div aria-hidden="true"
+           style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+        <label for="fCompany">Company</label>
+        <input id="fCompany" name="company" type="text" tabindex="-1" autocomplete="off">
+      </div>
+
       <button class="btn btn-live" type="submit" id="notifySubmit">
         <span id="notifySubmitText">Let me know</span>
         <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -183,7 +194,22 @@
   }
   sink.addEventListener('load', finish);
 
-  form.addEventListener('submit', function () {
+  /* Two cheap tells that the sender is a script rather than a person: the
+     bait field has something in it, or the form went back within a couple of
+     seconds of the page loading. Both fail silently - a bot told why it was
+     caught is a bot that gets fixed. */
+  var bait   = document.getElementById('fCompany');
+  var loaded = Date.now();
+
+  form.addEventListener('submit', function (e) {
+    if (bait.value !== '' || Date.now() - loaded < 2000) {
+      e.preventDefault();
+      done.querySelector('#doneLine').textContent =
+        'You will hear from me when ' + select.value + ' opens.';
+      form.hidden = true;
+      done.hidden = false;
+      return;
+    }
     sent = true;
     btn.disabled = true;
     btnTxt.textContent = 'Sending…';
