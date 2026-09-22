@@ -753,8 +753,21 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
   timeOther.addEventListener('change', syncTimeOther);
   syncTimeOther();
 
+  /* Two tells that the sender is a script: the bait field above has
+     something in it, or the form came back within two seconds of the page
+     loading. Show the same thanks panel either way - a bot learns nothing,
+     and a person caught by mistake is never left staring at a dead button.
+     Neither check sees a bot that posts straight to Google, which has the
+     form's address and field names from this page's source. */
+  var loaded = Date.now();
+
   form.addEventListener('submit', function (e) {
-    if (document.getElementById('f-site').value !== '') { e.preventDefault(); return; }
+    if (document.getElementById('f-site').value !== '' || Date.now() - loaded < 2000) {
+      e.preventDefault();
+      sent = true;
+      finish();
+      return;
+    }
     sent = true;
     submitBtn.disabled = true;
     status.textContent = 'Sending…';
