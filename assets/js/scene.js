@@ -125,6 +125,11 @@ const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
 const FOV = 42;
 const HALF_FOV = Math.tan((FOV * Math.PI) / 180 / 2);
 const FRAMING = 1.14;
+/* Phones step back further than the fit below asks for. That fit is the
+   tightest frame the tree survives, which on a narrow screen means the
+   canopy pressed into the top edge and the trunk running straight through
+   the copy. Portrait only - a wide window already has the room. */
+const PORTRAIT_PULLBACK = 1.25;
 
 /* Framing is measured off the tree once it exists rather than guessed.
    A procedural tree changes size whenever the growth rules change, and
@@ -210,15 +215,16 @@ function resize() {
      screen no matter how far back you stand, so the width fit is
      capped and the outer branches run off the sides rather than
      shrinking the tree to a speck. */
+  const portrait = aspect < 0.95;
   const halfH = (fitTop - fitBottom) / 2;
   const distH = halfH / HALF_FOV;
   const distW = fitRadius / (HALF_FOV * aspect);
-  orbit.baseRadius = Math.max(distH, Math.min(distW, distH * 1.25)) * FRAMING;
+  const framing = FRAMING * (portrait ? PORTRAIT_PULLBACK : 1);
+  orbit.baseRadius = Math.max(distH, Math.min(distW, distH * 1.25)) * framing;
   orbit.radius = orbit.baseRadius * zoom;
 
   /* Portrait puts the copy over the lower half, so aim lower and let
      the canopy sit in the space that is actually free. */
-  const portrait = aspect < 0.95;
   homeLook.set(0, (fitTop + fitBottom) / 2 - (portrait ? 1.1 : 0), 0);
   /* aiming lower lifts everything in frame, which would tuck the moon
      up behind the nav bar — so it follows the aim point down */

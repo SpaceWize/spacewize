@@ -491,6 +491,25 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   body[data-panel="open"] .stage-copy,
   body[data-panel="open"] .hint{opacity:0;pointer-events:none}
 }
+@media (max-width:820px){
+  /* 18vh of a phone screen is most of the first screenful spent on nothing.
+     Pulled in so the title and the opening line land above the fold. */
+  .page-head{padding:74px 0 26px}
+  .prose h2{margin:36px 0 14px}
+}
+
+/* Each paragraph arrives as it is scrolled to, on phones only. The reveal
+   class is added by script, so with no JS everything is simply visible, and
+   the opening block is shown at once rather than fading in under the
+   reader's thumb. */
+@media (max-width:820px){
+  .prose.reveal > *{
+    opacity:0;transform:translateY(14px);
+    transition:opacity .55s var(--ease),transform .55s var(--ease);
+  }
+  .prose.reveal > .shown{opacity:1;transform:none}
+}
+
 @media (max-width:620px){
   .topbar{inset:10px 10px auto 10px}
   .topbar-inner{padding:8px 8px 8px 16px}

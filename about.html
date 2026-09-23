@@ -145,5 +145,47 @@
   </div>
 </main>
 
+<script>
+(function () {
+  /* Phones only, and only when motion is welcome. Everything starts visible
+     in the markup - the class that hides it is added here, so a reader with
+     no JS, or a browser without IntersectionObserver, gets the whole page
+     rather than a blank one. */
+  var prose = document.querySelector('.prose');
+  if (!prose || !('IntersectionObserver' in window)) return;
+  if (!window.matchMedia('(max-width: 820px)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var blocks = [].slice.call(prose.children);
+  if (!blocks.length) return;
+  prose.classList.add('reveal');
+  blocks[0].classList.add('shown');      /* the opening line is the page */
+
+  var io = new IntersectionObserver(function (entries) {
+    var arriving = 0;
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      /* a batch crossing together comes in one after another rather than
+         all at once - otherwise half a screen appears in a single blink */
+      e.target.style.transitionDelay = (arriving++ * 70) + 'ms';
+      e.target.classList.add('shown');
+      io.unobserve(e.target);            /* once arrived, it stays */
+    });
+  }, { rootMargin: '0px 0px -12% 0px' });
+
+  /* Nothing below the first block is revealed until the reader actually
+     moves. Observing straight away would fire for everything already on
+     screen, which is most of the first screenful. */
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    blocks.slice(1).forEach(function (el) { io.observe(el); });
+  }
+  ['scroll', 'touchmove', 'wheel', 'keydown'].forEach(function (evt) {
+    window.addEventListener(evt, start, { once: true, passive: true });
+  });
+})();
+</script>
 </body>
 </html>
