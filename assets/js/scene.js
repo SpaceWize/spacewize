@@ -12,6 +12,11 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 /* the moon and the blossom live in one place, shared with the 404 */
 import { moonTexture, blossomSprite } from './sprites.js';
+/* and the tree's own parts — bark, limbs, flower, wind, rim light */
+import {
+  createTreeUniforms, windAt, barkMaps, limbRadius, limbGeometry,
+  flowerGeometry, makeWoodMaterial, makeBlossomMaterial,
+} from './sakura.js';
 
 const canvas     = document.getElementById('scene');
 const stage      = document.getElementById('main');
@@ -466,7 +471,16 @@ function leap() {
 /* ============================================================
    post-processing — real bloom, not a fake halo sprite
    ============================================================ */
-composer = new EffectComposer(renderer);
+/* The composer draws into its own target, and that target has no MSAA
+   unless asked - antialias:true on the renderer only covers the screen
+   buffer, which the composer skips. Without this every petal edge is
+   aliased, and thousands of small flowers read as speckle that shimmers
+   whenever the wind or an opening branch moves them. Phones already
+   draw at 2x or more, so they need fewer samples. */
+composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(
+  sizedW || 1, sizedH || 1,
+  { type: THREE.HalfFloatType, samples: isSmall ? 2 : 4 }
+));
 composer.addPass(new RenderPass(scene, camera));
 bloomPass = new UnrealBloomPass(
   new THREE.Vector2(sizedW || 1, sizedH || 1),
@@ -482,111 +496,8 @@ sizedW = 0;                 // rerun resize now the moon can be placed
 resize();
 
 /* ============================================================
-   shared geometry and materials
+   shared sprites
    ============================================================ */
-
-/* a sakura petal: rounded, with the notch at the tip */
-const petalShape = new THREE.Shape();
-petalShape.moveTo(0, 0);
-petalShape.bezierCurveTo(0.40, 0.16, 0.40, 0.80, 0.13, 1.00);
-petalShape.lineTo(0, 0.86);
-petalShape.lineTo(-0.13, 1.00);
-petalShape.bezierCurveTo(-0.40, 0.80, -0.40, 0.16, 0, 0);
-
-const petalGeo = new THREE.ShapeGeometry(petalShape, 10);
-{
-  // cup the petal so it catches light instead of reading as a flat card
-  const p = petalGeo.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const y = p.getY(i);
-    p.setZ(i, -0.17 * y * y);
-  }
-  p.needsUpdate = true;
-  petalGeo.computeVertexNormals();
-}
-petalGeo.scale(0.30, 0.30, 0.30);
-
-const coreGeo = new THREE.SphereGeometry(0.032, 6, 5);
-/* A template. Every branch clones it, because a single shared core
-   material cannot follow its branch: with a fixed emissive the flower
-   centres stayed dim while the petals blew out around them, leaving a
-   dark speck exactly where each flower was. */
-const CORE_MAT = new THREE.MeshStandardMaterial({
-  color: 0xf6e3a1, emissive: 0xf6c96a, emissiveIntensity: 0.5, roughness: 0.6,
-});
-
-/* Cherry bark: fibres running along the limb, and the horizontal
-   lenticel dashes that wrap around it. Tube UVs put length on u and
-   circumference on v, so the fibres are drawn across the canvas and
-   the lenticels down it. */
-function barkTexture() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 128;
-  const x = c.getContext('2d');
-  x.fillStyle = '#b9a9cc';
-  x.fillRect(0, 0, 512, 128);
-
-  for (let i = 0; i < 460; i++) {
-    const y  = Math.random() * 128;
-    const sx = Math.random() * 512;
-    const w  = 24 + Math.random() * 200;
-    const dark = Math.random() < 0.62;
-    const a = 0.05 + Math.random() * 0.17;
-    x.strokeStyle = dark
-      ? `rgba(46,32,64,${a})`
-      : `rgba(232,222,244,${a * 0.8})`;
-    x.lineWidth = 0.6 + Math.random() * 2.3;
-    x.beginPath();
-    x.moveTo(sx, y);
-    x.bezierCurveTo(
-      sx + w * 0.33, y + (Math.random() - 0.5) * 3.5,
-      sx + w * 0.66, y + (Math.random() - 0.5) * 3.5,
-      sx + w,        y + (Math.random() - 0.5) * 2.5
-    );
-    x.stroke();
-  }
-
-  /* lenticels — the dashes that band a cherry trunk */
-  for (let i = 0; i < 34; i++) {
-    const cx = Math.random() * 512;
-    const cy = Math.random() * 128;
-    const h  = 5 + Math.random() * 16;
-    x.strokeStyle = `rgba(38,26,54,${0.24 + Math.random() * 0.3})`;
-    x.lineWidth = 1.4 + Math.random() * 2.4;
-    x.lineCap = 'round';
-    x.beginPath();
-    x.moveTo(cx, cy);
-    x.lineTo(cx + (Math.random() - 0.5) * 2.5, cy + h);
-    x.stroke();
-  }
-
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(3, 1);
-  t.anisotropy = 4;
-  return t;
-}
-
-const barkTex = barkTexture();
-const barkMat = new THREE.MeshStandardMaterial({
-  color: 0x5a4269,
-  map: barkTex,
-  bumpMap: barkTex,
-  bumpScale: 0.02,
-  roughness: 0.88,
-  metalness: 0.0,
-});
-
-/* The trunk is many times longer than a twig, so sharing one repeat
-   value stretches its grain to mush. It gets its own tiling. */
-const trunkTex = barkTexture();
-trunkTex.repeat.set(9, 2);
-const trunkMat = barkMat.clone();
-trunkMat.map = trunkTex;
-trunkMat.bumpMap = trunkTex;
-trunkMat.bumpScale = 0.035;
-
 function softSprite(inner, outer) {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
@@ -624,113 +535,159 @@ const rndBloom = mulberry32(20260824);
 const rndFall = mulberry32(20260825);
 
 /* ============================================================
-   tapered tubes — wood thins along its length
+   the sakura
+   A short, heavy trunk that opens into six spreading scaffolds, one
+   per division. Each scaffold rises out of the trunk, arches over and
+   levels off, throwing laterals that spiral round it and forking at
+   its end, down through three ranks to fine twigs — and the twigs
+   run out into umbels of blossom. The parts it is built from, and the
+   shader that carries the wind and the moon's rim light, are in
+   sakura.js; this is only the shape.
    ============================================================ */
-function taperedTube(curve, r0, r1, seg, radial) {
-  const geo = new THREE.TubeGeometry(curve, seg, r0, radial, false);
-  const pos = geo.attributes.position;
-  const v = new THREE.Vector3();
-  for (let i = 0; i <= seg; i++) {
-    const t = i / seg;
-    const centre = curve.getPointAt(t);
-    const s = 1 + (r1 / r0 - 1) * t;
-    for (let j = 0; j <= radial; j++) {
-      const idx = i * (radial + 1) + j;
-      v.fromBufferAttribute(pos, idx).sub(centre).multiplyScalar(s).add(centre);
-      pos.setXYZ(idx, v.x, v.y, v.z);
-    }
-  }
-  pos.needsUpdate = true;
-  geo.computeVertexNormals();
-  return geo;
+const UP = new THREE.Vector3(0, 1, 0);
+const AXIS_X = new THREE.Vector3(1, 0, 0);
+
+const treeUniforms = createTreeUniforms();
+const woodMat = makeWoodMaterial(treeUniforms, barkMaps(mulberry32(20260826)));
+
+/* per rank of limb — 3 is a scaffold off the trunk, 0 a twig. `taper`
+   is how much of its starting radius a limb keeps by its far end, the
+   fall between them exponential. */
+const MAX_DEPTH = 3;
+const LIMB = [
+  { seg: 7,  radial: 5,  laterals: 0,               taper: 0.30, wander: 0.55, gnarl: 0,    sag: 0.12 },
+  { seg: 11, radial: 6,  laterals: 3,               taper: 0.40, wander: 0.50, gnarl: 0,    sag: 0.16 },
+  { seg: 18, radial: 8,  laterals: isSmall ? 2 : 3, taper: 0.46, wander: 0.42, gnarl: 0.03, sag: 0.10 },
+  { seg: 30, radial: 12, laterals: isSmall ? 3 : 4, taper: 0.50, wander: 0.30, gnarl: 0.05, sag: 0    },
+];
+/* umbels set along a limb of each rank, besides the one on every twig end */
+const SPURS = isSmall ? [1, 2, 1, 1] : [2, 2, 2, 1];
+/* Every site flowers - every twig end and every spot down a limb - with
+   three or four flowers each, about 7,800 in all: the full crown. Each
+   flower is the rounded old-style blossom at the old tree's size,
+   sitting on the wood with no stalk and tipped a little out of the
+   crown. */
+const PER_SITE    = [3, 4];
+const FLOWER_SIZE = 1.0;
+const FLOWER_LEAN = 0.35;
+
+const _side = new THREE.Vector3();
+const _ra = new THREE.Vector3();
+const _rb = new THREE.Vector3();
+
+/* a direction square to `T`, `angle` of the way round it */
+function around(T, angle, out) {
+  _ra.copy(Math.abs(T.y) < 0.95 ? UP : AXIS_X).cross(T).normalize();
+  _rb.crossVectors(T, _ra);
+  return out.copy(_ra).multiplyScalar(Math.cos(angle)).addScaledVector(_rb, Math.sin(angle));
 }
 
-/* ============================================================
-   recursive growth
-   Every limb sags a little more than its parent, bends off-axis, and
-   splits into two or three thinner ones. Blossoms only appear on the
-   finest twigs, which is where a cherry actually flowers.
-   ============================================================ */
-const MAX_DEPTH = 3;
-const UP = new THREE.Vector3(0, 1, 0);
-/* how many flower spurs each limb carries, indexed by depth — index 0
-   is the finest twig, index 3 the scaffold off the trunk */
-const SPUR_COUNT = isSmall ? [2, 2, 2, 2] : [5, 5, 5, 5];
+/* level, away from the trunk */
+function outward(p) {
+  const v = new THREE.Vector3(p.x, 0, p.z);
+  return v.lengthSq() > 1e-6 ? v.normalize() : v;
+}
 
-function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
-  const end = p0.clone().addScaledVector(dir, len);
-  /* thinner wood carries less weight but bends further */
-  end.y -= len * (0.06 + 0.13 * (MAX_DEPTH - depth));
+let flexMax = 0;   // the longest path from the ground to a twig end
 
-  const perp = new THREE.Vector3(-dir.z, 0, dir.x);
-  if (perp.lengthSq() < 1e-6) perp.set(1, 0, 0);
-  perp.normalize();
+function grow(p0, dir, len, r0, depth, parentTan, flex0, acc, clump) {
+  const L = LIMB[depth];
+  r0 = Math.max(r0, 0.007);
+  /* Every second-rank limb and the twigs off it make one clump of
+     blossom, and the shader lights each clump as its own soft mass —
+     the way foliage is painted as clouds rather than leaf by leaf. */
+  if (depth === 1) clump = { c: new THREE.Vector3(), n: 0 };
 
-  const bend = (rnd() - 0.5) * len * 0.34;
-  const m1 = p0.clone().addScaledVector(dir, len * 0.34)
-                .addScaledVector(perp, bend * 0.45);
-  const m2 = p0.clone().addScaledVector(dir, len * 0.68)
-                .addScaledVector(perp, bend);
-  m2.y -= len * 0.04;
-
-  const curve = new THREE.CatmullRomCurve3([p0, m1, m2, end]);
-  const seg    = depth >= 2 ? 14 : 8;
-  const radial = depth >= 2 ? 8 : 5;
-  /* A blossom spans about 0.77, so the taper decides whether it looks
-     attached. Nothing here was ever loose — every blossom sits within
-     0.16 of wood, median 0.03 — but at 0.62 the twig came out near
-     0.03 across, twenty-five times narrower than the flower on it, and
-     wood that fine disappears at any distance. Measured across the
-     range: 0.62 gives a 0.0139 edge and the clusters float, 0.66 is
-     0.0168 and still thins out, 0.72 is 0.0218 and reads chunky, 0.80
-     goes stubby. 0.68 is the one that keeps visible wood under every
-     spray without losing the fineness that makes it a cherry. */
-  wood.push(taperedTube(curve, rad, rad * 0.68, seg, radial));
-
-  /* A tube is an open sleeve with no end caps, so where a limb meets
-     its parent at an angle the two flat ends leave an open wedge — a
-     visible hole straight through the branch. A ball at the joint
-     closes it, and doubles as the swelling a real fork has. */
-  const joint = new THREE.SphereGeometry(rad * 1.04, 9, 7);
-  joint.translate(p0.x, p0.y, p0.z);
-  wood.push(joint);
+  /* The path steers toward `dir`, wanders a little, and lets gravity
+     have the thinner wood. A scaffold rises out of the trunk first and
+     only then levels off — that arch is most of the sakura outline. */
+  const n = depth >= 2 ? 6 : depth === 1 ? 4 : 3;
+  const pts = [p0.clone()];
+  const d = parentTan ? parentTan.clone().lerp(dir, 0.4).normalize() : dir.clone();
+  const p = p0.clone();
+  const step = len / (n - 1);
+  for (let i = 1; i < n; i++) {
+    const f = i / (n - 1);
+    d.lerp(dir, 0.55);
+    _side.set(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5);
+    if (_side.lengthSq() > 1e-6) d.applyAxisAngle(_side.normalize(), (rnd() - 0.5) * L.wander);
+    d.y += depth === MAX_DEPTH ? 0.10 - 0.30 * f : -L.sag * f;
+    d.normalize();
+    p.addScaledVector(d, step);
+    pts.push(p.clone());
+  }
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  const clen = curve.getLength();
+  const shape = { r0, r1: Math.max(r0 * L.taper, 0.0025), len: clen, collar: parentTan ? 0.3 : 0 };
+  acc.wood.push(limbGeometry(curve, {
+    ...shape, seg: L.seg, radial: L.radial, gnarl: L.gnarl,
+    seed: rnd() * 10, uStart: rnd() * 4, flex0,
+  }));
+  const flexEnd = flex0 + clen;
+  if (flexEnd > flexMax) flexMax = flexEnd;
 
   /* Flowers do not only sit at the twig ends. On a real cherry they
      run back down the limb on short spurs, and that is most of what
      makes the canopy read as full rather than as bare sticks with
-     pompoms on the end. */
-  const n = SPUR_COUNT[depth];
-  for (let k = 1; k <= n; k++) {
-    /* On the scaffold itself keep the spray to its outer end, so
-       flowers do not sprout straight out of the trunk. */
-    const u = depth === MAX_DEPTH ? 0.2 + 0.66 * (k / n) : k / (n + 1);
-    spurs.push({
-      pos: curve.getPointAt(u), dir: curve.getTangentAt(u),
-      /* the tube tapers rad -> rad*0.62 along its length */
-      r: rad * (1 - 0.38 * u),
+     pompoms on the end. On the scaffold itself they keep to its outer
+     end, so nothing sprouts straight out of the trunk. */
+  for (let k = 0; k < SPURS[depth]; k++) {
+    const t = depth === MAX_DEPTH
+      ? 0.75 + 0.2 * rnd()
+      : 0.35 + 0.55 * ((k + 0.3 + rnd() * 0.4) / SPURS[depth]);
+    acc.umbels.push({
+      pos: curve.getPointAt(t), tan: curve.getTangentAt(t),
+      r: limbRadius(shape, t), flex: flex0 + t * clen,
+      hit: depth >= 2 ? 0.42 : 0, clump,
     });
   }
 
-  if (depth === 0) {
-    /* and cap the open end of the final twig */
-    const cap = new THREE.SphereGeometry(rad * 0.6, 7, 5);
-    cap.translate(end.x, end.y, end.z);
-    wood.push(cap);
-    tips.push({ pos: end, dir: dir.clone(), r: rad * 0.68 });
-    return;
+  /* laterals, spiralling round the limb, reaching out rather than up */
+  if (depth > 0) {
+    let phase = rnd() * Math.PI * 2;
+    for (let k = 0; k < L.laterals; k++) {
+      phase += 2.4;                               // near the golden angle
+      const t = 0.26 + 0.62 * ((k + 0.25 + rnd() * 0.5) / L.laterals);
+      const P = curve.getPointAt(t);
+      const T = curve.getTangentAt(t);
+      around(T, phase, _side);
+      _side.y *= 0.45;
+      _side.normalize();
+      const spread = 0.6 + rnd() * 0.35;
+      const cd = T.clone().multiplyScalar(Math.cos(spread))
+        .addScaledVector(_side, Math.sin(spread))
+        .addScaledVector(outward(P), 0.3);
+      if (cd.y < -0.3) cd.y = -0.3;
+      cd.normalize();
+      grow(P, cd, len * (0.55 + rnd() * 0.15) * (1 - 0.35 * t),
+           limbRadius(shape, t) * (0.55 + rnd() * 0.12),
+           depth - 1, T, flex0 + t * clen, acc, clump);
+    }
   }
 
-  const kids = depth === MAX_DEPTH ? 3 : (rnd() < 0.35 ? 3 : 2);
-  for (let k = 0; k < kids; k++) {
-    const spread = 0.40 + rnd() * 0.38;
-    const axis = new THREE.Vector3(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5);
-    if (axis.lengthSq() < 1e-6) axis.set(0, 1, 0);
-    axis.normalize();
-    const childDir = dir.clone().applyAxisAngle(axis, spread);
-    childDir.y += 0.20;                       // twigs reach for light
-    childDir.normalize();
-    grow(end, childDir, len * (0.60 + rnd() * 0.14), rad * 0.68,
-         depth - 1, wood, tips, spurs);
+  if (depth >= 2) {
+    /* A fork at the end: two limbs carry on, splayed apart. They start
+       inside the parent, which rounds shut within them, so the join
+       has no open end and no seam. */
+    const t = 0.9;
+    const P = curve.getPointAt(t);
+    const T = curve.getTangentAt(t);
+    around(T, rnd() * Math.PI * 2, _side);
+    _side.y *= 0.4;
+    _side.normalize();
+    for (let s = -1; s <= 1; s += 2) {
+      const a = 0.32 + rnd() * 0.22;
+      const cd = T.clone().multiplyScalar(Math.cos(a)).addScaledVector(_side, s * Math.sin(a));
+      if (cd.y < -0.3) cd.y = -0.3;
+      cd.normalize();
+      grow(P, cd, len * (0.6 + rnd() * 0.12), limbRadius(shape, t) * 0.8,
+           depth - 1, T, flex0 + t * clen, acc, clump);
+    }
+  } else {
+    /* the end of a twig carries the fullest umbel, which hides the tip */
+    const tip = curve.getPointAt(1);
+    acc.umbels.push({ pos: tip, tan: curve.getTangentAt(1), r: 0, flex: flexEnd, hit: 0.62, tip: true, clump });
+    acc.tips.push(tip);
   }
 }
 
@@ -740,7 +697,8 @@ function grow(p0, dir, len, rad, depth, wood, tips, spurs) {
 /* Wind has to pivot at the foot of the trunk, or the whole tree
    slides sideways instead of swaying. treeSway sits at the trunk's
    base and `tree` is lifted back up inside it, so the two cancel out
-   and every world position stays exactly where it was. */
+   and every world position stays exactly where it was. The breeze
+   itself bends the wood in the shader; treeSway only carries a shake. */
 const TREE_LIFT  = -0.15;
 const TRUNK_FOOT = -5.1;          // matches the first point of trunkCurve
 
@@ -752,26 +710,141 @@ const tree = new THREE.Group();
 tree.position.y = -TRUNK_FOOT;
 treeSway.add(tree);
 
-let wind = 0;                     // 0 still, 1 swaying
-
-/* trunk — leans, kinks, and runs off the bottom of the frame */
+/* trunk — short and heavy, flared into its roots, leaning and kinking
+   on the way up, and running off the bottom of the frame */
 const trunkCurve = new THREE.CatmullRomCurve3([
   new THREE.Vector3(0, -5.1, 0),
-  new THREE.Vector3(0.24, -3.7, 0.15),
-  new THREE.Vector3(-0.10, -2.5, -0.12),
-  new THREE.Vector3(0.13, -1.5, 0.07),
-  new THREE.Vector3(0.02, -0.55, 0),
-]);
-tree.add(new THREE.Mesh(taperedTube(trunkCurve, 0.30, 0.11, 40, 12), trunkMat));
+  new THREE.Vector3(0.16, -4.2, 0.08),
+  new THREE.Vector3(0.30, -3.3, 0.16),
+  new THREE.Vector3(0.10, -2.5, -0.04),
+  new THREE.Vector3(-0.06, -1.85, 0.03),
+  new THREE.Vector3(0.02, -1.35, 0.06),
+], false, 'centripetal');
+const trunkShape = { r0: 0.42, r1: 0.2, len: trunkCurve.getLength(), collar: 0 };
+
+const wood = [limbGeometry(trunkCurve, {
+  ...trunkShape, seg: 44, radial: 16, gnarl: 0.06, flare: 0.5,
+  seed: 3.1, uStart: 0, flex0: 0,
+})];
+
+/* The scaffolds leave the trunk one above another, spiralling round
+   it — six limbs from one point reads as a shrub, not a tree. The
+   lower ones spread wider and the upper ones climb, which is the vase
+   a sakura grows into. */
+const SCAFFOLD_T = [0.62, 0.69, 0.76, 0.83, 0.90, 0.96];
+const grown = DIVISIONS.map((division, i) => {
+  const angle = (i / DIVISIONS.length) * Math.PI * 2 + 0.4 + (rnd() - 0.5) * 0.3;
+  const ts = SCAFFOLD_T[i % SCAFFOLD_T.length];
+  const lift = 0.55 + 0.5 * (i / Math.max(1, DIVISIONS.length - 1)) + (rnd() - 0.5) * 0.15;
+  const dir = new THREE.Vector3(Math.cos(angle), lift, Math.sin(angle)).normalize();
+  const acc = { wood, umbels: [], tips: [] };
+  grow(trunkCurve.getPointAt(ts), dir, 2.15 + rnd() * 0.4,
+       limbRadius(trunkShape, ts) * 0.68, MAX_DEPTH,
+       trunkCurve.getTangentAt(ts), ts * trunkShape.len, acc);
+  return acc;
+});
+
+/* all the wood, trunk to twig, is one mesh and one draw call */
+{
+  for (const g of wood) {
+    const f = g.attributes.aFlex.array;
+    for (let k = 0; k < f.length; k++) f[k] /= flexMax;
+  }
+  const woodMesh = new THREE.Mesh(mergeGeometries(wood, false), woodMat);
+  wood.forEach((g) => g.dispose());
+  /* the wind moves it in the shader, past a bounding box drawn at rest */
+  woodMesh.frustumCulled = false;
+  tree.add(woodMesh);
+}
+
+/* ---------- the crown, as one volume ----------
+   Each flower is told where it sits in the whole canopy: how far out
+   of it, and which way is out. The shader uses both to light the
+   crown as one mass — a dark heart and a burning edge — instead of as
+   thousands of separate flowers each catching light on its own. */
+const crownC = new THREE.Vector3();
+const crownR = new THREE.Vector3();
+{
+  let n = 0, minY = Infinity, maxY = -Infinity;
+  grown.forEach((acc) => acc.umbels.forEach((u) => {
+    crownC.add(u.pos); n++;
+    minY = Math.min(minY, u.pos.y); maxY = Math.max(maxY, u.pos.y);
+  }));
+  crownC.divideScalar(n);
+  crownC.y = (minY + maxY) / 2;
+  let maxR = 0;
+  grown.forEach((acc) => acc.umbels.forEach((u) => {
+    maxR = Math.max(maxR, Math.hypot(u.pos.x - crownC.x, u.pos.z - crownC.z));
+  }));
+  crownR.set(maxR, Math.max(0.5, (maxY - minY) / 2), maxR);
+
+  /* and the middle of each clump */
+  grown.forEach((acc) => acc.umbels.forEach((u) => {
+    if (u.clump) { u.clump.c.add(u.pos); u.clump.n++; }
+  }));
+  grown.forEach((acc) => acc.umbels.forEach((u) => {
+    if (u.clump && !u.clump.done) { u.clump.c.divideScalar(u.clump.n); u.clump.done = true; }
+  }));
+}
+
+const FLOWER = flowerGeometry();
+
+/* One spot's flowers: a small round cluster ringed evenly round the twig,
+   each flower's core sitting on the bark, each facing out from the twig,
+   out of the crown and up. They are spread round the wood rather than
+   strung along it, so a spot reads as one clump of blossom rather than a
+   line, and nothing is placed off the wood to float. */
+const _rad = new THREE.Vector3();
+function addCluster(list, at, along, count, woodR, flex, tip, clump) {
+  const axis = along.clone().normalize();
+  const perp = new THREE.Vector3(-axis.z, 0, axis.x);
+  if (perp.lengthSq() < 1e-6) perp.set(1, 0, 0);
+  perp.normalize();
+  const perp2 = new THREE.Vector3().crossVectors(axis, perp).normalize();
+  /* at a twig end the wood has all but run out, so the ring closes in on
+     the tip itself */
+  const ring = Math.max(woodR, 0.004) + 0.006;
+  const out = outward(at);
+  const yaw0 = rndBloom() * Math.PI * 2;
+
+  for (let k = 0; k < count; k++) {
+    const ang = yaw0 + (k / count) * Math.PI * 2 + (rndBloom() - 0.5) * 0.5;
+    _rad.copy(perp).multiplyScalar(Math.cos(ang)).addScaledVector(perp2, Math.sin(ang));
+    /* close together along the twig - a clump, not a string - and at an
+       end only back along it, never past the tip */
+    const a = rndBloom();
+    const pos = at.clone()
+      .addScaledVector(axis, tip ? -a * 0.05 : (a - 0.5) * 0.05)
+      .addScaledVector(_rad, ring);
+    /* out from the twig, out of the crown and up; never turned down */
+    const face = _rad.clone().multiplyScalar(0.6)
+      .addScaledVector(UP, 0.75)
+      .addScaledVector(out, FLOWER_LEAN)
+      .addScaledVector(axis, tip ? 0.3 : 0)
+      .normalize();
+    if (face.y < 0.15) { face.y = 0.15; face.normalize(); }
+
+    list.push({
+      pos,
+      quat: new THREE.Quaternion().setFromUnitVectors(UP, face),
+      scale: (0.32 + rndBloom() * 0.22) * (tip ? 1 : 0.84) * FLOWER_SIZE,
+      delay: rndBloom() * 0.5,
+      flex,
+      seed: rndBloom(),
+      axis: face,
+      clump,
+      jitter: rndBloom() * 0.1,
+    });
+  }
+}
 
 const branches = [];
 const hitTargets = [];
-/* One geometry and one material shared by every hover target, rather
-   than a fresh pair per twig — there are a few hundred of them. */
+/* One geometry and one material shared by every hover target. The
+   material is never drawn — the raycaster still finds the spheres, so
+   they cost the picking test and nothing else. */
 const hitGeo = new THREE.SphereGeometry(1, 6, 4);
-const hitMat = new THREE.MeshBasicMaterial({
-  transparent: true, opacity: 0, depthWrite: false,
-});
+const hitMat = new THREE.MeshBasicMaterial({ visible: false });
 function addHitTarget(group, at, radius, index) {
   const hit = new THREE.Mesh(hitGeo, hitMat);
   hit.position.copy(at);
@@ -781,121 +854,92 @@ function addHitTarget(group, at, radius, index) {
   hitTargets.push(hit);
 }
 
-/* one blossom, facing mostly upward off whatever wood it sits on */
-function addBlossom(list, at, along, jitter, scaleMul, woodR) {
-  /* Spread along the twig, barely across it. The scatter used to be
-     the same in every direction, which put blossoms up to eight times
-     the twig's own radius out to the side — floating in open air next
-     to wood far too thin to see. Cherry blossom grows in a line down a
-     spur anyway, so following the branch is both truer and fixes it. */
-  const axis = along.clone().normalize();
-  const perp = new THREE.Vector3(-axis.z, 0, axis.x);
-  if (perp.lengthSq() < 1e-6) perp.set(1, 0, 0);
-  perp.normalize();
-  const perp2 = new THREE.Vector3().crossVectors(axis, perp).normalize();
-
-  const pos = at.clone()
-    .addScaledVector(axis,  (rndBloom() - 0.5) * jitter)
-    .addScaledVector(perp,  (rndBloom() - 0.5) * jitter * 0.3)
-    .addScaledVector(perp2, (rndBloom() - 0.5) * jitter * 0.3);
-  const face = new THREE.Vector3(
-    along.x * 0.5 + (rndBloom() - 0.5) * 0.75,
-    0.75 + rndBloom() * 0.55,
-    along.z * 0.5 + (rndBloom() - 0.5) * 0.75
-  ).normalize();
-  /* Sitting on the twig's centre line is fine while the twig is
-     thinner than a petal, but the same rule on a limb buries half the
-     flower inside the wood. Lift it clear along the way it already
-     faces — applied after `face` is drawn so the random sequence, and
-     with it the shape of the whole tree, is untouched. */
-  if (woodR) {
-    const out = face.clone().addScaledVector(axis, -face.dot(axis));
-    if (out.lengthSq() > 1e-6) pos.addScaledVector(out.normalize(), woodR);
-  }
-
-  const yaws = [];
-  for (let j = 0; j < 5; j++) {
-    yaws.push((j / 5) * Math.PI * 2 + (rndBloom() - 0.5) * 0.2);
-  }
-  list.push({
-    pos,
-    quat: new THREE.Quaternion().setFromUnitVectors(UP, face),
-    base: (0.32 + rndBloom() * 0.22) * scaleMul,
-    delay: rndBloom() * 0.5,
-    yaws,
-  });
-}
-
-/* scaffolds leave the trunk at different heights, spiralling round it
-   — six limbs from one point reads as a shrub, not a tree */
-/* Web Development is the live division, so it takes the leader at the
-   top of the trunk rather than the lowest limb. */
-const SCAFFOLD_T = [1.0, 0.60, 0.68, 0.76, 0.84, 0.92];
+const _m = new THREE.Matrix4();
+const _s = new THREE.Vector3();
+const _fa = new THREE.Vector3();
+const _co = new THREE.Vector3();
 
 DIVISIONS.forEach((division, i) => {
-  const angle = (i / DIVISIONS.length) * Math.PI * 2 + 0.4 + (rnd() - 0.5) * 0.3;
-  const start = trunkCurve.getPointAt(SCAFFOLD_T[i]);
-  const lift  = division.live ? 1.05 : 0.62 + rnd() * 0.22;
-  const dir = new THREE.Vector3(
-    Math.cos(angle), lift, Math.sin(angle)
-  ).normalize();
-
-  const wood = [];
-  const tips = [];
-  const spurs = [];
-  grow(start, dir, 1.55 + rnd() * 0.35, 0.105, MAX_DEPTH, wood, tips, spurs);
-
-  /* one merged mesh per branch rather than ~28 separate tubes */
+  const acc = grown[i];
   const branchGroup = new THREE.Group();
-  branchGroup.add(new THREE.Mesh(mergeGeometries(wood, false), barkMat));
-  wood.forEach((g) => g.dispose());
+
+  const blossoms = [];
+  acc.umbels.forEach((u) => {
+    const tip = !!u.tip;
+    const [lo, hi] = PER_SITE;
+    const count = lo + Math.floor(rndBloom() * (hi - lo + 1));
+    const flex = Math.min(1, u.flex / flexMax + 0.02);
+    addCluster(blossoms, u.pos, u.tan, count, u.r, flex, tip, u.clump);
+  });
 
   /* the warmer the petal, the closer the division is to opening */
   const near = division.bloom > 0;
-  const petalMat = new THREE.MeshStandardMaterial({
-    color:     division.live ? 0xfbd3e0 : (near ? 0xe4cfdd : 0xcfc4e0),
-    emissive:  division.live ? 0xe36fa0 : (near ? 0x6b4a63 : 0x4a4266),
-    emissiveIntensity: 0.2,
-    roughness: 0.82,
-    side: THREE.DoubleSide,
-  });
+  const petalMat = makeBlossomMaterial(
+    treeUniforms,
+    division.live ? 0xfbd3e0 : (near ? 0xe4cfdd : 0xcfc4e0),
+    division.live ? 0xe36fa0 : (near ? 0x6b4a63 : 0x4a4266)
+  );
 
-  /* blossoms cluster on the twig ends */
-  const blossoms = [];
-  const anchor = new THREE.Vector3();
+  /* every flower on this branch in one draw call */
+  const geo = new THREE.BufferGeometry();
+  geo.setIndex(FLOWER.index);
+  ['position', 'normal', 'aPetal'].forEach((k) => geo.setAttribute(k, FLOWER.attributes[k]));
+  const inst = new Float32Array(blossoms.length * 4);
+  const out  = new Float32Array(blossoms.length * 3);
+  const petals = new THREE.InstancedMesh(geo, petalMat, blossoms.length);
 
-  /* dense clusters at the twig ends */
-  tips.forEach((tip) => {
-    anchor.add(tip.pos);
-    const count = isSmall ? 3 + Math.floor(rndBloom() * 3) : 4 + Math.floor(rndBloom() * 3);
-    for (let n = 0; n < count; n++) {
-      addBlossom(blossoms, tip.pos, tip.dir, 0.34, 1, tip.r);
+  blossoms.forEach((bl, k) => {
+    _s.setScalar(bl.scale);
+    _m.compose(bl.pos, bl.quat, _s);
+    petals.setMatrixAt(k, _m);
+
+    const qx = (bl.pos.x - crownC.x) / crownR.x;
+    const qy = (bl.pos.y - crownC.y) / crownR.y;
+    const qz = (bl.pos.z - crownC.z) / crownR.z;
+    /* out of the whole crown: the ellipsoid's own normal */
+    _fa.set(qx / crownR.x, qy / crownR.y, qz / crownR.z);
+    if (_fa.lengthSq() < 1e-8) _fa.copy(UP);
+    _fa.normalize();
+    /* out of this flower's own clump, which is what the light reads */
+    let clumpSide = 1;
+    if (bl.clump && bl.clump.n > 2) {
+      _co.subVectors(bl.pos, bl.clump.c);
+      if (_co.lengthSq() > 1e-8) {
+        _co.normalize();
+        clumpSide = _co.dot(_fa) * 0.5 + 0.5;
+        _fa.multiplyScalar(0.4).addScaledVector(_co, 0.6);
+      }
     }
-    addHitTarget(branchGroup, tip.pos, 0.62, i);
+    _fa.addScaledVector(bl.axis, 0.2).normalize();
+
+    /* how exposed it is: out on the skin of the crown, and on the
+       outer side of its own clump rather than tucked behind it */
+    const exposed = smoothstep(0.2, 0.95, Math.sqrt(qx * qx + qy * qy + qz * qz));
+    inst[k * 4]     = bl.delay;
+    inst[k * 4 + 1] = bl.flex;
+    inst[k * 4 + 2] = clamp(exposed * 0.6 + clumpSide * 0.3 + bl.jitter, 0, 1);
+    inst[k * 4 + 3] = bl.seed;
+
+    out[k * 3]     = _fa.x;
+    out[k * 3 + 1] = _fa.y;
+    out[k * 3 + 2] = _fa.z;
   });
-
-  /* smaller sprays back down the limbs */
-  spurs.forEach((spur) => {
-    const count = isSmall ? 1 + Math.floor(rndBloom() * 3) : 2 + Math.floor(rndBloom() * 3);
-    for (let n = 0; n < count; n++) {
-      addBlossom(blossoms, spur.pos, spur.dir, 0.24, 0.84, spur.r);
-    }
-    addHitTarget(branchGroup, spur.pos, 0.42, i);
-  });
-
-  anchor.divideScalar(Math.max(tips.length, 1));
-
-  /* every petal on this branch in one draw call */
-  const petals = new THREE.InstancedMesh(petalGeo, petalMat, blossoms.length * 5);
-  petals.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('aInst', new THREE.InstancedBufferAttribute(inst, 4));
+  geo.setAttribute('aOut',  new THREE.InstancedBufferAttribute(out, 3));
+  petals.instanceMatrix.needsUpdate = true;
   petals.frustumCulled = false;
   branchGroup.add(petals);
 
-  const coreMat = CORE_MAT.clone();
-  const cores = new THREE.InstancedMesh(coreGeo, coreMat, blossoms.length);
-  cores.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  cores.frustumCulled = false;
-  branchGroup.add(cores);
+  /* where the tag hangs and the camera pushes in: the middle of this
+     branch's twig ends, and how loosely that spot moves in the wind */
+  const anchor = new THREE.Vector3();
+  let anchorFlex = 0;
+  const tipUmbels = acc.umbels.filter((u) => u.tip);
+  tipUmbels.forEach((u) => { anchor.add(u.pos); anchorFlex += u.flex / flexMax; });
+  anchor.divideScalar(Math.max(tipUmbels.length, 1));
+  anchorFlex /= Math.max(tipUmbels.length, 1);
+
+  acc.umbels.forEach((u) => { if (u.hit) addHitTarget(branchGroup, u.pos, u.hit, i); });
 
   /* One halo on the centroid put all the light in a ball at the middle
      of the crown and left the outer flowers dark. Spreading several
@@ -907,10 +951,11 @@ DIVISIONS.forEach((division, i) => {
     blending: THREE.AdditiveBlending,
   });
 
+  const tips = acc.tips;
   const haloSpots = [anchor.clone()];
   const stride = Math.max(1, Math.floor(tips.length / 5));
   for (let k = 0; k < tips.length && haloSpots.length < 6; k += stride) {
-    haloSpots.push(tips[k].pos.clone());
+    haloSpots.push(tips[k].clone());
   }
 
   /* how far this branch's flowers reach — the halos are sized off it
@@ -934,7 +979,7 @@ DIVISIONS.forEach((division, i) => {
      and five identical dead ones. */
   const rest = division.live ? 0.45 : division.bloom * 0.55;
   branches.push({
-    division, blossoms, petals, cores, petalMat, coreMat, halos, haloMat, anchor,
+    division, blossoms, petals, petalMat, halos, haloMat, anchor, anchorFlex,
     rest, t: -1, target: rest,
     /* its own colours, kept so the full bloom can be blended away
        again rather than left overwritten */
@@ -944,24 +989,41 @@ DIVISIONS.forEach((division, i) => {
     /* How far this branch is *allowed* to open, kept on the branch
        rather than read off the division, so the full-bloom egg can
        lift it and put it back without touching the source of truth. */
-    ceiling: division.bloom, ceilTarget: division.bloom, written: false,
+    ceiling: division.bloom, ceilTarget: division.bloom,
     pulse: -1,          // seconds since this branch was woken, -1 = idle
   });
 });
+
+/* Where a branch's anchor actually is this frame: the wind moves the
+   wood in the shader, so the same wind is asked here, on the CPU, for
+   the one point the tag card and the camera care about. */
+const _windAt = new THREE.Vector3();
+function anchorWorldOf(b, out) {
+  out.copy(b.anchor).add(windAt(b.anchor, b.anchorFlex,
+    treeUniforms.uTime.value, treeUniforms.uWind.value, _windAt));
+  return tree.localToWorld(out);
+}
 
 /* ============================================================
    measure the tree, then centre and frame on what actually grew
    ============================================================ */
 {
+  /* Measured off every flowering site rather than the flowers drawn on
+     them: which sites flower is a lottery, and the camera should not move
+     because a different handful won it. Padded by how far a flower
+     reached past its site when this framing was signed off - flowers sat
+     on stalks then - so the camera stays where it was approved. */
+  const FLOWER_REACH = 0.07;
+  const sites = [];
+  grown.forEach((acc) => acc.umbels.forEach((u) => sites.push(u.pos)));
   let cx = 0, cz = 0, n = 0;
   let top = -Infinity;
-  branches.forEach((b) => {
-    b.blossoms.forEach((bl) => {
-      cx += bl.pos.x; cz += bl.pos.z; n++;
-      if (bl.pos.y > top) top = bl.pos.y;
-    });
+  sites.forEach((q) => {
+    cx += q.x; cz += q.z; n++;
+    if (q.y > top) top = q.y;
   });
   cx /= n; cz /= n;
+  top += FLOWER_REACH;
 
   /* orbit around the canopy's own centre — the scaffolds leave the
      trunk at different heights, so the crown does not sit over the
@@ -970,13 +1032,8 @@ DIVISIONS.forEach((division, i) => {
   tree.position.z = -cz;
 
   let maxR = 0;
-  branches.forEach((b) => {
-    b.blossoms.forEach((bl) => {
-      const dx = bl.pos.x - cx;
-      const dz = bl.pos.z - cz;
-      maxR = Math.max(maxR, Math.hypot(dx, dz));
-    });
-  });
+  sites.forEach((q) => { maxR = Math.max(maxR, Math.hypot(q.x - cx, q.z - cz)); });
+  maxR += FLOWER_REACH;
 
   fitRadius = maxR + 0.5;
   fitTop    = top + TREE_LIFT + 1.4;
@@ -1279,47 +1336,6 @@ for (let i = 0; i < MIST_BANKS; i++) {
 }
 
 /* ============================================================
-   blossom opening, written straight into the instance matrices
-   ============================================================ */
-const _m  = new THREE.Matrix4();
-const _q  = new THREE.Quaternion();
-const _qy = new THREE.Quaternion();
-const _qx = new THREE.Quaternion();
-const _s  = new THREE.Vector3();
-const AXIS_X = new THREE.Vector3(1, 0, 0);
-
-function writeBranchMatrices(b) {
-  /* How far this branch opens is its progress. Live goes all the way;
-     a dated division sits part-open; one with no date stays in bud. */
-  const ceiling = b.ceiling;
-  let p = 0;
-  for (let i = 0; i < b.blossoms.length; i++) {
-    const bl = b.blossoms[i];
-    const span = 1 - bl.delay;
-    const k = clamp((b.t - bl.delay) / span, 0, 1);
-    const open = k * k * (3 - 2 * k) * ceiling;
-
-    const tilt = 0.16 + open * 1.02;
-    const sc = bl.base * (0.74 + open * 0.34);
-    _s.setScalar(sc);
-    _qx.setFromAxisAngle(AXIS_X, tilt);
-
-    for (let j = 0; j < 5; j++) {
-      _qy.setFromAxisAngle(UP, bl.yaws[j]);
-      _q.copy(bl.quat).multiply(_qy).multiply(_qx);
-      _m.compose(bl.pos, _q, _s);
-      b.petals.setMatrixAt(p++, _m);
-    }
-
-    _s.setScalar(sc * 0.9);
-    _m.compose(bl.pos, bl.quat, _s);
-    b.cores.setMatrixAt(i, _m);
-  }
-  b.petals.instanceMatrix.needsUpdate = true;
-  b.cores.instanceMatrix.needsUpdate = true;
-}
-
-/* ============================================================
    the standby pulse
    A dormant branch breathes rather than flashes — one very slow, dim
    cycle for as long as its card is open. It reads as something idling,
@@ -1337,6 +1353,8 @@ const LIVE_PETAL    = new THREE.Color(0xfbd3e0);
 const LIVE_EMISSIVE = new THREE.Color(0xe36fa0);
 const LIVE_HALO     = new THREE.Color(0xe36fa0);
 const LIVE_GLOW     = new THREE.Color(0xe36fa0);
+/* resting light for a division still being built, per unit of its bloom */
+const REST_GLOW     = 0.5;
 const DORMANT_GLOW  = new THREE.Color(0x9c8fd0);
 const _glowCol = new THREE.Color();
 
@@ -1392,8 +1410,7 @@ function updateTag(dt, time) {
 
   /* hang the card off the branch's blossoms, in screen space */
   const b = branches[active];
-  _tagProject.copy(b.anchor);
-  tree.localToWorld(_tagProject);
+  anchorWorldOf(b, _tagProject);
   _tagProject.project(camera);
 
   const px = (_tagProject.x * 0.5 + 0.5) * sizedW;
@@ -2139,6 +2156,12 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.05);
   const time = clock.getElapsedTime();
 
+  /* The breeze never stops — it is a gentle one, and the shader does
+     all of it. Set first, because the anchors below ask where the wind
+     has carried their branch this frame. */
+  treeUniforms.uTime.value = time;
+  treeUniforms.uWind.value = noMotion ? 0 : 1;
+
   /* Slow: the moon is a fixed landmark now, so a brisk idle spin would
      quietly carry the opening composition off-screen while nobody is
      touching it. This is a drift, not a turntable. */
@@ -2160,18 +2183,15 @@ function animate() {
   /* ---- cinematic push-in toward whichever branch is open ---- */
   const closing = active !== null;
   const zoomGoal = closing ? ZOOM_IN : 1;
-  const windGoal = closing ? 1 : 0;
   const settle = noMotion ? 1 : Math.min(1, dt * 1.9);
 
   zoom += (zoomGoal - zoom) * settle;
-  wind += (windGoal - wind) * Math.min(1, dt * 1.2);
   orbit.radius = orbit.baseRadius * zoom;
 
   if (closing) {
     /* aim between the framing centre and the branch itself, so the
        canopy stays in shot rather than filling it entirely */
-    anchorWorld.copy(branches[active].anchor);
-    tree.localToWorld(anchorWorld);
+    anchorWorldOf(branches[active], anchorWorld);
     _aim.lerpVectors(homeLook, anchorWorld, 0.72);
   } else {
     _aim.copy(homeLook);
@@ -2179,19 +2199,20 @@ function animate() {
   LOOK_AT.lerp(_aim, settle);
   applyCamera();
 
-  /* ---- wind, pivoting at the foot of the trunk ---- */
+  /* the moon, as the shader sees it — the rim light needs to know where
+     the backlight is relative to the camera, every frame the camera moves */
+  camera.updateMatrixWorld();
+  treeUniforms.uSunView.value.copy(moonSprite.position).applyMatrix4(camera.matrixWorldInverse);
+
+  /* ---- a shake, pivoting at the foot of the trunk ----
+     it rings out on top of the breeze rather than replacing it */
   if (!noMotion) {
-    const a = wind * 0.019;
-    treeSway.rotation.z =
-      Math.sin(time * 0.62) * a + Math.sin(time * 1.43 + 1.3) * a * 0.38;
-    treeSway.rotation.x =
-      Math.sin(time * 0.51 + 2.1) * a * 0.55;
-    /* a shake rings out on top of the wind rather than replacing it */
+    treeSway.rotation.set(0, 0, 0);
     if (shakeKick > 0) {
       shakeKick = Math.max(0, shakeKick - dt * 1.4);
       const k = shakeKick * shakeKick;
-      treeSway.rotation.z += Math.sin(time * 25) * 0.045 * k;
-      treeSway.rotation.x += Math.sin(time * 19 + 1.1) * 0.028 * k;
+      treeSway.rotation.z = Math.sin(time * 25) * 0.045 * k;
+      treeSway.rotation.x = Math.sin(time * 19 + 1.1) * 0.028 * k;
     }
   } else {
     treeSway.rotation.set(0, 0, 0);
@@ -2233,8 +2254,6 @@ function animate() {
        the two divisions with dates sit part-open, which is the whole
        point of the tree doubling as the progress board. */
     {
-      const beforeT = b.t;
-      const beforeC = b.ceiling;
       if (noMotion || b.t < 0) {
         b.t = b.target;
       } else {
@@ -2250,16 +2269,13 @@ function animate() {
         if (Math.abs(b.ceiling - b.ceilTarget) < 0.0015) b.ceiling = b.ceilTarget;
       }
 
-      /* Only rewrite instance matrices for branches actually moving —
-         and a branch whose ceiling is nailed shut cannot move at all,
-         however far its own bloom value travels. */
-      const moved = Math.abs(b.t - beforeT) > 0.0004
-                 || Math.abs(b.ceiling - beforeC) > 0.0004;
-      const shut = b.ceiling === 0 && beforeC === 0;
-      if (!b.written || (moved && !shut)) {
-        writeBranchMatrices(b);
-        b.written = true;
-      }
+      /* How far this branch opens is its progress. Live goes all the
+         way; a dated division sits part-open; one with no date stays in
+         bud. The petals open in the shader, so this is two numbers per
+         branch rather than a rewrite of every flower. */
+      const u = b.petalMat.userData.uniforms;
+      u.uBloomT.value = b.t;
+      u.uCeiling.value = b.ceiling;
     }
 
     /* How brightly it burns is a separate question from how far it is
@@ -2275,6 +2291,11 @@ function animate() {
       lum = noMotion
         ? (b.pulse >= 0 ? PULSE_LOW : 0)
         : pulseLevel(b.pulse);
+      /* A division that is being built keeps a low light on even when
+         nobody is hovering it, scaled by how far along it is - so the
+         two opening next year read as warming up, and the planned ones,
+         at zero, stay dark. A hover still lifts it past this floor. */
+      lum = Math.max(lum, b.division.bloom * REST_GLOW);
 
       /* Under the full bloom a dormant branch stops being dormant: its
          light, its petal colour and its halo are all carried over to
@@ -2290,6 +2311,8 @@ function animate() {
       }
     }
 
+    b.petalMat.userData.uniforms.uCoreGlow.value = b.petalMat.emissiveIntensity * 1.2;
+
     /* the colours only need touching while the blend is somewhere
        between the two, or on the frame it finally lands */
     if (!b.division.live && (fullMix > 0 || b.tinted)) {
@@ -2298,9 +2321,6 @@ function animate() {
       b.haloMat.color.copy(b.restHalo).lerp(LIVE_HALO, fullMix);
       b.tinted = fullMix > 0;
     }
-
-    /* the centre of a flower must never sit darker than its petals */
-    b.coreMat.emissiveIntensity = b.petalMat.emissiveIntensity * 1.2;
 
     /* several overlapping additive sprites stack, so each is fainter
        than the single halo was — the total reads about the same */
@@ -2315,8 +2335,7 @@ function animate() {
   }
 
   if (glowBranch) {
-    anchorWorld.copy(glowBranch.anchor);
-    tree.localToWorld(anchorWorld);
+    anchorWorldOf(glowBranch, anchorWorld);
     glow.position.copy(anchorWorld);
     if (glowBranch.division.live) {
       glow.color.copy(LIVE_GLOW);
