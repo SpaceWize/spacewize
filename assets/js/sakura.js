@@ -657,17 +657,18 @@ varying vec3 vOut;`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 {
   vec3 base = diffuseColor.rgb;
-  vec3 petal = mix(base * vec3(0.96, 0.58, 0.74), base * 1.06, smoothstep(0.0, 0.8, vAlong));
-  petal = mix(base * vec3(0.9, 0.42, 0.62), petal, 0.35 + 0.65 * vOpen);
+  vec3 petal = mix(base * vec3(0.98, 0.76, 0.86), base * 1.08, smoothstep(0.0, 0.8, vAlong));
+  petal = mix(base * vec3(0.94, 0.62, 0.78), petal, 0.35 + 0.65 * vOpen);
   diffuseColor.rgb = vKind < 0.5 ? petal : (vKind < 1.5 ? uHeart : uStalk);
-  /* deep in the crown there is less light to go round */
-  diffuseColor.rgb *= mix(0.22, 0.62, vShade);
+  /* deep in the crown there is less light to go round - but not so
+     little that the pink sinks to burgundy */
+  diffuseColor.rgb *= mix(0.42, 0.88, vShade);
 }`)
       /* A petal is thin and deeply pigmented, so what light it gives
          back is its own pink — pale petals under the warm moon would
          otherwise bleach to cream. */
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-reflectedLight.directDiffuse *= vKind < 0.5 ? vec3(1.0, 0.48, 0.8) : vec3(1.0);
+reflectedLight.directDiffuse *= vKind < 0.5 ? vec3(1.0, 0.7, 0.88) : vec3(1.0);
 /* and a petal is velvet, not lacquer: with the moon behind, every one
    sits at a grazing angle, and a full specular there turns the crown
    white. What sheen it has is its own pink. */
