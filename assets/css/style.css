@@ -92,6 +92,19 @@ h1,h2,h3{margin:0;font-weight:400;line-height:1.05;letter-spacing:-.015em}
              0 18px 50px -26px rgba(0,0,0,.9);
 }
 
+/* A live blur over text that is scrolling underneath it is the costly
+   kind: the phone re-blurs the whole bar every frame of every flick. On
+   touch, wherever the bar sits over reading, it is a plain dark bar
+   instead - near-identical to look at, and free. */
+@media (hover:none){
+  .page .topbar-inner,
+  body[data-level="1"] .topbar-inner,
+  body[data-level="2"] .topbar-inner{
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+    background:rgba(16,14,32,.92);
+  }
+}
+
 /* ============================================================
    chrome — nav
    ============================================================ */
@@ -178,6 +191,13 @@ body[data-scene="on"] .hint{display:flex}
   transition:opacity .3s var(--ease);
 }
 .stage-copy > *{pointer-events:auto}
+/* On a phone the text sits exactly where thumbs land, so it must not catch
+   the touch: a swipe that starts on it has to reach the canvas, which is
+   what turns the tree and what swipes up to About. Links in it still work. */
+@media (hover:none){
+  .stage-copy > *{pointer-events:none}
+  .stage-copy a{pointer-events:auto}
+}
 
 .eyebrow{
   font-size:.68rem;font-weight:600;text-transform:uppercase;

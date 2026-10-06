@@ -409,6 +409,7 @@ scene.add(leaper);
 const _lr = new THREE.Vector3();
 const _lu = new THREE.Vector3();
 const _lf = new THREE.Vector3();
+const _lm = new THREE.Vector3();
 
 function updateLeap(dt) {
   if (leapLeft <= 0) return;
@@ -426,7 +427,11 @@ function updateLeap(dt) {
      to where the camera is standing right now */
   _lr.setFromMatrixColumn(camera.matrixWorld, 0);
   _lu.setFromMatrixColumn(camera.matrixWorld, 1);
-  _lf.subVectors(camera.position, MOON_POS).normalize();
+  /* The moon sprite is lowered in portrait (see resize), so the figure has
+     to cross the moon where it actually sits. Reading MOON_POS - where the
+     moon starts - put it two units too high on a phone. */
+  _lm.copy(moonSprite ? moonSprite.position : MOON_POS);
+  _lf.subVectors(camera.position, _lm).normalize();
 
   /* leapDir flips every click, so the figure alternates which way it
      crosses. Both the travel and the artwork mirror — see faceLeaper
@@ -434,7 +439,7 @@ function updateLeap(dt) {
   const across = noMotion ? 0 : leapDir * (1 - t * 2) * 4.8;
   const hop    = noMotion ? 0 : Math.sin(Math.PI * t) * 2.0 - 0.8;
 
-  leaper.position.copy(MOON_POS)
+  leaper.position.copy(_lm)
     .addScaledVector(_lr, across)
     .addScaledVector(_lu, hop)
     .addScaledVector(_lf, 1.6);      // in front of the disc, not inside it
@@ -1568,6 +1573,12 @@ function cancelClear() { clearAtMs = 0; }
 let dragging = false;
 let dragDistance = 0;
 let last = { x: 0, y: 0 };
+/* touch only: which way this drag has turned out to be going */
+let dragAxis = null;               // null until decided, then 'h' or 'v'
+let dragDx = 0;
+let dragDy = 0;
+let swiped = false;
+const SWIPE_UP_PX = 64;
 
 function pick(clientX, clientY) {
   const r = canvas.getBoundingClientRect();
@@ -1581,6 +1592,7 @@ function pick(clientX, clientY) {
 canvas.addEventListener('pointerdown', (e) => {
   dragging = true;
   dragDistance = 0;
+  dragAxis = null; dragDx = 0; dragDy = 0; swiped = false;
   last = { x: e.clientX, y: e.clientY };
   canvas.dataset.grabbing = 'true';
   canvas.setPointerCapture(e.pointerId);
@@ -1591,12 +1603,39 @@ canvas.addEventListener('pointermove', (e) => {
     const dx = e.clientX - last.x;
     const dy = e.clientY - last.y;
     dragDistance += Math.abs(dx) + Math.abs(dy);
+    last = { x: e.clientX, y: e.clientY };
+    if (dragDistance > 24) dismissHint();
+
+    /* A thumb has two jobs here and a phone has no hover to tell them
+       apart: sideways turns the tree, up leaves it for About. Which one
+       this drag is gets decided from its first few pixels and then held,
+       so a swipe up never tips the tree on its way out and a turn never
+       wanders into a page change. Vertical tilt on touch is given up for
+       it - a mouse keeps both. */
+    if (e.pointerType === 'touch') {
+      if (swiped) return;
+      dragDx += dx; dragDy += dy;
+      if (!dragAxis) {
+        if (Math.abs(dragDx) + Math.abs(dragDy) < 12) return;
+        dragAxis = Math.abs(dragDy) > Math.abs(dragDx) * 1.4 ? 'v' : 'h';
+      }
+      if (dragAxis === 'v') {
+        if (-dragDy > SWIPE_UP_PX && level === 0) {
+          swiped = true;
+          goTo(1).catch(() => {});
+        }
+        return;
+      }
+      orbit.targetTheta -= dx * 0.005;
+      orbit.velTheta = -dx * 0.005;
+      trackShake(dx);
+      return;
+    }
+
     orbit.targetTheta -= dx * 0.005;
     orbit.targetPhi = clamp(orbit.targetPhi - dy * 0.004, 0.72, 1.78);
     orbit.velTheta = -dx * 0.005;
     trackShake(dx);
-    last = { x: e.clientX, y: e.clientY };
-    if (dragDistance > 24) dismissHint();
     return;
   }
   if (!canHover) return;
@@ -1954,8 +1993,14 @@ function loadScreenHTML(src) {
   return job;
 }
 
+/* When About or Sites is up, the tree is entirely behind an opaque screen
+   and drawing it only costs frames the reader needs for scrolling. The
+   slide takes 900ms, so it keeps drawing until it has finished. */
+let treeHiddenAt = Infinity;
+
 function applyLevel(n) {
   level = n;
+  treeHiddenAt = n === 0 ? Infinity : performance.now() + 1000;
   document.body.dataset.level = String(n);
   document.body.style.setProperty('--level', String(n));
   for (let i = 1; i <= DEEPEST; i++) {
@@ -2133,6 +2178,7 @@ function animate() {
   requestAnimationFrame(animate);
   resize();                       // no-op unless the box actually changed
   const dt = Math.min(clock.getDelta(), 0.05);
+  if (performance.now() > treeHiddenAt) return;   // covered - see applyLevel
   const time = clock.getElapsedTime();
 
   /* The breeze never stops — it is a gentle one, and the shader does
