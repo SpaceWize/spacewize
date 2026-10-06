@@ -415,29 +415,35 @@ export function limbGeometry(curve, o) {
 
 /* ============================================================
    the flower
-   The pre-rebuild tree's blossom, brought back as it was: five rounded
-   petals from one bezier outline with a narrow notch at the tip, cupped
-   so they catch the light, round a small yellow core - and no stalk; it
-   sits on the twig. One mesh, instanced, with the petals opened in the
-   vertex shader so a branch coming into bloom is one uniform, not a
-   rewrite of every instance.
+   Five cupped petals with the notch at the tip, a heart, and a short
+   stalk back to the twig — one small mesh, instanced thousands of
+   times. The petal is a soft, rounded oval with no notch - the notch's
+   two lobes read as sharp points at this size - drawn narrow enough
+   that the five still read apart instead of merging into a disc, and
+   curled up at its edges as well as its tip. The petals are stored flat and opened in the vertex shader,
+   so a branch coming into bloom costs one uniform, not a rewrite of
+   every instance.
    ============================================================ */
-export const PETAL_LEN = 0.30;   // the old petal, before each flower's own size
+export const PETAL_LEN = 0.145;
+const PETAL_WIDTH = 0.82;    // of the old outline's width
+export const STALK_LEN = 0.085;
 
 export function flowerGeometry() {
+  /* one petal: rounded sides running into a rounded tip, no corners */
   const shape = new THREE.Shape();
   shape.moveTo(0, 0);
-  shape.bezierCurveTo(0.40, 0.16, 0.40, 0.80, 0.13, 1.00);
-  shape.lineTo(0, 0.86);
-  shape.lineTo(-0.13, 1.00);
-  shape.bezierCurveTo(-0.40, 0.80, -0.40, 0.16, 0, 0);
-  const petal = new THREE.ShapeGeometry(shape, 4);   // few points per curve: at this size more is invisible
+  shape.bezierCurveTo(0.42, 0.18, 0.40, 1.00, 0, 1.00);
+  shape.bezierCurveTo(-0.40, 1.00, -0.42, 0.18, 0, 0);
+  const petal = new THREE.ShapeGeometry(shape, 5);   // few points per curve: at this size more is invisible
 
-  /* across, along, and the cup - the tip curls back up toward the core */
+  /* across, along, and the cup — the tip curls back toward the heart
+     and the sides lift, so the petal holds light like a spoon */
   const sp = petal.attributes.position;
   for (let i = 0; i < sp.count; i++) {
-    const y = sp.getY(i);
-    sp.setXYZ(i, sp.getX(i) * PETAL_LEN, y * PETAL_LEN, 0.17 * y * y * PETAL_LEN);
+    const x = sp.getX(i), y = sp.getY(i);
+    const u = x / 0.4;
+    sp.setXYZ(i, x * PETAL_WIDTH * PETAL_LEN, y * PETAL_LEN,
+              (0.17 * y * y + 0.11 * u * u) * PETAL_LEN);
   }
   petal.computeVertexNormals();
   const pp = sp.array;
@@ -446,10 +452,10 @@ export function flowerGeometry() {
 
   const position = [];
   const normal = [];
-  const kind = [];       // yaw, then 0 petal / 1 core
+  const kind = [];       // yaw, then 0 petal / 1 heart / 2 stalk
   const index = [];
   const PETALS = 5;
-  const perPetal = sp.count;
+  const perPetal = pp.length / 3;
 
   for (let k = 0; k < PETALS; k++) {
     const base = position.length / 3;
@@ -462,22 +468,34 @@ export function flowerGeometry() {
     for (let i = 0; i < pi.length; i++) index.push(base + pi[i]);
   }
 
-  /* the core: the same small low-poly ball the old flowers had */
+  /* the heart: a low dome the stamens would stand on */
   {
-    const core = new THREE.SphereGeometry(0.032, 5, 3);
     const base = position.length / 3;
-    const cp = core.attributes.position.array;
-    const cn = core.attributes.normal.array;
-    for (let i = 0; i < core.attributes.position.count; i++) {
-      position.push(cp[i * 3], cp[i * 3 + 1], cp[i * 3 + 2]);
-      normal.push(cn[i * 3], cn[i * 3 + 1], cn[i * 3 + 2]);
+    position.push(0, 0.03, 0);
+    normal.push(0, 1, 0);
+    kind.push(0, 1);
+    const R = 5;
+    for (let i = 0; i < R; i++) {
+      const a = (i / R) * Math.PI * 2;
+      position.push(Math.cos(a) * 0.026, 0.01, -Math.sin(a) * 0.026);
+      normal.push(Math.cos(a) * 0.5, 0.87, -Math.sin(a) * 0.5);
       kind.push(0, 1);
     }
-    const ci = core.index.array;
-    for (let i = 0; i < ci.length; i++) index.push(base + ci[i]);
-    core.dispose();
+    for (let i = 0; i < R; i++) index.push(base, base + 1 + i, base + 1 + ((i + 1) % R));
   }
-  petal.dispose();
+
+  /* the stalk: one ribbon — at this size it is a line either way */
+  {
+    const w0 = 0.0055, w1 = 0.004;
+    for (let q = 0; q < 1; q++) {
+      const base = position.length / 3;
+      const ax = q === 0 ? 1 : 0, az = q === 0 ? 0 : 1;
+      position.push(-ax * w0, -0.004, -az * w0,  ax * w0, -0.004, az * w0,
+                    -ax * w1, -STALK_LEN, -az * w1, ax * w1, -STALK_LEN, az * w1);
+      for (let i = 0; i < 4; i++) { normal.push(az, 0, ax); kind.push(0, 2); }
+      index.push(base, base + 2, base + 1, base + 1, base + 2, base + 3);
+    }
+  }
 
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
@@ -551,23 +569,18 @@ diffuseColor.rgb *= mix(vec3(1.0), vec3(1.25, 0.82, 0.92), smoothstep(0.55, 1.0,
 }
 
 export function makeBlossomMaterial(shared, color, emissive) {
-  /* The old tree's flower, lit the soft way the rebuilt tree lit its
-     crown: shaded as one volume, darker deep inside, rimmed by the moon. */
   const mat = new THREE.MeshStandardMaterial({
     color, emissive, emissiveIntensity: 0.2,
-    roughness: 0.82,
+    roughness: 0.78,
     side: THREE.DoubleSide,
   });
   const uniforms = {
     ...shared,
-    uBloomT:    { value: 0 },    // how far this branch has been asked to open
-    uCeiling:   { value: 0 },    // how far it is allowed to
-    /* the core was its own material before; these are its colours, and
-       its glow follows the branch's at 1.2x, as it did */
-    uCore:      { value: new THREE.Color(0xf6e3a1) },
-    uCoreLight: { value: new THREE.Color(0xf6c96a) },
-    uCoreGlow:  { value: 0.24 },
-    uRimGain:   { value: 0.8 },
+    uBloomT:   { value: 0 },    // how far this branch has been asked to open
+    uCeiling:  { value: 0 },    // how far it is allowed to
+    uRimGain:  { value: 0.8 },
+    uHeart:    { value: new THREE.Color(0xffd98a) },
+    uStalk:    { value: new THREE.Color(0x5a2c44) },
   };
   mat.userData.uniforms = uniforms;
   return patch(mat, 'sakura-blossom', uniforms, (s) => {
@@ -577,7 +590,7 @@ uniform float uTime;
 uniform float uWind;
 uniform float uBloomT;
 uniform float uCeiling;
-attribute vec2 aPetal;   // yaw, kind: 0 petal, 1 core
+attribute vec2 aPetal;   // yaw, kind: 0 petal, 1 heart, 2 stalk
 attribute vec4 aInst;    // opening delay, flex, how exposed, seed
 attribute vec3 aOut;     // which way is out of the crown from here
 varying float vKind;
@@ -587,32 +600,30 @@ varying float vOpen;
 varying vec3 vOut;
 ${SIMPLEX_GLSL}
 ${WIND_GLSL}`)
-      /* the petals open here, through the old tree's own angles: from a
-         bud standing nearly upright round the core (9 degrees off the
-         flower's axis) out to 68 degrees, growing a third as they go */
+      /* the petals open here: each hinges up from its base, from a
+         closed bud cupped round the heart to a flat, open flower */
       .replace('#include <beginnormal_vertex>', `
 float skK = clamp((uBloomT - aInst.x) / (1.0 - aInst.x), 0.0, 1.0);
 float skOpen = skK * skK * (3.0 - 2.0 * skK) * uCeiling;
-float skGrow = 0.74 + skOpen * 0.34;
-vKind = aPetal.y;
 vOpen = skOpen;
+vKind = aPetal.y;
 vShade = aInst.z;
 vAlong = aPetal.y < 0.5 ? position.y / ${PETAL_LEN.toFixed(4)} : 0.0;
 vec3 skPos = position;
 vec3 objectNormal = normal;
 if (aPetal.y < 0.5) {
-  float e = mix(1.411, 0.391, skOpen);   /* above the flower's horizon */
+  float e = mix(1.3, 0.22, skOpen);
   float ce = cos(e), se = sin(e);
   float cy = cos(aPetal.x), sy = sin(aPetal.x);
-  /* along the petal -> out from the core, its cup -> up the flower */
-  vec3 p = vec3(position.y, position.z, position.x);
+  /* along the petal -> out from the heart, its cup -> up the flower */
+  vec3 p = vec3(position.y + 0.012, position.z, position.x);
   vec3 n = vec3(normal.y, normal.z, normal.x);
   p = vec3(p.x * ce - p.y * se, p.x * se + p.y * ce, p.z);
   n = vec3(n.x * ce - n.y * se, n.x * se + n.y * ce, n.z);
-  skPos = vec3(p.x * cy + p.z * sy, p.y, -p.x * sy + p.z * cy) * skGrow;
+  skPos = vec3(p.x * cy + p.z * sy, p.y, -p.x * sy + p.z * cy) * (0.74 + skOpen * 0.34);
   objectNormal = vec3(n.x * cy + n.z * sy, n.y, -n.x * sy + n.z * cy);
-} else {
-  skPos *= skGrow * 0.9;
+} else if (aPetal.y < 1.5) {
+  skPos *= 0.55 + skOpen * 0.55;
 }`)
       .replace('#include <begin_vertex>', 'vec3 transformed = skPos;')
       .replace('#include <project_vertex>', `
@@ -622,7 +633,7 @@ vec3 skHead = vec3(0.0);
   mvPosition = instanceMatrix * mvPosition;
   skHead = instanceMatrix[3].xyz;
 #endif
-/* each flower rocks a little where it sits, then goes where its twig goes */
+/* each flower rocks a little on its stalk, then goes where its twig goes */
 float skFl = (sin(uTime * 2.1 + aInst.w * 40.0 + skHead.x * 1.7) * 0.6
             + sin(uTime * 3.3 + aInst.w * 23.0 + skHead.z * 1.3) * 0.4) * aInst.y * uWind;
 mvPosition.xyz += cross(vec3(0.62, 0.0, 0.78), mvPosition.xyz - skHead) * (skFl * 0.22);
@@ -634,9 +645,8 @@ vOut = normalize(normalMatrix * aOut);`);
     s.fragmentShader = s.fragmentShader
       .replace('#include <common>', `#include <common>
 ${RIM_PARS}
-uniform vec3 uCore;
-uniform vec3 uCoreLight;
-uniform float uCoreGlow;
+uniform vec3 uHeart;
+uniform vec3 uStalk;
 varying float vKind;
 varying float vAlong;
 varying float vShade;
@@ -649,7 +659,7 @@ varying vec3 vOut;`)
   vec3 base = diffuseColor.rgb;
   vec3 petal = mix(base * vec3(0.96, 0.58, 0.74), base * 1.06, smoothstep(0.0, 0.8, vAlong));
   petal = mix(base * vec3(0.9, 0.42, 0.62), petal, 0.35 + 0.65 * vOpen);
-  diffuseColor.rgb = vKind < 0.5 ? petal : uCore;
+  diffuseColor.rgb = vKind < 0.5 ? petal : (vKind < 1.5 ? uHeart : uStalk);
   /* deep in the crown there is less light to go round */
   diffuseColor.rgb *= mix(0.22, 0.62, vShade);
 }`)
@@ -658,6 +668,9 @@ varying vec3 vOut;`)
          otherwise bleach to cream. */
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
 reflectedLight.directDiffuse *= vKind < 0.5 ? vec3(1.0, 0.48, 0.8) : vec3(1.0);
+/* and a petal is velvet, not lacquer: with the moon behind, every one
+   sits at a grazing angle, and a full specular there turns the crown
+   white. What sheen it has is its own pink. */
 reflectedLight.directSpecular *= vec3(0.3, 0.1, 0.18);`)
       /* light the crown as a volume rather than as thousands of cards */
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
@@ -675,10 +688,13 @@ normal = normalize(mix(normal, skOut, 0.55));`)
   /* a petal is thin: with the moon right behind it the light comes
      straight through */
   float thru = pow(saturate(along), 14.0) + 0.1 * pow(saturate(along), 4.0);
-  float part = vKind < 0.5 ? 1.0 : 0.6;
+  float part = vKind < 0.5 ? 1.0 : (vKind < 1.5 ? 0.6 : 0.3);
+  /* pink through most of the edge, running hot only right at it —
+     kept low enough that tone mapping leaves it saturated rather than
+     bleaching it toward cream */
   vec3 glow = mix(uRimPink, uRimHot, fres * fres * fres) * rim * 0.95
             + mix(uRimPink, uRimHot, 0.2) * thru * 0.25 * (0.4 + 0.6 * vOpen);
-  if (vKind > 0.5) totalEmissiveRadiance = uCoreLight * uCoreGlow;
+  totalEmissiveRadiance *= vKind > 0.5 && vKind < 1.5 ? 1.2 : 1.0;
   totalEmissiveRadiance += glow * vShade * part * uRimGain;
 }`);
   });
