@@ -480,7 +480,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
 
           <div class="field">
             <label for="f-name">First &amp; last name <span class="req">*</span></label>
-            <input type="text" id="f-name" name="entry.1000308126" required autocomplete="name">
+            <input type="text" id="f-name" name="entry.1000308126" required maxlength="60" autocomplete="name">
           </div>
 
           <div class="field">
@@ -510,17 +510,17 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
 
           <div class="field">
             <label for="f-semail">Student email</label>
-            <input type="email" id="f-semail" name="entry.931312052" autocomplete="email">
+            <input type="email" id="f-semail" name="entry.931312052" maxlength="254" autocomplete="email">
           </div>
 
           <div class="field">
             <label for="f-pemail">Parent/guardian email <span class="req">*</span></label>
-            <input type="email" id="f-pemail" name="entry.122577133" required>
+            <input type="email" id="f-pemail" name="entry.122577133" required maxlength="254">
           </div>
 
           <div class="field">
             <label for="f-pphone">Parent/guardian phone number <span class="req">*</span></label>
-            <input type="tel" id="f-pphone" name="entry.1477349607" required autocomplete="tel">
+            <input type="tel" id="f-pphone" name="entry.1477349607" required maxlength="20" autocomplete="tel">
           </div>
 
           <fieldset>
@@ -534,7 +534,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
           <fieldset id="allergyMore">
             <div class="field">
               <label for="f-allergy">If yes, what are they?</label>
-              <input type="text" id="f-allergy" name="entry.1763834955">
+              <input type="text" id="f-allergy" name="entry.1763834955" maxlength="200">
             </div>
             <fieldset>
               <legend class="legend">Do they carry an epinephrine auto-injector?</legend>
@@ -554,13 +554,13 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
             </div>
             <div class="field" id="timeOtherWrap" style="margin-top:10px;margin-bottom:0">
               <label for="f-time-other-text">Other time</label>
-              <input type="text" id="f-time-other-text" name="entry.1083290182.other_option_response">
+              <input type="text" id="f-time-other-text" name="entry.1083290182.other_option_response" maxlength="100">
             </div>
           </fieldset>
 
           <div class="field">
             <label for="f-idea">Do you have a current business idea or chosen industry interest?</label>
-            <textarea id="f-idea" name="entry.1299957947" rows="3"></textarea>
+            <textarea id="f-idea" name="entry.1299957947" rows="3" maxlength="500"></textarea>
           </div>
 
           <div class="honey" aria-hidden="true">
@@ -600,6 +600,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
 
 </div>
 
+<script src="/assets/js/form-guard.js"></script>
 <script>
 (function () {
   var root = document.documentElement;
@@ -730,6 +731,20 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
   var sink = document.getElementById('gformSink');
   var sent = false;
 
+  /* The same rules the Google Form is set to enforce (see form-guard.js).
+     If that file did not load the form still works, just unguarded on the
+     page - no worse than before. */
+  var guard = window.swzGuard;
+  if (guard) {
+    guard.bind(document.getElementById('f-name'),  guard.check.fullName);
+    guard.bind(document.getElementById('f-semail'), guard.check.email);
+    guard.bind(document.getElementById('f-pemail'), guard.check.email);
+    guard.bind(document.getElementById('f-pphone'), guard.check.phone);
+    guard.bind(document.getElementById('f-allergy'), guard.check.note);
+    guard.bind(document.getElementById('f-time-other-text'), guard.check.note);
+    guard.bind(document.getElementById('f-idea'),  guard.check.note);
+  }
+
   // allergy details only when the answer is Yes; disabled so a "No" never
   // sends stale details. Without JS everything simply stays visible.
   var allergyMore = document.getElementById('allergyMore');
@@ -762,6 +777,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
   var loaded = Date.now();
 
   form.addEventListener('submit', function (e) {
+    if (guard) guard.trim(form);
     if (document.getElementById('f-site').value !== '' || Date.now() - loaded < 2000) {
       e.preventDefault();
       sent = true;

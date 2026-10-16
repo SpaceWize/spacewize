@@ -61,13 +61,13 @@
 
       <div class="field">
         <label for="fName">Name <span class="opt">optional</span></label>
-        <input id="fName" name="entry.1138461797" type="text"
+        <input id="fName" name="entry.1138461797" type="text" maxlength="40"
                autocomplete="given-name" placeholder="First name">
       </div>
 
       <div class="field">
         <label for="fEmail">Email</label>
-        <input id="fEmail" name="entry.1879581011" type="email" required
+        <input id="fEmail" name="entry.1879581011" type="email" required maxlength="254"
                autocomplete="email" placeholder="you@example.com">
       </div>
 
@@ -151,6 +151,7 @@
   </div>
 </main>
 
+<script src="/assets/js/form-guard.js"></script>
 <script>
 (function () {
   var form   = document.getElementById('notifyForm');
@@ -159,6 +160,15 @@
   var done   = document.getElementById('notifyDone');
   var btn    = document.getElementById('notifySubmit');
   var btnTxt = document.getElementById('notifySubmitText');
+
+  /* The same rules the Google Form is set to enforce (see form-guard.js).
+     If that file did not load, the form still works - it is just unguarded
+     on the page, which is no worse than before. */
+  var guard = window.swzGuard;
+  if (guard) {
+    guard.bind(document.getElementById('fName'),  guard.check.firstName);
+    guard.bind(document.getElementById('fEmail'), guard.check.email);
+  }
 
   /* which division the visitor arrived asking about */
   var wanted = new URLSearchParams(location.search).get('division') || '';
@@ -204,6 +214,7 @@
   var loaded = Date.now();
 
   form.addEventListener('submit', function (e) {
+    if (guard) guard.trim(form);
     if (bait.value !== '' || Date.now() - loaded < 2000) {
       e.preventDefault();
       done.querySelector('#doneLine').textContent =
