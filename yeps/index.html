@@ -282,6 +282,14 @@ a { color: var(--accent); }
   text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px;
 }
 .req { color: var(--accent); }
+/* questions that open later: visible so people can see the whole form, but
+   switched off until the program is live */
+.later { opacity: .45; }
+.later input, .later select, .later textarea { cursor: not-allowed; }
+.waitlist-note {
+  margin: 0 0 22px; padding: 14px 16px;
+  border-left: 3px solid var(--accent); font-size: .95rem; line-height: 1.55;
+}
 input[type=text], input[type=email], input[type=number], input[type=tel], select, textarea {
   width: 100%;
   font-family: 'Karla', sans-serif; font-size: 1rem;
@@ -470,7 +478,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
     </section>
 
     <section class="card" id="signup">
-      <h2>Free Preview Session</h2>
+      <h2>Join the waitlist</h2>
       <p>Interested in seeing how a session runs? The first group meeting is <strong>100% free</strong> for anyone looking to check out if this is right for them.</p>
 
       <div class="form-body">
@@ -478,14 +486,16 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
               action="https://docs.google.com/forms/d/e/1FAIpQLSfNLv3KY-B9WcB9Ki3tvYW9lZUGlT27X34AH9X67sEVw1lTYA/formResponse"
               method="POST" target="gformSink">
 
+          <p class="waitlist-note">Join the waitlist by submitting only your name and email, and the student's name, age and email. All other questions can be left until the program is live.</p>
+
           <div class="field">
             <label for="f-name">First &amp; last name <span class="req">*</span></label>
             <input type="text" id="f-name" name="entry.1000308126" required maxlength="60" autocomplete="name">
           </div>
 
-          <div class="field">
-            <label for="f-grade">Grade <span class="req">*</span></label>
-            <select id="f-grade" name="entry.807465951" required>
+          <div class="field later">
+            <label for="f-grade">Grade</label>
+            <select id="f-grade" name="entry.807465951" disabled>
               <option value="">Choose a grade</option>
               <option value="8">Grade 8</option>
               <option value="9">Grade 9</option>
@@ -500,11 +510,11 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
             <input type="number" id="f-age" name="entry.402019445" required min="11" max="20" inputmode="numeric">
           </div>
 
-          <fieldset>
-            <legend class="legend">School / Homeschool <span class="req">*</span></legend>
+          <fieldset class="later">
+            <legend class="legend">School / Homeschool</legend>
             <div class="choices">
-              <label class="choice"><input type="radio" name="entry.369923858" value="Homeschool" required> Homeschool</label>
-              <label class="choice"><input type="radio" name="entry.369923858" value="Public/Private school"> Public/Private school</label>
+              <label class="choice"><input type="radio" name="entry.369923858" value="Homeschool" disabled> Homeschool</label>
+              <label class="choice"><input type="radio" name="entry.369923858" value="Public/Private school" disabled> Public/Private school</label>
             </div>
           </fieldset>
 
@@ -518,49 +528,49 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
             <input type="email" id="f-pemail" name="entry.122577133" required maxlength="254">
           </div>
 
-          <div class="field">
-            <label for="f-pphone">Parent/guardian phone number <span class="req">*</span></label>
-            <input type="tel" id="f-pphone" name="entry.1477349607" required maxlength="20" autocomplete="tel">
+          <div class="field later">
+            <label for="f-pphone">Parent/guardian phone number</label>
+            <input type="tel" id="f-pphone" name="entry.1477349607" disabled maxlength="20" autocomplete="tel">
           </div>
 
-          <fieldset>
+          <fieldset class="later">
             <legend class="legend">Any food allergies or dietary restrictions?</legend>
             <div class="choices">
-              <label class="choice"><input type="radio" name="entry.1691270090" value="Yes"> Yes</label>
-              <label class="choice"><input type="radio" name="entry.1691270090" value="No"> No</label>
+              <label class="choice"><input type="radio" name="entry.1691270090" value="Yes" disabled> Yes</label>
+              <label class="choice"><input type="radio" name="entry.1691270090" value="No" disabled> No</label>
             </div>
           </fieldset>
 
           <fieldset id="allergyMore">
             <div class="field">
               <label for="f-allergy">If yes, what are they?</label>
-              <input type="text" id="f-allergy" name="entry.1763834955" maxlength="200">
+              <input type="text" id="f-allergy" name="entry.1763834955" disabled maxlength="200">
             </div>
             <fieldset>
               <legend class="legend">Do they carry an epinephrine auto-injector?</legend>
               <div class="choices">
-                <label class="choice"><input type="radio" name="entry.336024456" value="Yes"> Yes</label>
-                <label class="choice"><input type="radio" name="entry.336024456" value="No"> No</label>
+                <label class="choice"><input type="radio" name="entry.336024456" value="Yes" disabled> Yes</label>
+                <label class="choice"><input type="radio" name="entry.336024456" value="No" disabled> No</label>
               </div>
             </fieldset>
           </fieldset>
 
-          <fieldset>
+          <fieldset class="later">
             <legend class="legend">Which times could you usually make?</legend>
             <div class="choices">
-              <label class="choice"><input type="checkbox" name="entry.1083290182" value="Saturday 1:30–3:30"> Saturday 1:30&ndash;3:30</label>
-              <label class="choice"><input type="checkbox" name="entry.1083290182" value="Saturday 3:30–5:30"> Saturday 3:30&ndash;5:30</label>
-              <label class="choice"><input type="checkbox" id="f-time-other" name="entry.1083290182" value="__other_option__"> Other</label>
+              <label class="choice"><input type="checkbox" name="entry.1083290182" value="Saturday 1:30–3:30" disabled> Saturday 1:30&ndash;3:30</label>
+              <label class="choice"><input type="checkbox" name="entry.1083290182" value="Saturday 3:30–5:30" disabled> Saturday 3:30&ndash;5:30</label>
+              <label class="choice"><input type="checkbox" id="f-time-other" name="entry.1083290182" value="__other_option__" disabled> Other</label>
             </div>
             <div class="field" id="timeOtherWrap" style="margin-top:10px;margin-bottom:0">
               <label for="f-time-other-text">Other time</label>
-              <input type="text" id="f-time-other-text" name="entry.1083290182.other_option_response" maxlength="100">
+              <input type="text" id="f-time-other-text" name="entry.1083290182.other_option_response" disabled maxlength="100">
             </div>
           </fieldset>
 
-          <div class="field">
+          <div class="field later">
             <label for="f-idea">Do you have a current business idea or chosen industry interest?</label>
-            <textarea id="f-idea" name="entry.1299957947" rows="3" maxlength="500"></textarea>
+            <textarea id="f-idea" name="entry.1299957947" rows="3" maxlength="500" disabled></textarea>
           </div>
 
           <div class="honey" aria-hidden="true">
@@ -572,7 +582,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
             Before you sign up, have a read of the <a href="/yeps/rules">group rules</a> &mdash; they're short, and they cover how the group actually runs.
           </p>
 
-          <button type="submit" class="btn" id="submitBtn">Claim a free spot</button>
+          <button type="submit" class="btn" id="submitBtn">Join the waitlist</button>
           <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
         </form>
 
@@ -735,6 +745,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
      If that file did not load the form still works, just unguarded on the
      page - no worse than before. */
   var guard = window.swzGuard;
+  var touched = null;
   if (guard) {
     guard.bind(document.getElementById('f-name'),  guard.check.fullName);
     guard.bind(document.getElementById('f-semail'), guard.check.email);
@@ -743,6 +754,7 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
     guard.bind(document.getElementById('f-allergy'), guard.check.note);
     guard.bind(document.getElementById('f-time-other-text'), guard.check.note);
     guard.bind(document.getElementById('f-idea'),  guard.check.note);
+    touched = guard.watch(form);
   }
 
   // allergy details only when the answer is Yes; disabled so a "No" never
@@ -778,7 +790,11 @@ footer a:hover, footer a:focus-visible { color: var(--accent); }
 
   form.addEventListener('submit', function (e) {
     if (guard) guard.trim(form);
-    if (document.getElementById('f-site').value !== '' || Date.now() - loaded < 2000) {
+    var looksScripted = document.getElementById('f-site').value !== '' ||
+      Date.now() - loaded < 2000 ||
+      (touched !== null && !touched()) ||
+      (guard && !guard.takeSend('yeps', 3));
+    if (looksScripted) {
       e.preventDefault();
       sent = true;
       finish();

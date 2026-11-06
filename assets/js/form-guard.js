@@ -38,6 +38,16 @@
   var PHONE      = /^[0-9+().\- ]{7,20}$/;
   var LINK       = /https?:|www\.|:\/\/|[a-z0-9\-]+\.[a-z]{2,24}\/|\.(com|net|org|ru|ly|io|xyz|top|click|me|app|site|online|info)\b/i;
 
+  /* Page-only. Names allow dots and hyphens (for initials and double names),
+     which also lets a bare domain like "cheap-pills.xyz" through. A dot run
+     straight into letters is the shape of a domain; "J. Smith" is not. */
+  var NAME_DOMAIN = /\.\p{L}{2,}/u;
+
+  /* Page-only, per browser: a visitor may send this many times in 24 hours.
+     Stored in localStorage; a script that clears it gets past this, which is
+     why it is one check among several and not the defence. */
+  var DAY = 24 * 60 * 60 * 1000;
+
   /* Page-only, because Google cannot hold a list like this on a form: domains
      the spam has come from, and the best-known throwaway services. */
   var THROWAWAY = [
@@ -50,9 +60,11 @@
      blank value is never judged here - "required" is the browser's job. */
   var check = {
     firstName: function (v) {
+      if (NAME_DOMAIN.test(v)) return 'Please leave web addresses out of this box.';
       return FIRST_NAME.test(v) ? '' : 'Letters only, please - no numbers, links or symbols. First name is enough.';
     },
     fullName: function (v) {
+      if (NAME_DOMAIN.test(v)) return 'Please leave web addresses out of this box.';
       return FULL_NAME.test(v) ? '' : 'Letters only, please - no numbers, links or symbols.';
     },
     email: function (v) {
@@ -95,5 +107,37 @@
     for (var i = 0; i < els.length; i++) els[i].value = els[i].value.trim();
   }
 
-  window.swzGuard = { RULES: RULES, check: check, bind: bind, trim: trim };
+  /* A person's keys, taps and clicks are trusted events (isTrusted is true).
+     Events a script fires itself (element.click(), dispatchEvent) are not.
+     Returns a function that says whether any trusted interaction happened.
+     Does not see a bot that drives a real browser through the DevTools
+     protocol, since those events are trusted too. */
+  function watch(form) {
+    var touched = false;
+    function mark(e) { if (e.isTrusted) touched = true; }
+    var kinds = ['pointerdown', 'keydown', 'touchstart', 'input', 'change'];
+    for (var i = 0; i < kinds.length; i++) {
+      form.addEventListener(kinds[i], mark, { capture: true, passive: true });
+    }
+    return function () { return touched; };
+  }
+
+  /* Returns true and counts this send if the browser is under `max` sends in
+     the last 24 hours for `key`. Returns true without counting if storage is
+     unavailable - a failure here must never stop a real person. */
+  function takeSend(key, max) {
+    try {
+      var k = 'swz-sent-' + key;
+      var now = Date.now();
+      var log = JSON.parse(localStorage.getItem(k) || '[]').filter(function (t) {
+        return typeof t === 'number' && now - t < DAY;
+      });
+      if (log.length >= max) return false;
+      log.push(now);
+      localStorage.setItem(k, JSON.stringify(log));
+    } catch (err) { /* storage blocked or corrupt: let the send through */ }
+    return true;
+  }
+
+  window.swzGuard = { RULES: RULES, check: check, bind: bind, trim: trim, watch: watch, takeSend: takeSend };
 })();
