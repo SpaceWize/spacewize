@@ -559,6 +559,32 @@ html[data-tone="dark"] .dot{background:var(--teal);box-shadow:0 0 0 0 rgba(79,21
 .care-buy .btn{width:100%}
 .care-note{margin-top:.9rem;font-size:.8rem;color:var(--ink-faint);max-width:26ch}
 
+/* add-ons — same full-width band as the care card, for extras that attach to
+   either build. Each item is a name with a plain-language note beneath. */
+.addons{
+  grid-column:1/-1;
+  border-radius:var(--r-lg);
+  padding:32px 30px;
+}
+.addons > *{position:relative;z-index:1}
+.addons .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.addons h3{font-size:1.9rem;margin:.7rem 0 .55rem}
+.addons-lede{color:var(--ink-soft);font-size:.98rem;max-width:54ch}
+.addons-list{
+  list-style:none;margin:1.3rem 0 0;padding:0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.1rem clamp(16px,2.5vw,32px);
+}
+.addons-list li{
+  position:relative;padding-left:22px;
+  font-size:.93rem;color:var(--ink-soft);
+}
+.addons-list li::before{
+  content:'';position:absolute;left:0;top:.55em;
+  width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.85;
+}
+.addons-list strong{display:block;font-weight:600;color:var(--ink);margin-bottom:.25rem}
+
 .notice{
   grid-column:1/-1;
   display:flex;align-items:center;gap:14px;
@@ -700,6 +726,7 @@ html[data-tone="dark"] .btn-text:hover{color:var(--teal);opacity:.75}
   .hero-card{max-width:none;border-radius:24px}
   .tiers{grid-template-columns:1fr}
   .care{grid-template-columns:1fr;padding:28px 24px}
+  .addons{padding:28px 24px}
   .care-buy{min-width:0}
   .about-grid{grid-template-columns:1fr}
   .row{grid-template-columns:1fr;gap:8px}
