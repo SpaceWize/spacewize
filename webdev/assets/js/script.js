@@ -121,6 +121,8 @@
       email:   form.email.value.trim(),
       type:    form.type.value,
       budget:  form.budget.value,
+      addons:  Array.prototype.slice.call(form.querySelectorAll('input[name="addons"]:checked'))
+                 .map(function(c){ return c.value; }),
       message: form.message.value.trim()
     };
     var missing = [];
@@ -137,7 +139,8 @@
         'Name: '    + f.name    + '\n' +
         'Email: '   + f.email   + '\n' +
         'Needs: '   + f.type    + '\n' +
-        'Budget: '  + f.budget  + '\n\n' +
+        'Budget: '  + f.budget  + '\n' +
+        'Add-ons: ' + (f.addons.length ? f.addons.join(', ') : 'none') + '\n\n' +
         f.message   + '\n'
     };
   }
@@ -229,16 +232,8 @@
         var had = box.value.replace(/\s+$/, '');
         box.value = had ? had + '\n\n' + line : line;
       }
-      /* the budget line should agree with what they just asked for,
-         but not overwrite a project they had already picked */
-      var budget = document.getElementById('cf-budget');
-      if (budget && budget.selectedIndex === budget.options.length - 1) {
-        for (var i = 0; i < budget.options.length; i++) {
-          if (budget.options[i].value.indexOf('Site care') === 0) {
-            budget.selectedIndex = i; break;
-          }
-        }
-      }
+      /* care is not a price to pick - it is only ever added to a site - so
+         the button leaves the budget alone and says so in the message */
       status.textContent = 'Added to your message below - tell me about the site and send it over.';
     });
   }
