@@ -1,4 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--
+  The web dev page. Plain HTML, CSS and JavaScript, plus the three.js r160 vendored in this repo
+  for the 3D cherry branch (assets/js/branch.js). No sound. With reduced motion, or without WebGL,
+  the page falls back to a plain layout.
+
+  Effect (snippet name)         Source                      Where it is used here
+  Kinetic-Type                  text-effects.colorion.co    the word "considered" in the headline
+  Magnetic Button               kinetics.colorion.co        hero buttons
+  Tracing Beam                  ui.aceternity.com           the 3D cherry branch that grows as you scroll
+  Scroll Based Velocity         magicui.design              the two marquee rows under the hero
+  Container Scroll Animation    ui.aceternity.com           the portfolio scroll: it unrolls on the way in, then rolls up and down between projects
+  3D Card Effect                ui.aceternity.com           the pricing cards
+  Directional Hover             kinetics.colorion.co        the services cards
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -20,437 +34,705 @@
 <meta name="twitter:title" content="Space Wize - Web Design Portfolio">
 <meta name="twitter:description" content="Space Wize is a web design studio building fast, considered websites for people who need one.">
 <meta name="twitter:image" content="https://spacewize.dev/assets/og/card.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="../favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="../assets/icons/icon-192.png">
 <link rel="apple-touch-icon" href="../assets/icons/icon-180.png">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/branch-link.css">
+<style>
+:root{
+  --cherry:#E36FA0; --cherry-ink:#A81B54; --void:#06070F; --ease:cubic-bezier(.16,1,.3,1);
+  --ink:#1c1418; --ink-soft:#54454c; --paper:#fbf5ef; --card:#fffaf5; --line:#e4d6cc;
+  --pink:#d6477c; --pink-deep:#b02d5e; --pink-soft:#f9c9d8; --green:#4f8a3c; --brown:#6b4226;
+  --display:"Instrument Serif",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1.0625rem/1.65 var(--body);overflow-x:hidden}
+img{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.skip{position:absolute;left:-999px;top:0;background:var(--ink);color:var(--paper);padding:.6rem 1rem;z-index:60}
+.skip:focus{left:0}
+#scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.layer{position:relative;z-index:1}
+.shell{width:min(1180px,100% - 2.5rem);margin-inline:auto}
+
+.strip{background:var(--ink);color:var(--paper);font:500 .8125rem/1.3 ui-monospace,Consolas,monospace;text-align:center;padding:.4rem 1rem}
+.bar{position:sticky;top:0;z-index:20;background:rgba(251,245,239,.94);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:1.2rem;min-height:60px}
+.wordmark{font:400 1.5rem/1 var(--display);text-decoration:none;margin-right:auto}
+.wordmark em{color:var(--pink)}
+.nav{display:flex;gap:.2rem;list-style:none;margin:0;padding:0}
+.nav a{display:block;padding:.5rem .7rem;text-decoration:none;font-weight:500;font-size:.9375rem;border-radius:99px}
+.nav a:hover{background:var(--pink-soft)}
+
+.eyebrow{font:600 .8125rem/1.3 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--pink-deep);margin:0 0 1rem}
+h2{font:400 clamp(2.2rem,5.2vw,3.8rem)/1.06 var(--display);margin:0 0 .9rem;letter-spacing:-.01em;max-width:11.5em}
+.lede{max-width:40rem;margin:0;color:var(--ink-soft)}
+.head{padding:6rem 0 2rem}
+/* a paper-coloured edge so text stays readable where the branch passes behind it */
+.head,.hero-copy,.dusk,.about-copy{text-shadow:0 0 2px var(--paper),0 0 5px var(--paper),0 0 9px var(--paper)}
+.btn{text-shadow:none}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:calc(100vh - 60px);display:grid;align-items:center;padding:3rem 0 4rem}
+.hero-copy{max-width:41rem}
+.hero h1{font:400 clamp(3rem,8.4vw,6.6rem)/1 var(--display);margin:0 0 1.4rem;letter-spacing:-.015em}
+.hero h1 em{color:var(--pink)}
+.w{display:inline-block;white-space:nowrap}
+/* Kinetic-Type */
+.kt .l{display:inline-block;animation:kt 2.8s cubic-bezier(.2,.8,.2,1) infinite;animation-delay:calc(var(--i)*.08s)}
+@keyframes kt{0%,18%{transform:none}34%{transform:translateY(-.3em) rotate(-9deg)}52%{transform:translateY(.05em) rotate(4deg)}66%,100%{transform:none}}
+.hero .lede{font-size:1.1875rem;margin-bottom:2.2rem}
+.cta{display:flex;flex-wrap:wrap;gap:1.6rem}
+/* Magnetic Button */
+.mag-zone{display:inline-block;padding:1.4rem;margin:-1.4rem}
+.btn{display:inline-block;padding:1.05rem 1.7rem;border-radius:99px;font:600 1.0625rem/1 var(--body);text-decoration:none;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);transition:transform .15s ease-out}
+.btn.alt{background:var(--card);color:var(--ink)}
+.btn.pink{background:var(--pink-deep);border-color:var(--pink-deep);color:#fff}
+
+/* ---------- Scroll Based Velocity ---------- */
+.vel{padding:1.2rem 0;overflow:hidden;background:var(--ink);color:var(--paper)}
+.vel-row{white-space:nowrap;will-change:transform;font:400 clamp(1.7rem,4.6vw,3.2rem)/1.25 var(--display)}
+.vel-row span{display:inline-block}
+.vel-row i{font-style:normal;color:var(--pink-soft);padding:0 .4em}
+.vel-row.b{font-style:italic;color:#d9cbd1}
+
+/* ---------- Container Scroll Animation ---------- */
+.pin{height:420vh;position:relative}
+.pin-in{position:sticky;top:60px;height:calc(100vh - 60px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:2.2rem;align-items:center;padding:1rem 0}
+.browser{aspect-ratio:16/10;background:var(--ink);border-radius:14px;padding:10px;transform-origin:50% 100%;will-change:transform;box-shadow:0 44px 60px -34px rgba(28,20,24,.6)}
+/* when the 3D hanging scroll is live it stands in for this frame, which stays in place to hold the space and the image descriptions */
+.has3d:not(.calm) .browser{opacity:0}
+.browser-bar{display:flex;gap:6px;align-items:center;height:22px;padding:0 6px 8px}
+.browser-bar i{width:9px;height:9px;border-radius:50%;background:#6d5f66}
+.browser-bar span{margin-left:.6rem;font:400 .75rem/1 ui-monospace,Consolas,monospace;color:#cbbfc5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.browser-view{position:relative;height:calc(100% - 22px);border-radius:6px;overflow:hidden;background:#000}
+.browser-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity .45s}
+.browser-view img.on{opacity:1}
+.projs{position:relative;min-height:min(35rem,calc(100vh - 110px))}
+.proj{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.5rem;opacity:0;transform:translateY(18px);transition:opacity .4s,transform .4s;pointer-events:none;overflow:auto}
+.proj.on{opacity:1;transform:none;pointer-events:auto}
+.proj .count{font:500 .8125rem/1 ui-monospace,Consolas,monospace;color:var(--ink-soft)}
+.proj h3{font:400 2rem/1.1 var(--display);margin:.5rem 0 .6rem}
+.tags{display:flex;flex-wrap:wrap;gap:.35rem;list-style:none;margin:0 0 .9rem;padding:0}
+.tags li{font:600 .75rem/1 var(--body);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--ink);padding:.3rem .5rem;border-radius:99px}
+.proj p{margin:0 0 1rem;font-size:.9375rem;line-height:1.55}
+.proj a{font-weight:600;text-decoration-color:var(--pink);text-decoration-thickness:2px;text-underline-offset:4px}
+
+/* ---------- Directional Hover ---------- */
+.dh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem}
+.dh{position:relative;border:1.5px solid var(--ink);border-radius:14px;padding:1.6rem 1.4rem;background:var(--card);overflow:hidden;--ex:50%;--ey:50%}
+.dh::before{content:"";position:absolute;inset:0;background:var(--pink-soft);clip-path:circle(0 at var(--ex) var(--ey));transition:clip-path .6s cubic-bezier(.2,.8,.2,1)}
+.dh:hover::before{clip-path:circle(150% at var(--ex) var(--ey))}
+.dh>*{position:relative}
+.dh h3{font:400 1.8rem/1.1 var(--display);margin:0 0 .5rem}
+.dh p{margin:0}
+
+/* ---------- 3D Card Effect ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.6rem}
+.tilt{perspective:1000px}
+.tilt-in{height:100%;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:1.5rem;transform-style:preserve-3d;transition:transform .2s ease-out;display:flex;flex-direction:column}
+.tilt-in>*{transition:transform .2s ease-out}
+.kind{font:600 .75rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--pink-deep)}
+.tilt-in h3{font:400 1.9rem/1.1 var(--display);margin:.5rem 0 .2rem}
+.price{font:400 3.4rem/1 var(--display);margin:.3rem 0 0}
+.price small{font:500 .875rem/1 var(--body);color:var(--ink-soft);margin-left:.3rem}
+.per{font-size:.875rem;color:var(--ink-soft);margin:0 0 1rem}
+.tilt-in ul{margin:0 0 1.4rem;padding-left:1.1rem;font-size:.9375rem;display:grid;gap:.45rem}
+.tilt-in li::marker{color:var(--pink)}
+.tilt-in .btn{margin-top:auto;text-align:center}
+.tilt.hot .price{transform:translateZ(60px)}
+.tilt.hot h3{transform:translateZ(36px)}
+.tilt.hot .btn{transform:translateZ(44px)}
+.tilt.hot ul{transform:translateZ(16px)}
+
+/* ---------- Click Me: the way back up to the tree (look and swell are in branch-link.css) ---------- */
+.branch-pin{position:absolute;left:auto;right:clamp(1rem,8vw,8rem);top:1.4rem;bottom:auto;margin:0;z-index:5}
+/* with the 3D branch live, the script keeps it sitting on the bough */
+.has3d .branch-pin{position:fixed;right:auto;left:-300px;top:-300px;bottom:auto;margin-left:calc(var(--pin-size) / -2);margin-top:calc(var(--pin-size) / -2)}
+
+.status{margin:2rem 0 0;font-size:.9375rem;color:var(--ink-soft)}
+.status .dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:var(--green);margin-right:.4rem}
+.menu-btn{display:none;background:var(--card);border:1.5px solid var(--ink);border-radius:99px;padding:.45rem .8rem;font:600 .75rem/1 var(--body)}
+
+.open-card{display:flex;gap:1.2rem;align-items:center;text-decoration:none;border:1.5px dashed var(--ink);border-radius:16px;padding:1.4rem;background:var(--card);margin-top:2rem}
+.open-card .plus{font:400 3rem/1 var(--display);color:var(--pink-deep);width:4.5rem;height:4.5rem;display:grid;place-items:center;border:1.5px solid var(--ink);border-radius:50%;flex:0 0 auto}
+.open-card h3{font:400 1.9rem/1.1 var(--display);margin:0 0 .4rem}
+.open-card p{margin:0 0 .8rem;font-size:.9375rem}
+.open-card .tags{margin:0}
+
+.dusk{padding:7rem 0 0;text-align:center}
+.dusk .line{font:italic 400 clamp(1.6rem,3.6vw,2.6rem)/1.25 var(--display);margin:0}
+
+.care-copy{font-size:.9375rem;margin:0 0 1rem}
+.care-note{font-size:.8125rem;line-height:1.5;color:var(--ink-soft);margin:.9rem 0 0}
+.wide-card{background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:1.6rem;margin-top:1.6rem}
+.wide-card h3{font:400 1.9rem/1.1 var(--display);margin:.5rem 0 .4rem}
+.wide-card>p{margin:0}
+.addons-list{list-style:none;margin:1.3rem 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.1rem 1.8rem}
+.addons-list strong{display:block}
+.addons-list span{font-size:.9375rem;color:var(--ink-soft)}
+.notice{display:flex;gap:.8rem;align-items:flex-start;margin-top:1.6rem;border:1.5px solid var(--pink-deep);background:#fff4f8;border-radius:14px;padding:1rem 1.2rem}
+.notice svg{flex:0 0 auto;stroke:var(--pink-deep);margin-top:.2rem}
+.notice p{margin:0}
+
+.about-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:2rem;align-items:start}
+.about-copy .lede{max-width:none;color:var(--ink)}
+.about-copy p{margin:1.1rem 0 0}
+.about-copy p:first-child{margin-top:0}
+.facts{margin:0;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:.4rem 1.4rem}
+.fact{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--line)}
+.fact:last-child{border-bottom:0}
+.fact dt{color:var(--ink-soft)}
+.fact dd{margin:0;font-weight:600;text-align:right}
+
+/* ---------- contact form ---------- */
+#contact .lede a{font-weight:600;text-decoration-color:var(--pink);text-decoration-thickness:2px;text-underline-offset:4px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem 1.2rem;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:1.6rem;max-width:880px}
+.field{display:grid;gap:.4rem;align-content:start}
+.wide,.form-actions{grid-column:1 / -1}
+.form label,.form legend{font-weight:600;font-size:.9375rem}
+.form input[type=text],.form input[type=email],.form select,.form textarea{font:inherit;color:inherit;background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:.7rem .8rem;width:100%;min-height:48px}
+.form textarea{min-height:9rem;resize:vertical}
+.pick{border:0;padding:0;margin:0;min-width:0}
+.pick legend{padding:0}
+.opt{font-weight:400;color:var(--ink-soft);margin-left:.4rem}
+.pick-grid{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+.form .pick-opt{display:inline-flex;align-items:center;gap:.5rem;border:1.5px solid var(--ink);border-radius:99px;padding:.5rem .9rem;font-weight:500;cursor:pointer;background:#fff;min-height:44px}
+.pick-opt:has(input:checked){background:var(--pink-soft)}
+.pick-opt input{accent-color:var(--pink-deep);width:1.05rem;height:1.05rem;margin:0}
+.hint{font-size:.875rem;color:var(--ink-soft);margin:0}
+.form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem 1rem}
+.mail-alt{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.mail-alt-label{font-size:.875rem;color:var(--ink-soft)}
+.btn.small{padding:.7rem 1rem;font-size:.9375rem}
+.btn-text{background:none;border:0;padding:.4rem 0;font-weight:600;text-decoration:underline;text-decoration-color:var(--pink);text-decoration-thickness:2px;text-underline-offset:4px}
+.form-actions .hint{flex-basis:100%}
+.colophon{padding:4rem 0 3rem;font-size:.875rem;color:var(--ink-soft)}
+.colophon p{margin:0}
+footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-soft)}
+.motion{background:var(--card);border:1.5px solid var(--ink);border-radius:99px;padding:.45rem .8rem;font:600 .75rem/1 var(--body);white-space:nowrap}
+
+/* motion off: the visitor's setting, or the switch */
+@media (prefers-reduced-motion:reduce){.kt .l{animation:none}html{scroll-behavior:auto}}
+.calm .kt .l{animation:none}
+.calm .pin{height:auto}
+.calm .pin-in{position:static;height:auto;display:block}
+.calm .browser{transform:none!important;margin-bottom:1.5rem;max-width:720px}
+.calm .projs{min-height:0;display:grid;gap:1rem}
+.calm .proj{position:static;opacity:1;transform:none;pointer-events:auto}
+.calm .dh::before,.calm .tilt-in,.calm .tilt-in>*,.calm .btn{transition:none}
+
+@media (max-width:860px){
+  .bar-in{gap:.6rem}
+  .menu-btn{display:inline-block}
+  .nav{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:var(--paper);border-bottom:1px solid var(--line);padding:.5rem 1.25rem .8rem}
+  .nav.open{display:flex}
+  .nav a{padding:.8rem .7rem}
+  .about-grid,.form{grid-template-columns:minmax(0,1fr)}
+  .open-card{align-items:flex-start}
+  .pin-in{display:flex;flex-direction:column;align-items:stretch;gap:.8rem;padding:.8rem 0}
+  .browser{flex:0 0 auto;align-self:center;height:min(36vh,calc((100vw - 2.5rem)*.625));max-width:100%}
+  .projs{flex:1 1 0;min-height:0}
+  .proj{padding:.9rem 1.1rem}
+  .proj h3{font-size:1.5rem;margin:.3rem 0 .45rem}
+  .proj .tags{margin-bottom:.6rem}
+  .proj p{font-size:.9375rem;line-height:1.5;margin-bottom:.6rem}
+  .calm .browser{height:auto}
+  .hero{align-items:end}
+}
+</style>
 </head>
 <body>
-
 <a class="skip" href="#main">Skip to content</a>
+<canvas id="scene" aria-hidden="true"></canvas>
 
-<!-- ============ rail (desktop) ============ -->
-<header class="rail">
-  <a class="wordmark" href="#home">Space <em>Wize</em></a>
-  <nav class="rail-nav" aria-label="Sections">
-    <a href="#home">Home</a>
-    <a href="#portfolio">Portfolio</a>
-    <a href="#services">Services</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#about">About</a>
-    <a href="#contact">Contact</a>
-  </nav>
-  <div class="rail-foot">
-    <p class="status"><span class="dot" aria-hidden="true"></span> Available! <br> 7/10 spots left. </p>
-    <p>BC, Canada<br>Remote worldwide</p>
+<div class="layer">
+<header class="bar">
+  <div class="shell bar-in">
+    <a class="wordmark" href="#home">Space <em>Wize</em></a>
+    <ul class="nav" id="nav">
+      <li><a href="#portfolio">Portfolio</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+    <button class="motion" id="motionBtn" aria-pressed="false">Reduced motion: off</button>
   </div>
 </header>
 
-<!-- ============ bar (mobile) ============ -->
-<div class="bar">
-  <a class="wordmark" href="#home">Space <em>Wize</em></a>
-  <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="sheet" aria-label="Open menu">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <path d="M4 7h16M4 12h16M4 17h16"/>
-    </svg>
-  </button>
-</div>
-<nav class="sheet" id="sheet" data-open="false" aria-label="Sections">
-  <div class="sheet-inner">
-    <a href="#home">Home</a>
-    <a href="#portfolio">Portfolio</a>
-    <a href="#services">Services</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#about">About</a>
-    <a href="#contact">Contact</a>
-  </div>
-</nav>
-
 <main id="main">
 
-  <!-- ============ HOME ============ -->
-  <section class="section hero" id="home" data-tone="light">
-    <div class="branch" aria-hidden="true">
-      <div class="branch-img branch-base"></div>
-      <div class="branch-img branch-bloom" id="bloomLayer"></div>
+<section class="hero shell" id="home">
+  <!-- this branch came off a tree; the tree is the umbrella site -->
+  <a class="branch-pin" id="branchPin" href="/"
+     aria-label="Space Wize Enterprise - the tree this branch grew from">Click Me!</a>
+  <div class="hero-copy">
+    <p class="eyebrow">Web design &amp; build - Space Wize</p>
+    <h1>Sites that are <em class="kt" id="kt">considered</em>, not assembled.</h1>
+    <p class="lede">I'm a web designer building fast, clear websites for people who need one and don't want to overcomplicate it. You bring the business, I bring a place for it to live.</p>
+    <div class="cta">
+      <span class="mag-zone"><a class="btn mag" href="#portfolio">See the work</a></span>
+      <span class="mag-zone"><a class="btn alt mag" href="#contact">Start a project</a></span>
     </div>
-
-    <!-- this branch came off a tree; the tree is the umbrella site -->
-    <div class="branch-pin-layer">
-      <a class="branch-pin" id="branchPin" href="/"
-         aria-label="Space Wize Enterprise - the tree this branch grew from">Click Me!</a>
-    </div>
-    <div class="drift" aria-hidden="true"></div>
-    <div class="glowspot" id="glowspot" aria-hidden="true"></div>
-
-    <div class="shell">
-      <div class="hero-card glass">
-        <p class="eyebrow">Web design &amp; build - Space Wize</p>
-        <h1>Sites that are <em>considered</em>, not assembled.</h1>
-        <p class="lede">I'm a web designer building fast, clear websites for people who need one and don't want to overcomplicate it. You bring the business, I bring a place for it to live.</p>
-        <div class="hero-cta">
-          <a class="btn btn-solid" href="#portfolio"><span>See the work</span></a>
-          <a class="btn btn-ghost" href="#contact"><span>Start a project</span></a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ PORTFOLIO ============ -->
- <section class="section" id="portfolio" data-tone="light">
-  <div class="shell">
-    <div class="head">
-      <p class="eyebrow">Portfolio</p>
-      <h2>Recent work</h2>
-      <p class="lede">Six live builds and one concept piece. The live ones open in a new tab. Have a look around before you decide whether I'm the right person to call.</p>
-    </div>
-    <div class="grid">
-
-      <a class="card glass" href="https://acespaders.com/" target="_blank" rel="noopener">
-        <div class="thumb"><span style="background-image:url('assets/images/work/acespaders-3.jpg')"></span></div>
-        <div class="card-body">
-          <h3>Ace Spaders</h3>
-          <p>A leadership operator and facilitator needing a representative site. Rebuilt from the ground up to match his business's growing needs, and includes a cute, fully animated Chatbot named Little Ace. It runs in over 25 languages and has a Christmas theme. It's also what a site looks like with every add-on I offer, plus On-Call Site Care, packed into one.</p>
-          <div class="tags"><span class="tag">Redesign</span><span class="tag">Ground-up build</span><span class="tag">Consulting</span><span class="tag">25+ languages</span><span class="tag">Christmas theme</span></div>
-        </div>
-      </a>
-
-      <a class="card glass" href="https://space-wize-enterprise.github.io/deoro/" target="_blank" rel="noopener">
-        <div class="thumb"><span style="background-image:url('assets/images/work/deoro.jpg')"></span></div>
-        <div class="card-body">
-          <h3>Deoro Property Maintenance</h3>
-          <p>Commercial cleaning for strata buildings, offices, and construction sites across the Lower Mainland. They had a site, but it was a template - so I rebuilt it from nothing on their own photos and colours. The three-language switcher was my suggestion, and they took it.</p>
-          <div class="tags">
-            <span class="tag">Client Work</span>
-            <span class="tag">Ground-up redesign</span>
-            <span class="tag">Trilingual</span>
-          </div>
-        </div>
-      </a>
-
-      <a class="card glass" href="https://spacewize.github.io/canuteach.me/" target="_blank" rel="noopener">
-        <div class="thumb"><span style="background-image:url('assets/images/work/canuteach.jpg')"></span></div>
-        <div class="card-body">
-          <h3>Computer U&#8209;Teach</h3>
-          <p>Computer lessons and repair for kids and seniors in Vancouver. I repaired the broken links, rewrote the copy so every course explains itself, and brought the styling up to a current standard.</p>
-          <div class="tags">
-            <span class="tag">Client Work</span>
-            <span class="tag">Redesign</span>
-            <span class="tag">Copy</span>
-            <span class="tag">Education</span>
-          </div>
-        </div>
-      </a>
-
-      <a class="card glass" href="https://spacewize.github.io/canuteach.me2/" target="_blank" rel="noopener">
-        <div class="thumb"><span style="background-image:url('assets/images/work/canuteach2.jpg')"></span></div>
-        <div class="card-body">
-          <h3>Computer U&#8209;Teach, second direction</h3>
-          <p>The same lessons and repair, rebuilt with a much louder voice - display type at full volume and a mascot you can drag around. Put in front of them as the bolder of two options.</p>
-          <div class="tags">
-            <span class="tag">Client Work</span>
-            <span class="tag">Art direction</span>
-            <span class="tag">Education</span>
-          </div>
-        </div>
-      </a>
-
-      <a class="card glass" href="https://spacewize.github.io/AWDEAA/" target="_blank" rel="noopener">
-        <div class="thumb"><span style="background-image:url('assets/images/work/awdea-red.jpg')"></span></div>
-        <div class="card-body">
-          <h3>AWDEA</h3>
-          <p>A BC nonprofit getting disabled adults into concerts, festivals, and games. Rebuilt from their original site, with an events calendar the admins update themselves - no code, no developer.</p>
-          <div class="tags">
-            <span class="tag">Pro Bono</span>
-            <span class="tag">Redesign</span>
-            <span class="tag">No-code calendar</span>
-            <span class="tag">Nonprofit</span>
-          </div>
-        </div>
-      </a>
-
-      <a class="card glass" href="https://spacewize.github.io/AWDEAAA/" target="_blank" rel="noopener">
-        <div class="thumb"><span style="background-image:url('assets/images/work/awdea-purple.jpg')"></span></div>
-        <div class="card-body">
-          <h3>AWDEA, second direction</h3>
-          <p>The same build carrying a different palette. Same structure, same self-serve calendar - shown to the board beside the first so they could pick the one that felt like them.</p>
-          <div class="tags">
-            <span class="tag">Pro Bono</span>
-            <span class="tag">Art direction</span>
-            <span class="tag">Nonprofit</span>
-          </div>
-        </div>
-      </a>
-
-      <div class="card glass card-demo">
-        <div class="thumb">
-          <span style="background-image:url('assets/images/work/frontrow.jpg')"></span>
-          <em class="badge">Concept</em>
-        </div>
-        <div class="card-body">
-          <h3>Front Row</h3>
-          <p>A self-directed concept, not a client build - one of my first. A booking service for watching matches out: find a fixture, pick a venue on screens and sound, hold a seat. Built to practise dark UI and live state - countdowns, seat counts, fill bars.</p>
-          <div class="tags"><span class="tag">Concept</span><span class="tag">Dark UI</span><span class="tag">Booking flow</span></div>
-        </div>
-      </div>
-
-      <a class="card glass card-open" href="#contact">
-        <div class="thumb thumb-open"><span aria-hidden="true">+</span></div>
-        <div class="card-body">
-          <h3>Your site here!</h3>
-          <p>This spot's up for grabs. If you need a new build, redesign, or a tidy-up of something that already exists, book a scouting call and I'll make it happen.</p>
-          <div class="tags"><span class="tag">Available now</span><span class="tag">Free scoping call</span><span class="tag">Under a week</span></div>
-        </div>
-      </a>
-
-    </div>
+    <p class="status"><span class="dot" aria-hidden="true"></span>Available! 7/10 spots left. BC, Canada - Remote worldwide</p>
   </div>
 </section>
 
-  <!-- ============ SERVICES ============ -->
-  <section class="section" id="services" data-tone="light">
-    <div class="shell">
-      <div class="head">
-        <p class="eyebrow">Services</p>
-        <h2>What I actually do</h2>
-        <p class="lede">Most projects are a full design-and-build: we talk, I design it, I build it, it goes live. If you already have a site and it just needs to work better, that's fine too.</p>
-      </div>
-      <div class="rows">
-        <div class="row">
-          <h3>Design &amp; build</h3>
-          <p>A complete site from a blank page. Structure, layout, copy direction, and a working build you own outright. Typically three to six pages, launched in under a week.</p>
-        </div>
-        <div class="row">
-          <h3>Redesign</h3>
-          <p>You have a site. It's slow, dated, or nobody can find anything. I audit what's there, keep what works, and rebuild the rest without losing your search rankings.</p>
-        </div>
-        <div class="row">
-          <h3>Ongoing care</h3>
-          <p>Once you're live I can keep the site looked after - on-call help, updates and backups, checks and broken link fixes, seasonal updates if you want them, and notes on what changed. $160 CAD a month, cancel any time. There's no limit on what I can change, unless it needs different pricing.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+<div class="vel" aria-hidden="true">
+  <div class="vel-row" data-dir="1"><span>Redesign<i>✿</i>Ground-up build<i>✿</i>25+ languages<i>✿</i>Seasonal themes<i>✿</i>Animated chatbot<i>✿</i>Calendar<i>✿</i>On-Call Site Care<i>✿</i></span></div>
+  <div class="vel-row b" data-dir="-1"><span>Ace Spaders<i>✿</i>Deoro Property Maintenance<i>✿</i>Computer U‑Teach<i>✿</i>AWDEA<i>✿</i>Front Row<i>✿</i>Your site here!<i>✿</i></span></div>
+</div>
 
-  <!-- ============ DUSK ============ -->
-  <div class="dusk" aria-hidden="true">
-    <p class="line">Great websites don’t start with templates; <br> they start with an idea and a business.</p>
+<section id="portfolio" class="shell">
+  <div class="head">
+    <p class="eyebrow">Portfolio</p>
+    <h2>Recent work</h2>
+    <p class="lede">Six live builds and one concept piece. The live ones open in a new tab. Have a look around before you decide whether I'm the right person to call.</p>
+  </div>
+  <div class="pin" id="pin">
+    <div class="pin-in">
+      <div class="browser" id="browser">
+        <div class="browser-bar"><i></i><i></i><i></i><span id="url"></span></div>
+        <div class="browser-view" id="view"></div>
+      </div>
+      <div class="projs" id="projs"></div>
+    </div>
+  </div>
+  <a class="open-card" href="#contact">
+    <span class="plus" aria-hidden="true">+</span>
+    <div>
+      <h3>Your site here!</h3>
+      <p>This spot's up for grabs. If you need a new build, redesign, or a tidy-up of something that already exists, book a scouting call and I'll make it happen.</p>
+      <ul class="tags"><li>Available now</li><li>Free scoping call</li><li>Under a week</li></ul>
+    </div>
+  </a>
+</section>
+
+<section id="services" class="shell">
+  <div class="head">
+    <p class="eyebrow">Services</p>
+    <h2>What I actually do</h2>
+    <p class="lede">Most projects are a full design-and-build: we talk, I design it, I build it, it goes live. If you already have a site and it just needs to work better, that's fine too.</p>
+  </div>
+  <div class="dh-grid">
+    <article class="dh"><h3>Design &amp; build</h3><p>A complete site from a blank page. Structure, layout, copy direction, and a working build you own outright. Typically three to six pages, launched in under a week.</p></article>
+    <article class="dh"><h3>Redesign</h3><p>You have a site. It's slow, dated, or nobody can find anything. I audit what's there, keep what works, and rebuild the rest without losing your search rankings.</p></article>
+    <article class="dh"><h3>Ongoing care</h3><p>Once you're live I can keep the site looked after - on-call help, updates and backups, checks and broken link fixes, seasonal updates if you want them, and notes on what changed. $160 CAD a month, cancel any time. There's no limit on what I can change, unless it needs different pricing.</p></article>
+  </div>
+</section>
+
+<div class="dusk shell" aria-hidden="true">
+  <p class="line">Great websites don’t start with templates; <br> they start with an idea and a business.</p>
+</div>
+
+<section id="pricing" class="shell">
+  <div class="head">
+    <p class="eyebrow">Pricing</p>
+    <h2>Two ways to build, one way to keep it running</h2>
+    <p class="lede">Two flat rates, no hourly guessing. You'll know the cost before anything starts, and the only extras - copywriting, ongoing care, nice-to-have's - are optional and priced plainly below. Every price on this page is in Canadian dollars.</p>
+  </div>
+  <div class="cards">
+    <div class="tilt"><div class="tilt-in">
+      <span class="kind">Project</span><h3>Full build</h3>
+      <p class="price">$2,500<small>CAD</small></p><p class="per">flat rate</p>
+      <ul><li>One 30-minute call to scope the work</li><li>Design, build, and launch included</li><li>Three rounds of revisions - up to 3 small edits per round, or one larger change in place of the rest</li><li>Launches with placeholder copy; write it yourself, or add copywriting for $300 CAD</li><li>You own everything at handoff</li></ul>
+      <a class="btn" href="#contact">Start a build</a>
+    </div></div>
+    <div class="tilt"><div class="tilt-in">
+      <span class="kind">Project</span><h3>Redesign</h3>
+      <p class="price">$1,000<small>CAD</small></p><p class="per">flat rate</p>
+      <ul><li>One 30-minute call to scope the work</li><li>Audit, rebuild, and relaunch included</li><li>Two rounds of revisions</li><li>Keeps your existing copy; rewrite it yourself, or add copywriting for $250 CAD</li><li>You own everything at handoff</li></ul>
+      <a class="btn" href="#contact">Start a redesign</a>
+    </div></div>
+    <div class="tilt"><div class="tilt-in">
+      <span class="kind">After launch</span><h3>On‑Call Site Care</h3>
+      <p class="price">$160<small>CAD</small></p><p class="per">per month</p>
+      <p class="care-copy">A site isn't finished the day it goes live. This keeps yours current, and puts someone on the other end of the phone when something breaks at an inconvenient hour.</p>
+      <ul><li>On call by phone or email when something breaks</li><li>Updates and backups</li><li>Checks and broken link fixes</li><li>Seasonal updates, if you want them</li><li>Notes on what changed</li><li>No limit on what I can change, unless it needs different pricing</li><li>Month to month, cancel any time</li></ul>
+      <a class="btn alt" href="#contact" id="careBtn">Add site care</a>
+      <p class="care-note">Optional, and only worth paying for once you're live. Add it at handoff or any time after. Let me know if this is something you are interested in when you write to me.</p>
+    </div></div>
+  </div>
+  <!-- Add-ons span the full row: they attach to either build rather than being a build of their own. -->
+  <div class="wide-card">
+    <span class="kind">Add-ons</span>
+    <h3>Extras for a redesign or new build</h3>
+    <p>Each of these can be added to a redesign or a new build for a slightly higher quote.</p>
+    <ul class="addons-list">
+      <li><strong>Seasonal themes</strong><span>Seasonal updates can be updated automatically by me with On-Call Site Care. Otherwise, you call me and pay a fee each time you want one added.</span></li>
+      <li><strong>Account system</strong><span>Not managed by me unless you have On-Call Site Care.</span></li>
+      <li><strong>Calendar</strong><span>Designed to be managed by whoever the website is for. I can manage it with On-Call Site Care.</span></li>
+      <li><strong>Daily, weekly or monthly updates</strong><span>For regular updates, I recommend On-Call Site Care. Otherwise, a flat fee covers one image, a header and text in one predetermined section.</span></li>
+      <li><strong>Language support</strong><span>A flat fee per language. Silly languages are free.</span></li>
+      <li><strong>Chatbot</strong><span>A chat assistant on your site, like the one on Computer U&#8209;Teach, second direction. Costs a bit more than the other add-ons.</span></li>
+      <li><strong>Animated chatbot</strong><span>A chatbot with an animated character, like the one on Computer U&#8209;Teach, second direction, and Little Ace on the Ace Spaders website. Costs a bit more than the other add-ons, and the price changes with what you want from the animation.</span></li>
+    </ul>
+  </div>
+  <div class="notice" role="note">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/></svg>
+    <p><strong>These rates hold for my first 10 clients.</strong> After that, they go up. If you're reading this, the current pricing is still available.</p>
+  </div>
+</section>
+
+<section id="about" class="shell">
+  <div class="head">
+    <p class="eyebrow">About</p>
+    <h2>Hi, I'm Sophia (AKA Space Wize)</h2>
+  </div>
+  <div class="about-grid">
+    <div class="about-copy">
+      <p class="lede">I'm a self-taught web designer based in BC. I build sites for small businesses, independent practices, and people launching something for the first time.</p>
+      <p class="lede">I'm early in this, and I price accordingly. What you get in exchange is someone who builds quickly, responds accordingly, and gives you a real home for your brand.</p>
+      <p><em>When I’m not coding or designing, I’m usually watching anime, spending time with family, or learning about new stuff.</em></p>
+    </div>
+    <dl class="facts">
+      <div class="fact"><dt>Based in</dt><dd>British Columbia, Canada</dd></div>
+      <div class="fact"><dt>Working since</dt><dd>2026</dd></div>
+      <div class="fact"><dt>Typical timeline</dt><dd>Under a week</dd></div>
+      <div class="fact"><dt>Clients so far</dt><dd>3 of 10</dd></div>
+      <div class="fact"><dt>Reply time</dt><dd>Within one business day</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="contact" class="shell">
+  <div class="head">
+    <p class="eyebrow">Contact</p>
+    <h2>Tell me what you're building</h2>
+    <p class="lede">Fill this in and you can open it in the mail-app of your choice - nothing sends until you hit send there. Or write to me directly at <a href="mailto:thespacewize@gmail.com">thespacewize@gmail.com</a>.</p>
   </div>
 
-  <!-- ============ PRICING ============ -->
-  <section class="section" id="pricing" data-tone="dark">
-    <div class="shell">
-      <div class="head">
-        <p class="eyebrow">Pricing</p>
-        <h2>Two ways to build, one way to keep it running</h2>
-        <p class="lede">Two flat rates, no hourly guessing. You'll know the cost before anything starts, and the only extras - copywriting, ongoing care, nice-to-have's - are optional and priced plainly below. Every price on this page is in Canadian dollars.</p>
-      </div>
-      <div class="tiers">
-
-        <div class="tier glass">
-          <p class="kicker">Project</p>
-          <h3>Full build</h3>
-          <p class="price">$2,500<small> CAD</small><br><small>flat rate</small></p>
-          <ul>
-            <li>One 30-minute call to scope the work</li>
-            <li>Design, build, and launch included</li>
-            <li>Three rounds of revisions - up to 3 small edits per round, or one larger change in place of the rest</li>
-            <li>Launches with placeholder copy; write it yourself, or add copywriting for $300 CAD</li>
-            <li>You own everything at handoff</li>
-          </ul>
-          <a class="btn btn-solid" href="#contact"><span>Start a build</span></a>
-        </div>
-
-        <div class="tier glass">
-          <p class="kicker">Project</p>
-          <h3>Redesign</h3>
-          <p class="price">$1,000<small> CAD</small><br><small>flat rate</small></p>
-          <ul>
-            <li>One 30-minute call to scope the work</li>
-            <li>Audit, rebuild, and relaunch included</li>
-            <li>Two rounds of revisions</li>
-            <li>Keeps your existing copy; rewrite it yourself, or add copywriting for $250 CAD</li>
-            <li>You own everything at handoff</li>
-          </ul>
-          <a class="btn btn-solid" href="#contact"><span>Start a redesign</span></a>
-        </div>
-
-        <!-- After-launch care spans the full row rather than becoming a third
-             column: it isn't another way to build, it's what happens next. -->
-        <div class="care glass">
-          <div class="care-main">
-            <p class="kicker">After launch</p>
-            <h3>On&#8209;Call Site Care</h3>
-            <p class="care-copy">A site isn't finished the day it goes live. This keeps yours current, and puts someone on the other end of the phone when something breaks at an inconvenient hour.</p>
-            <ul class="care-points">
-              <li>On call by phone or email when something breaks</li>
-              <li>Updates and backups</li>
-              <li>Checks and broken link fixes</li>
-              <li>Seasonal updates, if you want them</li>
-              <li>Notes on what changed</li>
-              <li>No limit on what I can change, unless it needs different pricing</li>
-              <li>Month to month, cancel any time</li>
-            </ul>
-          </div>
-          <div class="care-buy">
-            <p class="price">$160<small> CAD</small><br><small>per month</small></p>
-            <a class="btn btn-solid" href="#contact" id="careBtn"><span>Add site care</span></a>
-            <p class="care-note">Optional, and only worth paying for once you're live. Add it at handoff or any time after. Let me know if this is something you are interested in when you write to me.</p>
-          </div>
-        </div>
-
-        <!-- Add-ons also span the full row: they attach to either build rather
-             than being a build of their own. -->
-        <div class="addons glass">
-          <p class="kicker">Add-ons</p>
-          <h3>Extras for a redesign or new build</h3>
-          <p class="addons-lede">Each of these can be added to a redesign or a new build for a slightly higher quote.</p>
-          <ul class="addons-list">
-            <li>
-              <strong>Seasonal themes</strong>
-              <span>Seasonal updates can be updated automatically by me with On-Call Site Care. Otherwise, you call me and pay a fee each time you want one added.</span>
-            </li>
-            <li>
-              <strong>Account system</strong>
-              <span>Not managed by me unless you have On-Call Site Care.</span>
-            </li>
-            <li>
-              <strong>Calendar</strong>
-              <span>Designed to be managed by whoever the website is for. I can manage it with On-Call Site Care.</span>
-            </li>
-            <li>
-              <strong>Daily, weekly or monthly updates</strong>
-              <span>For regular updates, I recommend On-Call Site Care. Otherwise, a flat fee covers one image, a header and text in one predetermined section.</span>
-            </li>
-            <li>
-              <strong>Language support</strong>
-              <span>A flat fee per language. Silly languages are free.</span>
-            </li>
-            <li>
-              <strong>Chatbot</strong>
-              <span>A chat assistant on your site, like the one on Computer U&#8209;Teach, second direction. Costs a bit more than the other add-ons.</span>
-            </li>
-            <li>
-              <strong>Animated chatbot</strong>
-              <span>A chatbot with an animated character, like the one on Computer U&#8209;Teach, second direction, and Little Ace on the Ace Spaders website. Costs a bit more than the other add-ons, and the price changes with what you want from the animation.</span>
-            </li>
-          </ul>
-        </div>
-
-       <div class="notice" role="note">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/>
-          </svg>
-          <p><strong>These rates hold for my first 10 clients.</strong> After that, they go up. If you're reading this, the current pricing is still available.</p>
-        </div>
-
-      </div>
+  <form class="form" id="contactForm" novalidate>
+    <div class="field">
+      <label for="cf-name">Your name</label>
+      <input id="cf-name" name="name" type="text" autocomplete="name" required>
     </div>
-  </section>
-
-  <!-- ============ ABOUT ============ -->
-  <section class="section" id="about" data-tone="dark">
-    <div class="shell">
-      <div class="head">
-        <p class="eyebrow">About</p>
-        <h2>Hi, I'm Sophia (AKA Space Wize)</h2>
-      </div>
-      <div class="about-grid">
-        <div>
-          <p class="lede">I'm a self-taught web designer based in BC. I build sites for small businesses, independent practices, and people launching something for the first time.</p>
-          <p class="lede" style="margin-top:1.1rem">I'm early in this, and I price accordingly. What you get in exchange is someone who builds quickly, responds accordingly, and gives you a real home for your brand.</p>
-          <p><em>When I’m not coding or designing, I’m usually watching anime, spending time with family, or learning about new stuff.</em></p>
-        </div>
-        <dl class="facts">
-          <div class="fact"><dt>Based in</dt><dd>British Columbia, Canada</dd></div>
-          <div class="fact"><dt>Working since</dt><dd>2026</dd></div>
-          <div class="fact"><dt>Typical timeline</dt><dd>Under a week</dd></div>
-          <div class="fact"><dt>Clients so far</dt><dd>3 of 10</dd></div>
-          <div class="fact"><dt>Reply time</dt><dd>Within one business day</dd></div>
-        </dl>
-      </div>
+    <div class="field">
+      <label for="cf-email">Your email</label>
+      <input id="cf-email" name="email" type="email" autocomplete="email" required>
     </div>
-  </section>
-
-  <!-- ============ CONTACT ============ -->
-  <section class="section" id="contact" data-tone="dark">
-    <div class="shell">
-      <div class="head">
-        <p class="eyebrow">Contact</p>
-        <h2>Tell me what you're building</h2>
-        <p class="lede">Fill this in and you can open it in the mail-app of your choice - nothing sends until you hit send there. Or write to me directly at <a href="mailto:thespacewize@gmail.com">thespacewize@gmail.com</a>.</p>
-      </div>
-
-      <form class="form glass" id="contactForm" novalidate>
-        <div class="field">
-          <label for="cf-name">Your name</label>
-          <input id="cf-name" name="name" type="text" autocomplete="name" required>
-        </div>
-        <div class="field">
-          <label for="cf-email">Your email</label>
-          <input id="cf-email" name="email" type="email" autocomplete="email" required>
-        </div>
-        <div class="field">
-          <label for="cf-type">What you need</label>
-          <select id="cf-type" name="type">
-            <option>A new site, design and build</option>
-            <option>A redesign of an existing site</option>
-            <option>Not sure yet</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="cf-budget">Which price fits? (CAD)</label>
-          <select id="cf-budget" name="budget">
-            <option>$1,000 - Redesign</option>
-            <option>$2,500 - Full build</option>
-            <option>Not sure yet</option>
-          </select>
-        </div>
-        <fieldset class="pick wide">
-          <legend>Add-ons <span class="opt">optional, for a slightly higher quote</span></legend>
-          <div class="pick-grid">
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Seasonal themes"><span>Seasonal themes</span></label>
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Account system"><span>Account system</span></label>
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Calendar"><span>Calendar</span></label>
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Daily, weekly or monthly updates"><span>Daily, weekly or monthly updates</span></label>
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Language support"><span>Language support</span></label>
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Chatbot"><span>Chatbot</span></label>
-            <label class="pick-opt"><input type="checkbox" name="addons" value="Animated chatbot"><span>Animated chatbot</span></label>
-          </div>
-        </fieldset>
-        <div class="field wide">
-          <label for="cf-message">What's the project</label>
-          <textarea id="cf-message" name="message" required></textarea>
-          <p class="hint" id="cf-hint">What the business/brand does, what the site needs to accomplish, and when you'd like it live. If you already have a site, include the URL here. Also include if you would like maintenance after your new site is live.</p>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-solid" type="submit"><span>Open in Mail app</span></button>
-          <div class="mail-alt">
-            <span class="mail-alt-label">or open with</span>
-            <button class="btn btn-ghost btn-compact" type="button" data-provider="gmail"><span>Gmail</span></button>
-            <button class="btn btn-ghost btn-compact" type="button" data-provider="outlook"><span>Outlook</span></button>
-            <button class="btn btn-ghost btn-compact" type="button" data-provider="yahoo"><span>Yahoo</span></button>
-          </div>
-          <button class="btn-text" type="button" id="copyBtn">Copy the details instead</button>
-          <p class="hint" id="formStatus" role="status">Nothing sends from this page - every option above only opens a draft for you to review and send yourself.</p>
-        </div>
-      </form>
-
-      <div class="colophon">
-        <p> Sophia F. - Web design, BC, Canada</p>
-        <p> © 2026 Space Wize Enterprise, By TheSpaceWize. All rights reserved.</p>
-      </div>
+    <div class="field">
+      <label for="cf-type">What you need</label>
+      <select id="cf-type" name="type">
+        <option>A new site, design and build</option>
+        <option>A redesign of an existing site</option>
+        <option>Not sure yet</option>
+      </select>
     </div>
-  </section>
+    <div class="field">
+      <label for="cf-budget">Which price fits? (CAD)</label>
+      <select id="cf-budget" name="budget">
+        <option>$1,000 - Redesign</option>
+        <option>$2,500 - Full build</option>
+        <option>Not sure yet</option>
+      </select>
+    </div>
+    <fieldset class="pick wide">
+      <legend>Add-ons <span class="opt">optional, for a slightly higher quote</span></legend>
+      <div class="pick-grid">
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Seasonal themes"><span>Seasonal themes</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Account system"><span>Account system</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Calendar"><span>Calendar</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Daily, weekly or monthly updates"><span>Daily, weekly or monthly updates</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Language support"><span>Language support</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Chatbot"><span>Chatbot</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="Animated chatbot"><span>Animated chatbot</span></label>
+      </div>
+    </fieldset>
+    <div class="field wide">
+      <label for="cf-message">What's the project</label>
+      <textarea id="cf-message" name="message" required aria-describedby="cf-hint"></textarea>
+      <p class="hint" id="cf-hint">What the business/brand does, what the site needs to accomplish, and when you'd like it live. If you already have a site, include the URL here. Also include if you would like maintenance after your new site is live.</p>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Open in Mail app</button>
+      <div class="mail-alt">
+        <span class="mail-alt-label">or open with</span>
+        <button class="btn alt small" type="button" data-provider="gmail">Gmail</button>
+        <button class="btn alt small" type="button" data-provider="outlook">Outlook</button>
+        <button class="btn alt small" type="button" data-provider="yahoo">Yahoo</button>
+      </div>
+      <button class="btn-text" type="button" id="copyBtn">Copy the details instead</button>
+      <p class="hint" id="formStatus" role="status">Nothing sends from this page - every option above only opens a draft for you to review and send yourself.</p>
+    </div>
+  </form>
+
+  <div class="colophon">
+    <p>Sophia F. - Web design, BC, Canada</p>
+    <p>© 2026 Space Wize Enterprise, By TheSpaceWize. All rights reserved.</p>
+  </div>
+</section>
 
 </main>
+</div>
 
-<script src="assets/js/script.js"></script>
+
+<!-- page effects: work with or without the 3D scene -->
+<script>
+(function(){
+  var root = document.documentElement, $ = function(s){ return document.querySelector(s); };
+  var clamp = function(v,a,b){ return Math.min(b, Math.max(a, v)); };
+  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var btn = $('#motionBtn');
+  function setCalm(v){ calm = v; root.classList.toggle('calm', v); btn.setAttribute('aria-pressed', String(v)); btn.textContent = 'Reduced motion: ' + (v ? 'on' : 'off'); }
+  btn.addEventListener('click', function(){ setCalm(!calm); });
+  setCalm(calm);
+
+  /* menu on narrow screens */
+  (function(){
+    var mb = $('#menuBtn'), nav = $('#nav');
+    function shut(){ nav.classList.remove('open'); mb.setAttribute('aria-expanded', 'false'); }
+    mb.addEventListener('click', function(){ var open = nav.classList.toggle('open'); mb.setAttribute('aria-expanded', String(open)); });
+    nav.addEventListener('click', function(e){ if (e.target.tagName === 'A') shut(); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && nav.classList.contains('open')){ shut(); mb.focus(); } });
+  })();
+
+  /* contact form -> mailto draft, web compose, or clipboard. Nothing is sent from this page. */
+  (function(){
+    var form = document.getElementById('contactForm');
+    var status = document.getElementById('formStatus');
+    /* keep in sync with the plain mailto: link in #contact */
+    var TO = 'thespacewize@gmail.com';
+
+    function readForm(){
+      var f = {
+        name:    form.name.value.trim(),
+        email:   form.email.value.trim(),
+        type:    form.type.value,
+        budget:  form.budget.value,
+        addons:  Array.prototype.slice.call(form.querySelectorAll('input[name="addons"]:checked'))
+                   .map(function(c){ return c.value; }),
+        message: form.message.value.trim()
+      };
+      var missing = [];
+      if (!f.name) missing.push('cf-name');
+      if (!f.email || f.email.indexOf('@') < 1) missing.push('cf-email');
+      if (!f.message) missing.push('cf-message');
+      return { fields: f, missing: missing };
+    }
+
+    function buildDraft(f){
+      return {
+        subject: 'Project enquiry — ' + f.name,
+        body:
+          'Name: '    + f.name    + '\n' +
+          'Email: '   + f.email   + '\n' +
+          'Needs: '   + f.type    + '\n' +
+          'Budget: '  + f.budget  + '\n' +
+          'Add-ons: ' + (f.addons.length ? f.addons.join(', ') : 'none') + '\n\n' +
+          f.message   + '\n'
+      };
+    }
+
+    /* Validates, then hands the built draft to `run`. */
+    function withDraft(run){
+      var r = readForm();
+      if (r.missing.length){
+        status.textContent = 'Add your name, a valid email, and a note about the project first.';
+        document.getElementById(r.missing[0]).focus();
+        return;
+      }
+      run(r.fields, buildDraft(r.fields));
+    }
+
+    /* Web compose URLs open a normal browser tab and need nothing installed. */
+    var PROVIDERS = {
+      gmail: function(d){
+        return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(TO) +
+          '&su=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.body);
+      },
+      outlook: function(d){
+        return 'https://outlook.live.com/mail/0/deeplink/compose?to=' + encodeURIComponent(TO) +
+          '&subject=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.body);
+      },
+      yahoo: function(d){
+        return 'https://compose.mail.yahoo.com/?to=' + encodeURIComponent(TO) +
+          '&subject=' + encodeURIComponent(d.subject) + '&body=' + encodeURIComponent(d.body);
+      }
+    };
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      withDraft(function(f, d){
+        status.textContent = 'Opening your mail app. Nothing sends until you press send there.';
+        window.location.href = 'mailto:' + TO +
+          '?subject=' + encodeURIComponent(d.subject) +
+          '&body='    + encodeURIComponent(d.body);
+      });
+    });
+
+    Array.prototype.slice.call(document.querySelectorAll('[data-provider]')).forEach(function(b){
+      b.addEventListener('click', function(){
+        var name = b.textContent.trim();
+        withDraft(function(f, d){
+          status.textContent = 'Opening ' + name + ' in a new tab. Nothing sends until you press send there.';
+          window.open(PROVIDERS[b.dataset.provider](d), '_blank', 'noopener');
+        });
+      });
+    });
+
+    function copyText(text){
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        return navigator.clipboard.writeText(text);
+      }
+      return new Promise(function(resolve, reject){
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(ta);
+        ok ? resolve() : reject(new Error('copy failed'));
+      });
+    }
+
+    /* "Add site care" jumps to the form and says so in the message, once. */
+    var careBtn = document.getElementById('careBtn');
+    if (careBtn) {
+      careBtn.addEventListener('click', function(){
+        var box = document.getElementById('cf-message');
+        if (!box) return;
+        var line = 'I would like to add Site Care to my website.';
+        if (box.value.indexOf(line) === -1) {
+          var had = box.value.replace(/\s+$/, '');
+          box.value = had ? had + '\n\n' + line : line;
+        }
+        status.textContent = 'Added to your message below - tell me about the site and send it over.';
+      });
+    }
+
+    document.getElementById('copyBtn').addEventListener('click', function(){
+      withDraft(function(f, d){
+        var text = 'To: ' + TO + '\nSubject: ' + d.subject + '\n\n' + d.body;
+        copyText(text).then(function(){
+          status.textContent = 'Copied — paste it into any email or message.';
+        }, function(){
+          status.textContent = 'Could not copy automatically. Select the text and copy it by hand.';
+        });
+      });
+    });
+  })();
+
+  var WORK = [
+    {t:'Ace Spaders', u:'acespaders.com', h:'https://acespaders.com/', img:'acespaders-3.jpg', tags:['Redesign','Ground-up build','Consulting','25+ languages','Christmas theme'], d:"A leadership operator and facilitator needing a representative site. Rebuilt from the ground up to match his business's growing needs, and includes a cute, fully animated Chatbot named Little Ace. It runs in over 25 languages and has a Christmas theme. It's also what a site looks like with every add-on I offer, plus On-Call Site Care, packed into one."},
+    {t:'Deoro Property Maintenance', u:'space-wize-enterprise.github.io/deoro', h:'https://space-wize-enterprise.github.io/deoro/', img:'deoro.jpg', tags:['Client Work','Ground-up redesign','Trilingual'], d:'Commercial cleaning for strata buildings, offices, and construction sites across the Lower Mainland. They had a site, but it was a template - so I rebuilt it from nothing on their own photos and colours. The three-language switcher was my suggestion, and they took it.'},
+    {t:'Computer U‑Teach', u:'spacewize.github.io/canuteach.me', h:'https://spacewize.github.io/canuteach.me/', img:'canuteach.jpg', tags:['Client Work','Redesign','Copy','Education'], d:'Computer lessons and repair for kids and seniors in Vancouver. I repaired the broken links, rewrote the copy so every course explains itself, and brought the styling up to a current standard.'},
+    {t:'Computer U‑Teach, second direction', u:'spacewize.github.io/canuteach.me2', h:'https://spacewize.github.io/canuteach.me2/', img:'canuteach2.jpg', tags:['Client Work','Art direction','Education'], d:'The same lessons and repair, rebuilt with a much louder voice - display type at full volume and a mascot you can drag around. Put in front of them as the bolder of two options.'},
+    {t:'AWDEA', u:'spacewize.github.io/AWDEAA', h:'https://spacewize.github.io/AWDEAA/', img:'awdea-red.jpg', tags:['Pro Bono','Redesign','No-code calendar','Nonprofit'], d:'A BC nonprofit getting disabled adults into concerts, festivals, and games. Rebuilt from their original site, with an events calendar the admins update themselves - no code, no developer.'},
+    {t:'AWDEA, second direction', u:'spacewize.github.io/AWDEAAA', h:'https://spacewize.github.io/AWDEAAA/', img:'awdea-purple.jpg', tags:['Pro Bono','Art direction','Nonprofit'], d:'The same build carrying a different palette. Same structure, same self-serve calendar - shown to the board beside the first so they could pick the one that felt like them.'},
+    {t:'Front Row', u:'concept, not a client build', h:'', img:'frontrow.jpg', tags:['Concept','Dark UI','Booking flow'], d:'A self-directed concept, not a client build - one of my first. A booking service for watching matches out: find a fixture, pick a venue on screens and sound, hold a seat. Built to practise dark UI and live state - countdowns, seat counts, fill bars.'}
+  ];
+  var IMG = 'assets/images/work/';
+  window.__work = WORK; window.__workImg = IMG;        /* the 3D hanging scroll paints these */
+
+  /* Kinetic-Type: split one word into letters */
+  (function(el){
+    if (!el) return;
+    var label = el.textContent, w = document.createElement('span'); w.className = 'w'; w.setAttribute('aria-hidden', 'true');
+    label.split('').forEach(function(ch, i){ var l = document.createElement('span'); l.className = 'l'; l.textContent = ch; l.style.setProperty('--i', i); w.appendChild(l); });
+    el.textContent = ''; el.appendChild(w); el.setAttribute('aria-label', label);
+  })($('#kt'));
+
+  /* Magnetic Button */
+  document.querySelectorAll('.mag-zone').forEach(function(z){
+    var b = z.querySelector('.mag');
+    z.addEventListener('pointermove', function(e){
+      if (calm || e.pointerType === 'touch') return;
+      var r = b.getBoundingClientRect();
+      b.style.transform = 'translate(' + (e.clientX - r.left - r.width / 2) * .35 + 'px,' + (e.clientY - r.top - r.height / 2) * .35 + 'px)';
+    });
+    z.addEventListener('pointerleave', function(){ b.style.transform = ''; });
+  });
+
+  /* Scroll Based Velocity */
+  var rows = [].slice.call(document.querySelectorAll('.vel-row')).map(function(r){
+    var one = r.firstElementChild; for (var c = 0; c < 3; c++) r.appendChild(one.cloneNode(true));
+    return {el:r, dir:+r.getAttribute('data-dir'), pos:0, one:one};
+  });
+
+  /* Container Scroll Animation */
+  var view = $('#view'), projs = $('#projs'), browser = $('#browser'), imgs = [], cards = [], idx = -1;
+  if (view) WORK.forEach(function(w, i){
+    var im = new Image(); im.src = IMG + w.img; im.alt = 'Screenshot of ' + w.t; view.appendChild(im); imgs.push(im);
+    var a = document.createElement('article'); a.className = 'proj';
+    a.innerHTML = '<span class="count"></span><h3></h3><ul class="tags"></ul><p></p>';
+    a.querySelector('.count').textContent = (i + 1) + ' / ' + WORK.length;
+    a.querySelector('h3').textContent = w.t; a.querySelector('p').textContent = w.d;
+    w.tags.forEach(function(t){ var li = document.createElement('li'); li.textContent = t; a.querySelector('.tags').appendChild(li); });
+    if (w.h){ var l = document.createElement('a'); l.href = w.h; l.target = '_blank'; l.rel = 'noopener'; l.textContent = 'Visit the site'; a.appendChild(l); }
+    projs.appendChild(a); cards.push(a);
+  });
+  function show(i){
+    if (!view || i === idx) return; idx = i;
+    imgs.forEach(function(im, n){ im.classList.toggle('on', n === i); });
+    cards.forEach(function(c, n){ c.classList.toggle('on', n === i); });
+    $('#url').textContent = WORK[i].u;
+  }
+  show(0);
+
+  /* 3D Card Effect */
+  document.querySelectorAll('.tilt').forEach(function(t){
+    var inner = t.firstElementChild;
+    t.addEventListener('pointermove', function(e){
+      if (calm || e.pointerType === 'touch') return;
+      var r = t.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      inner.style.transform = 'rotateY(' + x * 18 + 'deg) rotateX(' + (-y * 12) + 'deg)'; t.classList.add('hot');
+    });
+    t.addEventListener('pointerleave', function(){ inner.style.transform = ''; t.classList.remove('hot'); });
+  });
+
+  /* Directional Hover */
+  document.querySelectorAll('.dh').forEach(function(c){
+    function edge(e){
+      var r = c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      var d = [y, r.height - y, x, r.width - x], m = d.indexOf(Math.min.apply(null, d));
+      c.style.setProperty('--ex', (m === 2 ? 0 : m === 3 ? 100 : x / r.width * 100) + '%');
+      c.style.setProperty('--ey', (m === 0 ? 0 : m === 1 ? 100 : y / r.height * 100) + '%');
+    }
+    c.addEventListener('pointerenter', edge); c.addEventListener('pointerleave', edge);
+  });
+
+  var lastY = scrollY, vel = 0, pin = $('#pin');
+  function tick(){
+    var y = scrollY; vel += ((y - lastY) - vel) * .18; lastY = y;
+    if (!calm){
+      var skew = clamp(vel * .3, -8, 8);
+      rows.forEach(function(r){
+        var w = r.one.offsetWidth; if (!w) return;
+        r.pos += r.dir * (.7 + vel * .45);
+        r.el.style.transform = 'translateX(' + (-(((r.pos % w) + w) % w)) + 'px) skewX(' + (-skew * r.dir) + 'deg)';
+      });
+      if (pin){
+      var rc = pin.getBoundingClientRect(), span = rc.height - innerHeight, p = span > 0 ? clamp((60 - rc.top) / span, 0, 1) : 0;
+      var open = clamp((innerHeight - rc.top) / (innerHeight * .9), 0, 1), e = 1 - Math.pow(1 - open, 3);
+      browser.style.transform = root.classList.contains('has3d') ? '' : 'perspective(1200px) rotateX(' + (1 - e) * 38 + 'deg) scale(' + (.82 + .18 * e) + ')';
+      show(Math.min(WORK.length - 1, Math.floor(clamp(p, 0, .999) * WORK.length + .22)));   /* the card changes as the scroll changes its picture */
+      }
+    }
+  }
+  function frame(){ tick(); requestAnimationFrame(frame); }
+  window.__tick = tick;
+  requestAnimationFrame(frame);
+})();
+</script>
+
+<!-- the 3D branch: grows down the page as you scroll, blossoms open behind the growing tip -->
+<script type="module" src="assets/js/branch.js"></script>
+
+<!-- the way back up to the tree: the circle swells over the page, then the main site opens -->
 <div class="page-wipe" id="pageWipe" aria-hidden="true"></div>
 <script src="assets/js/branch-link.js"></script>
 </body>
