@@ -594,10 +594,10 @@ function makeFolio(){
   const print = w => { const c = mk(CW, CH), x = c.getContext('2d'), tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const paint = im => { x.drawImage(paper, 0, 0);
-      x.fillStyle = '#e9dfd2'; x.fillRect(px, py, 1600, 1000);
-      if (im){ const s = 1600 / im.naturalWidth, sh = Math.min(im.naturalHeight, 1000 / s), dh = sh * s; x.drawImage(im, 0, 0, im.naturalWidth, sh, px, py, 1600, dh);
-        if (dh < 999) x.drawImage(im, 0, im.naturalHeight - 2, im.naturalWidth, 1, px, py + dh - 1, 1600, 1001 - dh); }   /* a wide, short picture: its last line runs on down to the band */
-      x.strokeStyle = 'rgba(70,40,30,.35)'; x.lineWidth = 2; x.strokeRect(px - 1, py - 1, 1602, 1002);
+      let iy = py, dh = 1000;                               /* a wide, short picture is mounted in the middle with paper above and below, never stretched */
+      if (im){ const s = 1600 / im.naturalWidth, sh = Math.min(im.naturalHeight, 1000 / s); dh = sh * s; iy = py + (1000 - dh) / 2; x.drawImage(im, 0, 0, im.naturalWidth, sh, px, iy, 1600, dh); }
+      else { x.fillStyle = '#e9dfd2'; x.fillRect(px, py, 1600, 1000); }
+      x.strokeStyle = 'rgba(70,40,30,.35)'; x.lineWidth = 2; x.strokeRect(px - 1, iy - 1, 1602, dh + 2);
       const by = py + 1000 + 41;
       x.fillStyle = '#fbf3ea'; x.font = '600 27px ui-monospace, Consolas, monospace'; x.textBaseline = 'middle'; x.textAlign = 'center';
       const tw = x.measureText(w.u).width + 44; x.fillRect(CW / 2 - tw / 2, by - 21, tw, 42); x.fillStyle = '#4a2c26'; x.fillText(w.u, CW / 2, by + 1);

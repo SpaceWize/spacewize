@@ -47,6 +47,7 @@
   --cherry:#E36FA0; --cherry-ink:#A81B54; --void:#06070F; --ease:cubic-bezier(.16,1,.3,1);
   --ink:#1c1418; --ink-soft:#54454c; --paper:#fbf5ef; --card:#fffaf5; --line:#e4d6cc;
   --pink:#d6477c; --pink-deep:#b02d5e; --pink-soft:#f9c9d8; --green:#4f8a3c; --brown:#6b4226;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
   --display:"Instrument Serif",Georgia,serif; --body:"Inter",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
@@ -172,29 +173,53 @@ h2{font:400 clamp(2.2rem,5.2vw,3.8rem)/1.06 var(--display);margin:0 0 .9rem;lett
 
 .care-copy{font-size:.9375rem;margin:0 0 1rem}
 .care-note{font-size:.8125rem;line-height:1.5;color:var(--ink-soft);margin:.9rem 0 0}
-.wide-card{background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:1.6rem;margin-top:1.6rem}
-.wide-card h3{font:400 1.9rem/1.1 var(--display);margin:.5rem 0 .4rem}
-.wide-card>p{margin:0}
-.addons-list{list-style:none;margin:1.3rem 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.1rem 1.8rem}
-.addons-list strong{display:block}
-.addons-list span{font-size:.9375rem;color:var(--ink-soft)}
-.notice{display:flex;gap:.8rem;align-items:flex-start;margin-top:1.6rem;border:1.5px solid var(--pink-deep);background:#fff4f8;border-radius:14px;padding:1rem 1.2rem}
-.notice svg{flex:0 0 auto;stroke:var(--pink-deep);margin-top:.2rem}
-.notice p{margin:0}
+/* ---------- lower half: plain and a little technical. Mono labels, hairlines, numbered parts. ---------- */
+.addons{margin-top:4.5rem}
+.addons-head{text-shadow:0 0 2px var(--paper),0 0 5px var(--paper),0 0 9px var(--paper)}
+.addons-head h3{font:400 clamp(1.9rem,3.6vw,2.6rem)/1.1 var(--display);margin:.5rem 0 .4rem}
+.addons-head p{margin:0;color:var(--ink-soft)}
+/* one panel cut into numbered cells */
+.mods{list-style:none;margin:2rem 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));background:var(--card);border:1.5px solid var(--ink);border-radius:16px;overflow:hidden;counter-reset:mod}
+.mod{position:relative;overflow:hidden;padding:1.3rem 1.4rem 1.6rem;margin:0 -1px -1px 0;border:solid var(--ink);border-width:0 1px 1px 0;counter-increment:mod;--ex:50%;--ey:50%}
+.mod::before{content:"";position:absolute;inset:0;background:var(--pink-soft);clip-path:circle(0 at var(--ex) var(--ey));transition:clip-path .6s cubic-bezier(.2,.8,.2,1)}
+.mod:hover::before{clip-path:circle(150% at var(--ex) var(--ey))}
+.mod>*{position:relative}
+.mod strong{display:block;font:400 1.55rem/1.15 var(--display);margin-bottom:.45rem}
+.mod strong::before{content:counter(mod,decimal-leading-zero);display:block;font:500 .75rem/1 var(--mono);letter-spacing:.08em;color:var(--pink-deep);margin-bottom:1.1rem}
+.mod>span{font-size:.9375rem;line-height:1.55;color:var(--ink-soft)}
 
-.about-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:2rem;align-items:start}
+.notice{display:flex;gap:.9rem;align-items:center;margin-top:1.6rem;border:1.5px solid var(--ink);background:var(--card);border-radius:14px;padding:1rem 1.2rem}
+.notice p{margin:0}
+.live{flex:0 0 auto;width:.65rem;height:.65rem;border-radius:50%;background:var(--pink);animation:live 2.2s ease-out infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(214,71,124,.55)}70%,100%{box-shadow:0 0 0 .7rem rgba(214,71,124,0)}}
+
+/* about: the facts as a read-out */
+.about-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:2.4rem;align-items:start}
 .about-copy .lede{max-width:none;color:var(--ink)}
 .about-copy p{margin:1.1rem 0 0}
 .about-copy p:first-child{margin-top:0}
-.facts{margin:0;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:.4rem 1.4rem}
-.fact{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--line)}
-.fact:last-child{border-bottom:0}
-.fact dt{color:var(--ink-soft)}
-.fact dd{margin:0;font-weight:600;text-align:right}
+.spec{background:var(--ink);color:var(--paper);border-radius:16px;font:400 .875rem/1.4 var(--mono);box-shadow:0 44px 60px -34px rgba(28,20,24,.6)}
+.spec-bar{display:flex;gap:6px;padding:.85rem 1.1rem;border-bottom:1px solid #3a2f34}
+.spec-bar i{width:9px;height:9px;border-radius:50%;background:#6d5f66}
+.spec-bar i:first-child{background:var(--pink)}
+.facts{margin:0;padding:.3rem 1.2rem .2rem}
+.fact{display:flex;align-items:baseline;gap:.7rem;padding:.75rem 0;border-bottom:1px solid #3a2f34}
+.fact dt{flex:1 1 auto;display:flex;align-items:baseline;gap:.7rem;color:var(--pink-soft);white-space:nowrap}
+.fact dt::after{content:"";flex:1 1 1rem;border-bottom:1px dotted #7d6e75;transform:translateY(-.25em)}
+.fact dd{margin:0;text-align:right}
+.caret{display:block;width:.55rem;height:1.05rem;margin:.7rem 1.2rem 1.1rem;background:var(--pink);animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
 
 /* ---------- contact form ---------- */
 #contact .lede a{font-weight:600;text-decoration-color:var(--pink);text-decoration-thickness:2px;text-underline-offset:4px}
-.form{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem 1.2rem;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:1.6rem;max-width:880px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem 1.2rem;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:1.6rem;max-width:880px;box-shadow:0 44px 60px -40px rgba(28,20,24,.5)}
+.form input[type=text]:hover,.form input[type=email]:hover,.form select:hover,.form textarea:hover{border-color:var(--pink-deep)}
+.form input[type=text]:focus,.form input[type=email]:focus,.form select:focus,.form textarea:focus{border-color:var(--pink-deep);box-shadow:0 0 0 4px var(--pink-soft)}
+.form .field>label,.form legend{font:500 .75rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.form .opt{font:400 .875rem/1.3 var(--body);letter-spacing:0;text-transform:none}
+.form .pick-opt{transition:transform .2s ease-out,background-color .2s}
+.form .pick-opt:hover{transform:translateY(-2px)}
+.pick-opt:has(input:checked){border-color:var(--pink-deep)}
 .field{display:grid;gap:.4rem;align-content:start}
 .wide,.form-actions{grid-column:1 / -1}
 .form label,.form legend{font-weight:600;font-size:.9375rem}
@@ -214,8 +239,16 @@ h2{font:400 clamp(2.2rem,5.2vw,3.8rem)/1.06 var(--display);margin:0 0 .9rem;lett
 .btn.small{padding:.7rem 1rem;font-size:.9375rem}
 .btn-text{background:none;border:0;padding:.4rem 0;font-weight:600;text-decoration:underline;text-decoration-color:var(--pink);text-decoration-thickness:2px;text-underline-offset:4px}
 .form-actions .hint{flex-basis:100%}
-.colophon{padding:4rem 0 3rem;font-size:.875rem;color:var(--ink-soft)}
+.colophon{margin-top:5rem;padding:1.2rem 0 3rem;border-top:1px solid var(--ink);display:flex;flex-wrap:wrap;justify-content:space-between;gap:.4rem 2rem;font:400 .75rem/1.5 var(--mono);letter-spacing:.04em;color:var(--ink-soft);text-shadow:0 0 2px var(--paper),0 0 5px var(--paper),0 0 9px var(--paper)}
 .colophon p{margin:0}
+
+/* the lower half comes in as you reach it */
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.rv .mod,.rv .notice,.rv .spec,.rv .form{opacity:0}
+.rv .mod.in,.rv .notice.in,.rv .spec.in,.rv .form.in{animation:rise .8s var(--ease) calc(var(--n,0) * 70ms) both}
+.calm .mod,.calm .notice,.calm .spec,.calm .form{opacity:1;animation:none!important}
+.calm .live,.calm .caret{animation:none}
+.calm .mod::before,.calm .form .pick-opt{transition:none}
 footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-soft)}
 .motion{background:var(--card);border:1.5px solid var(--ink);border-radius:99px;padding:.45rem .8rem;font:600 .75rem/1 var(--body);white-space:nowrap}
 
@@ -363,22 +396,25 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
     </div></div>
   </div>
   <!-- Add-ons span the full row: they attach to either build rather than being a build of their own. -->
-  <div class="wide-card">
-    <span class="kind">Add-ons</span>
-    <h3>Extras for a redesign or new build</h3>
-    <p>Each of these can be added to a redesign or a new build for a slightly higher quote.</p>
-    <ul class="addons-list">
-      <li><strong>Seasonal themes</strong><span>Seasonal updates can be updated automatically by me with On-Call Site Care. Otherwise, you call me and pay a fee each time you want one added.</span></li>
-      <li><strong>Account system</strong><span>Not managed by me unless you have On-Call Site Care.</span></li>
-      <li><strong>Calendar</strong><span>Designed to be managed by whoever the website is for. I can manage it with On-Call Site Care.</span></li>
-      <li><strong>Daily, weekly or monthly updates</strong><span>For regular updates, I recommend On-Call Site Care. Otherwise, a flat fee covers one image, a header and text in one predetermined section.</span></li>
-      <li><strong>Language support</strong><span>A flat fee per language. Silly languages are free.</span></li>
-      <li><strong>Chatbot</strong><span>A chat assistant on your site, like the one on Computer U&#8209;Teach, second direction. Costs a bit more than the other add-ons.</span></li>
-      <li><strong>Animated chatbot</strong><span>A chatbot with an animated character, like the one on Computer U&#8209;Teach, second direction, and Little Ace on the Ace Spaders website. Costs a bit more than the other add-ons, and the price changes with what you want from the animation.</span></li>
+  <div class="addons">
+    <div class="addons-head">
+      <span class="kind">Add-ons</span>
+      <h3>Extras for a redesign or new build</h3>
+      <p>Each of these can be added to a redesign or a new build for a slightly higher quote.</p>
+    </div>
+    <ul class="mods">
+      <li class="mod" style="--n:0"><strong>Seasonal themes</strong><span>Seasonal updates can be updated automatically by me with On-Call Site Care. Otherwise, you call me and pay a fee each time you want one added.</span></li>
+      <li class="mod" style="--n:1"><strong>Account system</strong><span>Not managed by me unless you have On-Call Site Care.</span></li>
+      <li class="mod" style="--n:2"><strong>Calendar</strong><span>Designed to be managed by whoever the website is for. I can manage it with On-Call Site Care.</span></li>
+      <li class="mod" style="--n:3"><strong>Daily, weekly or monthly updates</strong><span>For regular updates, I recommend On-Call Site Care. Otherwise, a flat fee covers one image, a header and text in one predetermined section.</span></li>
+      <li class="mod" style="--n:0"><strong>Language support</strong><span>A flat fee per language. Silly languages are free.</span></li>
+      <li class="mod" style="--n:1"><strong>Chatbot</strong><span>A chat assistant on your site, like the one on Computer U&#8209;Teach, second direction. Costs a bit more than the other add-ons.</span></li>
+      <li class="mod" style="--n:2"><strong>Animated chatbot</strong><span>A chatbot with an animated character, like the one on Computer U&#8209;Teach, second direction, and Little Ace on the Ace Spaders website. Costs a bit more than the other add-ons, and the price changes with what you want from the animation.</span></li>
+      <li class="mod" style="--n:3"><strong>3D effects</strong></li>
     </ul>
   </div>
   <div class="notice" role="note">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.2v.1"/></svg>
+    <span class="live" aria-hidden="true"></span>
     <p><strong>These rates hold for my first 10 clients.</strong> After that, they go up. If you're reading this, the current pricing is still available.</p>
   </div>
 </section>
@@ -394,13 +430,17 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
       <p class="lede">I'm early in this, and I price accordingly. What you get in exchange is someone who builds quickly, responds accordingly, and gives you a real home for your brand.</p>
       <p><em>When I’m not coding or designing, I’m usually watching anime, spending time with family, or learning about new stuff.</em></p>
     </div>
-    <dl class="facts">
-      <div class="fact"><dt>Based in</dt><dd>British Columbia, Canada</dd></div>
-      <div class="fact"><dt>Working since</dt><dd>2026</dd></div>
-      <div class="fact"><dt>Typical timeline</dt><dd>Under a week</dd></div>
-      <div class="fact"><dt>Clients so far</dt><dd>3 of 10</dd></div>
-      <div class="fact"><dt>Reply time</dt><dd>Within one business day</dd></div>
-    </dl>
+    <div class="spec">
+      <div class="spec-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <dl class="facts">
+          <div class="fact"><dt>Based in</dt><dd>British Columbia, Canada</dd></div>
+          <div class="fact"><dt>Working since</dt><dd>2026</dd></div>
+          <div class="fact"><dt>Typical timeline</dt><dd>Under a week</dd></div>
+          <div class="fact"><dt>Clients so far</dt><dd>3 of 10</dd></div>
+          <div class="fact"><dt>Reply time</dt><dd>Within one business day</dd></div>
+        </dl>
+      <span class="caret" aria-hidden="true"></span>
+    </div>
   </div>
 </section>
 
@@ -446,6 +486,7 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
         <label class="pick-opt"><input type="checkbox" name="addons" value="Language support"><span>Language support</span></label>
         <label class="pick-opt"><input type="checkbox" name="addons" value="Chatbot"><span>Chatbot</span></label>
         <label class="pick-opt"><input type="checkbox" name="addons" value="Animated chatbot"><span>Animated chatbot</span></label>
+        <label class="pick-opt"><input type="checkbox" name="addons" value="3D effects"><span>3D effects</span></label>
       </div>
     </fieldset>
     <div class="field wide">
@@ -454,7 +495,7 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
       <p class="hint" id="cf-hint">What the business/brand does, what the site needs to accomplish, and when you'd like it live. If you already have a site, include the URL here. Also include if you would like maintenance after your new site is live.</p>
     </div>
     <div class="form-actions">
-      <button class="btn" type="submit">Open in Mail app</button>
+      <span class="mag-zone"><button class="btn mag" type="submit">Open in Mail app</button></span>
       <div class="mail-alt">
         <span class="mail-alt-label">or open with</span>
         <button class="btn alt small" type="button" data-provider="gmail">Gmail</button>
@@ -626,6 +667,20 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
     });
   })();
 
+  /* lower half: each part rises in as you reach it. Only transforms, so the page never changes height. */
+  var waiting = [];
+  (function(){
+    if (calm) return;
+    root.classList.add('rv');
+    waiting = [].slice.call(document.querySelectorAll('.mod,.notice,.spec,.form'));
+  })();
+  function arrive(){                                   /* called every frame until everything has come in */
+    for (var i = waiting.length - 1; i >= 0; i--){
+      var r = waiting[i].getBoundingClientRect();
+      if (r.top < innerHeight * .9 && r.bottom > 0){ waiting[i].classList.add('in'); waiting.splice(i, 1); }
+    }
+  }
+
   var WORK = [
     {t:'Ace Spaders', u:'acespaders.com', h:'https://acespaders.com/', img:'acespaders-3.jpg', tags:['Redesign','Ground-up build','Consulting','25+ languages','Christmas theme'], d:"A leadership operator and facilitator needing a representative site. Rebuilt from the ground up to match his business's growing needs, and includes a cute, fully animated Chatbot named Little Ace. It runs in over 25 languages and has a Christmas theme. It's also what a site looks like with every add-on I offer, plus On-Call Site Care, packed into one."},
     {t:'Deoro Property Maintenance', u:'space-wize-enterprise.github.io/deoro', h:'https://space-wize-enterprise.github.io/deoro/', img:'deoro.jpg', tags:['Client Work','Ground-up redesign','Trilingual'], d:'Commercial cleaning for strata buildings, offices, and construction sites across the Lower Mainland. They had a site, but it was a template - so I rebuilt it from nothing on their own photos and colours. The three-language switcher was my suggestion, and they took it.'},
@@ -695,7 +750,7 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
   });
 
   /* Directional Hover */
-  document.querySelectorAll('.dh').forEach(function(c){
+  document.querySelectorAll('.dh,.mod').forEach(function(c){
     function edge(e){
       var r = c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
       var d = [y, r.height - y, x, r.width - x], m = d.indexOf(Math.min.apply(null, d));
@@ -708,6 +763,7 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
   var lastY = scrollY, vel = 0, pin = $('#pin');
   function tick(){
     var y = scrollY; vel += ((y - lastY) - vel) * .18; lastY = y;
+    if (waiting.length) arrive();
     if (!calm){
       var skew = clamp(vel * .3, -8, 8);
       rows.forEach(function(r){
