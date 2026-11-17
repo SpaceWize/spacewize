@@ -42,6 +42,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/branch-link.css">
+<!-- languages: must load here, before the page is drawn -->
+<script src="/assets/js/lang.js"></script>
 <script>
 /* Arriving from a branch on the tree: stay covered until the page can open outward from that branch. */
 try {
@@ -324,7 +326,7 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
      aria-label="Space Wize Enterprise - the tree this branch grew from">Click Me!</a>
   <div class="hero-copy">
     <p class="eyebrow">Web design &amp; build - Space Wize</p>
-    <h1>Sites that are <em class="kt" id="kt">considered</em>, not assembled.</h1>
+    <h1 data-i18n-html>Sites that are <em class="kt" id="kt">considered</em>, not assembled.</h1>
     <p class="lede">I'm a web designer building fast, clear websites for people who need one and don't want to overcomplicate it. You bring the business, I bring a place for it to live.</p>
     <div class="cta">
       <span class="mag-zone"><a class="btn mag" href="#portfolio">See the work</a></span>
@@ -531,6 +533,7 @@ footer{padding:2rem 0 3rem;text-align:center;font-size:.875rem;color:var(--ink-s
 </div>
 
 
+<script>window.swzTranslate && swzTranslate();</script>
 <!-- page effects: work with or without the 3D scene -->
 <script>
 (function(){

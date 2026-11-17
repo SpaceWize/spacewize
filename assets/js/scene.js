@@ -1789,7 +1789,7 @@ function openMore(index) {
   pinned = true;
   locked = true;
   cancelClear();
-  moreSheet.dataset.stage = d.stage;
+  moreSheet.dataset.near = String(d.bloom > 0);
   moreStage.textContent = d.stage;
   moreName.textContent = d.name;
   moreLine.textContent = d.line;

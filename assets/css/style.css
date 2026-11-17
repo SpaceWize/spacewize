@@ -452,7 +452,7 @@ button.btn{font-family:var(--body);cursor:pointer}
 }
 .more-close:hover{color:var(--ink);background:rgba(255,255,255,.07)}
 .more .panel-status{margin-bottom:14px}
-.more[data-stage="In build"] .panel-status{color:var(--cherry)}
+.more[data-near="true"] .panel-status{color:var(--cherry)}
 .more h2{
   font-family:var(--display);font-weight:500;
   font-size:clamp(1.9rem,3.2vw,2.5rem);line-height:1.08;
