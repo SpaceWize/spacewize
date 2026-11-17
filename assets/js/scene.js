@@ -52,6 +52,13 @@ const DIVISIONS = Array.from(
   stage:  li.dataset.stage || 'Planned',
   when:   li.dataset.when || '',
   notify: li.dataset.notify || '',
+  /* the longer read behind "Learn more", if this division has one */
+  /* ...and only once it has been written: a template still holding its
+     placeholder counts as none, so the button stays off the card */
+  more:   (() => {
+    const t = li.querySelector('template.more-copy');
+    return t && !t.content.querySelector('.more-todo') && t.content.textContent.trim() ? t : null;
+  })(),
   /* how far this branch's flowers can open — the tree doubles as the
      progress board, so a division nearer to opening is further out of
      bud even before anyone touches it */
@@ -853,6 +860,8 @@ const _m = new THREE.Matrix4();
 const _s = new THREE.Vector3();
 const _co = new THREE.Vector3();
 
+const _progressPetal = new THREE.Color(0xfbd3e0);
+const _progressGlow  = new THREE.Color(0xe36fa0);
 DIVISIONS.forEach((division, i) => {
   const acc = grown[i];
   const branchGroup = new THREE.Group();
@@ -860,13 +869,16 @@ DIVISIONS.forEach((division, i) => {
   const blossoms = [];
   acc.umbels.forEach((u) => umbelFlowers(u, blossoms));
 
-  /* the warmer the petal, the closer the division is to opening */
+  /* the warmer the petal, the closer the division is to opening. It is
+     a slight lean, not a signal: a branch in build carries a little of
+     the live branch's pink in its glow, in step with how far along it
+     is, and a planned one stays the cool lavender of a bud. */
   const near = division.bloom > 0;
-  const petalMat = makeBlossomMaterial(
-    treeUniforms,
-    division.live ? 0xfbd3e0 : (near ? 0xe4cfdd : 0xcfc4e0),
-    division.live ? 0xe36fa0 : (near ? 0x6b4a63 : 0x4a4266)
-  );
+  const petalMat = makeBlossomMaterial(treeUniforms, 0xfbd3e0, 0xe36fa0);
+  if (!division.live) {
+    petalMat.color.set(0xcfc4e0).lerp(_progressPetal, Math.min(1, division.bloom * 1.1));
+    petalMat.emissive.set(0x4a4266).lerp(_progressGlow, Math.min(1, division.bloom * 0.8));
+  }
 
   /* every flower on this branch in one draw call */
   const geo = new THREE.BufferGeometry();
@@ -1285,6 +1297,166 @@ let updateFallen = null;
 }
 
 /* ============================================================
+   the sky
+   One flat navy read as a backdrop rather than as distance. This is a
+   dome that only ever turns with the camera, never moves with it: deep
+   at the top, a little violet toward the horizon, and warmed where the
+   moon hangs. The stars are fixed, tiny and cool, so they are never
+   mistaken for the drifting blossom.
+   ============================================================ */
+{
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    uniforms: {
+      uTop:     { value: new THREE.Color(0x06070f) },
+      uHorizon: { value: new THREE.Color(0x17133c) },
+      uGlow:    { value: new THREE.Color(0xc98fb4) },
+      uMoon:    { value: moonSprite.position },
+    },
+    vertexShader: `
+      varying vec3 vDir;
+      void main() {
+        vDir = position;
+        vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0);
+        gl_Position = p.xyww;            // pinned to the far plane
+      }`,
+    fragmentShader: `
+      uniform vec3 uTop, uHorizon, uGlow, uMoon;
+      varying vec3 vDir;
+      void main() {
+        vec3 d = normalize(vDir);
+        float up = smoothstep(-0.10, 0.70, d.y);
+        vec3 c = mix(uHorizon, uTop, pow(up, 0.65));
+        c = mix(c, uTop, smoothstep(-0.02, -0.45, d.y));     // dark again under the horizon
+        float m = max(dot(d, normalize(uMoon - cameraPosition)), 0.0);
+        c += uGlow * (pow(m, 10.0) * 0.028 + pow(m, 48.0) * 0.085);
+        gl_FragColor = vec4(c, 1.0);
+      }`,
+  });
+  const sky = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 3), skyMat);
+  sky.frustumCulled = false;
+  sky.renderOrder = -100;
+  scene.add(sky);
+
+  const STARS = isSmall ? 150 : 320;
+  const spos = new Float32Array(STARS * 3);
+  const sdat = new Float32Array(STARS * 3);   // size, brightness, phase
+  for (let i = 0; i < STARS; i++) {
+    /* even over the upper sky, thinning toward the horizon */
+    const y = 0.06 + Math.pow(rnd(), 0.8) * 0.92;
+    const r = Math.sqrt(1 - y * y);
+    const a = rnd() * Math.PI * 2;
+    spos[i * 3] = Math.cos(a) * r; spos[i * 3 + 1] = y; spos[i * 3 + 2] = Math.sin(a) * r;
+    const big = rnd() < 0.12;
+    sdat[i * 3] = big ? 2.4 + rnd() * 0.9 : 1.1 + rnd() * 0.9;
+    sdat[i * 3 + 1] = big ? 0.75 + rnd() * 0.25 : 0.25 + rnd() * 0.4;
+    sdat[i * 3 + 2] = rnd() * 6.283;
+  }
+  const sgeo = new THREE.BufferGeometry();
+  sgeo.setAttribute('position', new THREE.BufferAttribute(spos, 3));
+  sgeo.setAttribute('aDat', new THREE.BufferAttribute(sdat, 3));
+  const starMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    fog: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: treeUniforms.uTime,
+      uWind: treeUniforms.uWind,       // 0 with reduced motion: no twinkle
+      uMoon: { value: moonSprite.position },
+      uPx:   { value: Math.min(window.devicePixelRatio || 1, 2) },
+    },
+    vertexShader: `
+      attribute vec3 aDat;
+      uniform float uTime, uWind, uPx;
+      uniform vec3 uMoon;
+      varying float vA;
+      void main() {
+        vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0);
+        gl_Position = p.xyww;
+        gl_PointSize = aDat.x * uPx;
+        float tw = 1.0 - uWind * 0.35 * (0.5 + 0.5 * sin(uTime * (0.5 + aDat.z * 0.12) + aDat.z));
+        /* none in the moon's own glare, and fewer low down */
+        float m = max(dot(normalize(position), normalize(uMoon - cameraPosition)), 0.0);
+        vA = aDat.y * tw * (1.0 - smoothstep(0.90, 0.985, m)) * smoothstep(0.04, 0.3, position.y);
+      }`,
+    fragmentShader: `
+      varying float vA;
+      void main() {
+        float r = length(gl_PointCoord - 0.5);
+        float a = smoothstep(0.5, 0.12, r) * vA;
+        gl_FragColor = vec4(vec3(0.74, 0.80, 1.0) * a, a);
+      }`,
+  });
+  const stars = new THREE.Points(sgeo, starMat);
+  stars.frustumCulled = false;
+  stars.renderOrder = -99;
+  scene.add(stars);
+}
+
+/* ============================================================
+   the ground
+   The trunk used to fade into haze and the tree hung in the air. This
+   is only a suggestion of earth: a dark rise that fades out before it
+   has an edge, the tree's shadow thrown toward the viewer by the moon
+   behind it, and a tight dark patch where the roots meet the soil.
+   ============================================================ */
+{
+  const blob = (stops, size) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d'), h = size / 2;
+    const g = ctx.createRadialGradient(h, h, 0, h, h, h);
+    stops.forEach(([at, col]) => g.addColorStop(at, col));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+  const flat = (tex, w, d, opacity, order) => {
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, d),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity, depthWrite: false, fog: false })
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.renderOrder = order;
+    scene.add(m);
+    return m;
+  };
+  const footX = tree.position.x, footZ = tree.position.z;
+  /* away from the moon, along the ground */
+  const sx = Math.sin(HOME_THETA), sz = Math.cos(HOME_THETA);
+
+  const earth = flat(blob([
+    [0,    'rgba(58,45,104,0.95)'],
+    [0.28, 'rgba(38,30,78,0.85)'],
+    [0.62, 'rgba(18,16,44,0.5)'],
+    [1,    'rgba(6,7,15,0)'],
+  ], 256), 34, 34, 1, -30);
+  earth.position.set(footX, GROUND_Y - 0.06, footZ);
+
+  /* the canopy's shadow, long and soft */
+  const shade = flat(blob([
+    [0,   'rgba(4,4,14,0.62)'],
+    [0.5, 'rgba(4,4,14,0.34)'],
+    [1,   'rgba(4,4,14,0)'],
+  ], 128), 9.5, 15, 1, -29);
+  shade.rotation.z = HOME_THETA;
+  shade.position.set(footX + sx * 4.2, GROUND_Y - 0.04, footZ + sz * 4.2);
+
+  /* and the contact patch under the roots */
+  const foot = flat(blob([
+    [0,    'rgba(2,2,8,0.9)'],
+    [0.45, 'rgba(2,2,8,0.55)'],
+    [1,    'rgba(2,2,8,0)'],
+  ], 128), 3.4, 3.4, 1, -28);
+  foot.position.set(footX + sx * 0.3, GROUND_Y - 0.02, footZ + sz * 0.3);
+}
+
+/* ============================================================
    ground mist
    Banks of soft haze at the foot of the frame. Pinned to the measured
    bottom rather than a fixed height, so they sit on the horizon of
@@ -1436,6 +1608,11 @@ function updateTag(dt, time) {
    ============================================================ */
 let active = null;
 let locked = false;
+/* chosen from the Divisions menu: the card stays up when the pointer
+   wanders back over empty sky, until something else is picked */
+let pinned = false;
+/* which division's "Learn more" sheet is open, if any */
+let moreIndex = null;
 let hinted = false;
 
 function dismissHint() {
@@ -1446,6 +1623,8 @@ function dismissHint() {
 
 function select(index) {
   if (active === index) return;
+  /* the longer read belongs to one branch; moving off it puts it away */
+  if (moreIndex !== null && index !== moreIndex) closeMore(false);
   active = index;
   branches.forEach((b, i) => {
     const on = i === index;
@@ -1490,6 +1669,7 @@ function select(index) {
   }
   panelBtn.removeAttribute('aria-disabled');
   if (panelAlt) panelAlt.hidden = !d.live;
+  if (panelMore) panelMore.hidden = d.live || !d.more;
 
   liveRegion.textContent = d.live
     ? `${d.name}. Live site.`
@@ -1501,10 +1681,200 @@ function select(index) {
 function activate(index) {
   const d = DIVISIONS[index];
   if (d.live && d.url) {
-    window.location.href = d.url;
+    leaveTo(d.url, index);
   } else {
     select(index);
     locked = true;
+  }
+}
+
+/* ---------- the way down into a live division ----------
+   A circle swells out of the branch itself and covers the tree, and the
+   site opens behind it. The other half lives on that site, which opens
+   outward from the same branch. Plain navigation when motion is off. */
+const pageLeave = document.getElementById('pageLeave');
+const _leaveAt = new THREE.Vector3();
+let leaving = false;
+function leaveTo(href, index) {
+  if (leaving) return;
+  if (!pageLeave || noMotion) { window.location.href = href; return; }
+  leaving = true;
+  try { sessionStorage.setItem('swz:descend', '1'); } catch (err) {}
+
+  let cx = sizedW / 2, cy = sizedH / 2;
+  if (index !== null && index !== undefined && branches[index]) {
+    anchorWorldOf(branches[index], _leaveAt).project(camera);
+    cx = clamp((_leaveAt.x * 0.5 + 0.5) * sizedW, 0, sizedW);
+    cy = clamp((-_leaveAt.y * 0.5 + 0.5) * sizedH, 0, sizedH);
+  }
+  const far = Math.hypot(Math.max(cx, sizedW - cx), Math.max(cy, sizedH - cy)) + 40;
+  pageLeave.style.left = cx + 'px';
+  pageLeave.style.top = cy + 'px';
+  pageLeave.style.width = pageLeave.style.height = far * 2 + 'px';
+  pageLeave.style.marginLeft = pageLeave.style.marginTop = -far + 'px';
+  /* commit scale(0) as the starting value before asking for scale(1) */
+  void getComputedStyle(pageLeave).transform;
+  pageLeave.dataset.on = 'true';
+
+  let gone = false;
+  const go = () => { if (!gone) { gone = true; window.location.href = href; } };
+  pageLeave.addEventListener('transitionend', (ev) => {
+    if (ev.propertyName === 'transform') setTimeout(go, 120);
+  });
+  setTimeout(go, 1900);          // never strand anyone behind the cover
+}
+/* coming Back to a page the browser kept alive: take the cover off again */
+window.addEventListener('pageshow', (e) => {
+  if (!e.persisted || !pageLeave) return;
+  leaving = false;
+  pageLeave.removeAttribute('data-on');
+  pageLeave.removeAttribute('style');
+});
+/* a plain click on a link to a live division goes by the same road;
+   new-tab and other modified clicks are left alone */
+function leaveOnClick(el, indexOf) {
+  if (!el) return;
+  el.addEventListener('click', (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    const href = el.getAttribute('href');
+    if (!href || href.charAt(0) !== '/' || el.target === '_blank') return;
+    const index = indexOf();
+    if (index === null || !DIVISIONS[index] || !DIVISIONS[index].live) return;
+    e.preventDefault();
+    leaveTo(href, index);
+  });
+}
+leaveOnClick(panelBtn, () => active);
+leaveOnClick(panelAlt, () => active);
+
+/* ---------- turn the tree to a branch and open it ----------
+   The camera swings round to the side the branch grows on, a little off
+   square so the branch is seen along its length rather than end-on. */
+const _faceAt = new THREE.Vector3();
+function focusBranch(index) {
+  if (level !== 0) goTo(0).catch(() => {});
+  anchorWorldOf(branches[index], _faceAt);
+  let want = Math.atan2(_faceAt.x, _faceAt.z) + 0.45;
+  const turn = Math.PI * 2;
+  want += Math.round((orbit.targetTheta - want) / turn) * turn;   // the short way round
+  orbit.targetTheta = want;
+  orbit.targetPhi = 1.42;
+  orbit.velTheta = 0;
+  cancelClear();
+  select(index);
+  locked = true;
+  pinned = true;
+}
+
+/* ---------- learn more: what is planned for one division ----------
+   Opened from the button on that division's card and from nowhere
+   else. It sits beside the tree rather than over it, so the branch it
+   is about stays in view, and the card steps aside while it is open. */
+const panelMore  = document.getElementById('panelMore');
+const moreSheet  = document.getElementById('more');
+const moreClose  = document.getElementById('moreClose');
+const moreStage  = document.getElementById('moreStage');
+const moreName   = document.getElementById('moreName');
+const moreLine   = document.getElementById('moreLine');
+const moreWhen   = document.getElementById('moreWhen');
+const moreBody   = document.getElementById('moreBody');
+const moreNotify = document.getElementById('moreNotify');
+let moreHideTimer = 0;
+
+function openMore(index) {
+  const d = DIVISIONS[index];
+  if (!moreSheet || !d || !d.more) return;
+  clearTimeout(moreHideTimer);
+  moreIndex = index;
+  pinned = true;
+  locked = true;
+  cancelClear();
+  moreSheet.dataset.stage = d.stage;
+  moreStage.textContent = d.stage;
+  moreName.textContent = d.name;
+  moreLine.textContent = d.line;
+  moreWhen.textContent = d.when;
+  moreWhen.hidden = !d.when;
+  moreBody.replaceChildren(d.more.content.cloneNode(true));
+  if (d.notify) { moreNotify.setAttribute('href', d.notify); moreNotify.hidden = false; }
+  else moreNotify.hidden = true;
+  moreSheet.hidden = false;
+  void moreSheet.offsetWidth;                 // commit the closed state so it can slide
+  moreSheet.dataset.open = 'true';
+  document.body.dataset.more = 'open';
+  moreSheet.querySelector('.more-inner').scrollTop = 0;
+  moreClose.focus({ preventScroll: true });
+}
+
+function closeMore(refocus) {
+  if (moreIndex === null || !moreSheet) return;
+  moreIndex = null;
+  moreSheet.dataset.open = 'false';
+  document.body.dataset.more = 'closed';
+  clearTimeout(moreHideTimer);
+  moreHideTimer = setTimeout(() => { moreSheet.hidden = true; }, noMotion ? 0 : 460);
+  if (refocus && panelMore && !panelMore.hidden) panelMore.focus({ preventScroll: true });
+}
+
+if (panelMore && moreSheet) {
+  panelMore.addEventListener('click', () => { if (active !== null) openMore(active); });
+  moreClose.addEventListener('click', () => closeMore(true));
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && moreIndex !== null) { closeMore(true); e.stopPropagation(); }
+  }, true);
+}
+
+/* ---------- the Divisions menu in the bar ---------- */
+{
+  const wrap = document.getElementById('divs');
+  const btn  = document.getElementById('divsBtn');
+  const menu = document.getElementById('divsMenu');
+  if (wrap && btn && menu) {
+    const setOpen = (open) => {
+      menu.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      if (open) {
+        menu.querySelectorAll('button').forEach((b, i) => {
+          if (i === active) b.setAttribute('aria-current', 'true');
+          else b.removeAttribute('aria-current');
+        });
+      }
+    };
+    DIVISIONS.forEach((d, i) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.live = String(d.live);
+      const pip = document.createElement('span'); pip.className = 'pip'; pip.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.textContent = d.name;
+      const stage = document.createElement('span'); stage.className = 'divs-stage'; stage.textContent = d.stage;
+      b.append(pip, name, stage);
+      b.addEventListener('click', () => { setOpen(false); focusBranch(i); });
+      li.appendChild(b);
+      menu.appendChild(li);
+    });
+    btn.addEventListener('click', () => {
+      const open = menu.hidden;
+      setOpen(open);
+      if (open) dismissHint();
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!menu.hidden && !wrap.contains(e.target)) setOpen(false);
+    });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); e.stopPropagation(); return; }
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      const items = Array.from(menu.querySelectorAll('button'));
+      if (menu.hidden) setOpen(true);
+      const at = items.indexOf(document.activeElement);
+      const next = e.key === 'ArrowDown' ? (at + 1) % items.length : (at <= 0 ? items.length - 1 : at - 1);
+      items[next].focus();
+      e.preventDefault();
+    });
+    wrap.addEventListener('focusout', (e) => {
+      if (!menu.hidden && e.relatedTarget && !wrap.contains(e.relatedTarget)) setOpen(false);
+    });
+    wrap.hidden = false;
   }
 }
 
@@ -1521,6 +1891,8 @@ DIVISIONS.forEach((d, i) => {
   el.addEventListener('mouseenter', () => select(i));
   if (!d.live) {
     el.addEventListener('click', () => { select(i); locked = true; });
+  } else {
+    leaveOnClick(el, () => i);
   }
   keys.appendChild(el);
 });
@@ -1535,6 +1907,7 @@ panel.addEventListener('click', (e) => {
   const href = panelBtn.getAttribute('href');
   if (!href) return;
   if (panelBtn.target === '_blank') window.open(href, '_blank', 'noopener');
+  else if (active !== null && DIVISIONS[active].live) leaveTo(href, active);
   else window.location.href = href;
 });
 
@@ -1646,9 +2019,10 @@ canvas.addEventListener('pointermove', (e) => {
     cancelClear();
     select(index);
     locked = false;
+    pinned = false;
   } else if (nearActive(e.clientX - r.left, e.clientY - r.top)) {
     cancelClear();                       // still hovering its neighbourhood
-  } else if (!overCard && !keys.matches(':focus-within')) {
+  } else if (!overCard && !pinned && !keys.matches(':focus-within')) {
     /* off the branch and off the card — let it go, but not instantly */
     scheduleClear();
   }
@@ -1664,12 +2038,12 @@ panel.addEventListener('pointerenter', () => {
 });
 panel.addEventListener('pointerleave', () => {
   overCard = false;
-  if (canHover) scheduleClear();
+  if (canHover && !pinned) scheduleClear();
 });
 
 canvas.addEventListener('pointerleave', () => {
   canvas.dataset.over = 'false';
-  if (canHover && !overCard && !keys.matches(':focus-within')) scheduleClear();
+  if (canHover && !overCard && !pinned && !keys.matches(':focus-within')) scheduleClear();
 });
 
 function endDrag(e) {
@@ -1685,6 +2059,7 @@ function endDrag(e) {
          in — the branches always win the click */
       if (raycaster.intersectObject(moonSprite, false).length) leap();
       locked = false;
+      pinned = false;
       select(null);
     } else if (canHover) {
       activate(index);

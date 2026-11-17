@@ -71,6 +71,16 @@ setTimeout(function () {
   <div class="topbar-inner glass">
     <a class="wordmark" href="/">Space <em>Wize</em></a>
     <nav class="topnav" aria-label="Primary">
+      <!-- every division by name; picking one turns the tree to its branch and opens its card.
+           Filled and shown by the scene, so it only exists when there is a tree to turn. -->
+      <div class="divs" id="divs" hidden>
+        <button class="divs-btn" id="divsBtn" type="button" aria-expanded="false" aria-controls="divsMenu">
+          <span>Divisions</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="divs-menu" id="divsMenu" hidden></ul>
+      </div>
       <a href="/about">About</a>
       <a href="/sites">Sites</a>
     </nav>
@@ -113,6 +123,10 @@ setTimeout(function () {
           <path d="M5 12h14M13 6l6 6-6 6"/>
         </svg>
       </a>
+      <!-- the longer read on a division that has not opened yet. This button is the only way in. -->
+      <button class="btn btn-sm panel-alt" id="panelMore" type="button" hidden>
+        <span>Learn more</span>
+      </button>
       <!-- second action, only on the division that is actually open -->
       <a class="btn btn-sm panel-alt" id="panelAlt"
          href="/webdev/#contact" hidden>
@@ -174,6 +188,30 @@ setTimeout(function () {
         </a>
       </li>
 
+      <li data-id="games"
+          data-name="Game Development"
+          data-line="Games made small, properly, and uniquely. Good games require good stories first, then mechanics built around them."
+          data-stage="In build"
+          data-when="Opening spring 2027"
+          data-bloom="0.5"
+          data-notify="/notify?division=Game%20Development"
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>In build</span>
+          <h3>Game Development</h3>
+          <p>Games made small, properly, and uniquely. Good games require good stories first, then mechanics built around them.</p>
+            <p class="card-when">Opening spring 2027</p>
+          <div class="card-acts">
+            <a class="card-notify" href="/notify?division=Game%20Development">Tell me when this opens</a>
+          </div>
+        </div>
+        <!-- Learn more: what is planned for this division. Replace the placeholder with your own words;
+             any number of <p> paragraphs works. -->
+        <template class="more-copy">
+          <p class="more-todo">Your words about what is planned for Game Development go here.</p>
+        </template>
+      </li>
+
       <li data-id="print"
           data-name="3D Printing"
           data-line="From custom statues or mini-figures, to premade toys and tools."
@@ -191,6 +229,11 @@ setTimeout(function () {
             <a class="card-notify" href="/notify?division=3D%20Printing">Tell me when this opens</a>
           </div>
         </div>
+        <!-- Learn more: what is planned for this division. Replace the placeholder with your own words;
+             any number of <p> paragraphs works. -->
+        <template class="more-copy">
+          <p class="more-todo">Your words about what is planned for 3D Printing go here.</p>
+        </template>
       </li>
 
       <li data-id="shop"
@@ -209,43 +252,11 @@ setTimeout(function () {
             <a class="card-notify" href="/notify?division=Dropshipping">Tell me when this opens</a>
           </div>
         </div>
-      </li>
-
-      <li data-id="property"
-          data-name="Real Estate Development"
-          data-line="Real homes to build real memories, all with the future in mind."
-          data-stage="Planned"
-          data-when=""
-          data-bloom="0"
-          data-notify="/notify?division=Real%20Estate%20Development"
-          data-live="false">
-        <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>Planned</span>
-          <h3>Real Estate Development</h3>
-          <p>Real homes to build real memories, all with the future in mind.</p>
-          <div class="card-acts">
-            <a class="card-notify" href="/notify?division=Real%20Estate%20Development">Tell me when this opens</a>
-          </div>
-        </div>
-      </li>
-
-      <li data-id="games"
-          data-name="Game Development"
-          data-line="Games made small, properly, and uniquely. Good games require good stories first, then mechanics built around them."
-          data-stage="In build"
-          data-when="Opening spring 2027"
-          data-bloom="0.5"
-          data-notify="/notify?division=Game%20Development"
-          data-live="false">
-        <div class="branch-card glass" data-live="false">
-          <span class="tag"><span class="pip"></span>In build</span>
-          <h3>Game Development</h3>
-          <p>Games made small, properly, and uniquely. Good games require good stories first, then mechanics built around them.</p>
-            <p class="card-when">Opening spring 2027</p>
-          <div class="card-acts">
-            <a class="card-notify" href="/notify?division=Game%20Development">Tell me when this opens</a>
-          </div>
-        </div>
+        <!-- Learn more: what is planned for this division. Replace the placeholder with your own words;
+             any number of <p> paragraphs works. -->
+        <template class="more-copy">
+          <p class="more-todo">Your words about what is planned for Dropshipping go here.</p>
+        </template>
       </li>
 
       <li data-id="books"
@@ -264,6 +275,34 @@ setTimeout(function () {
             <a class="card-notify" href="/notify?division=Books">Tell me when this opens</a>
           </div>
         </div>
+        <!-- Learn more: what is planned for this division. Replace the placeholder with your own words;
+             any number of <p> paragraphs works. -->
+        <template class="more-copy">
+          <p class="more-todo">Your words about what is planned for Books go here.</p>
+        </template>
+      </li>
+
+      <li data-id="property"
+          data-name="Real Estate Development"
+          data-line="Real homes to build real memories, all with the future in mind."
+          data-stage="Planned"
+          data-when=""
+          data-bloom="0"
+          data-notify="/notify?division=Real%20Estate%20Development"
+          data-live="false">
+        <div class="branch-card glass" data-live="false">
+          <span class="tag"><span class="pip"></span>Planned</span>
+          <h3>Real Estate Development</h3>
+          <p>Real homes to build real memories, all with the future in mind.</p>
+          <div class="card-acts">
+            <a class="card-notify" href="/notify?division=Real%20Estate%20Development">Tell me when this opens</a>
+          </div>
+        </div>
+        <!-- Learn more: what is planned for this division. Replace the placeholder with your own words;
+             any number of <p> paragraphs works. -->
+        <template class="more-copy">
+          <p class="more-todo">Your words about what is planned for Real Estate Development go here.</p>
+        </template>
       </li>
     </ul>
 
@@ -272,6 +311,28 @@ setTimeout(function () {
 
     <p class="fallback-copy">© 2026 Space Wize Enterprise. All rights reserved.</p>
   </div>
+
+  <!-- What is planned for one division, opened from "Learn more" on its card and nowhere else.
+       The words come from that division's <template class="more-copy"> in the list above. -->
+  <section class="more" id="more" hidden>
+    <div class="more-inner" role="dialog" aria-modal="false" aria-labelledby="moreName">
+      <button class="more-close" id="moreClose" type="button" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <p class="panel-status" id="moreStage"></p>
+      <h2 id="moreName"></h2>
+      <p class="more-line" id="moreLine"></p>
+      <p class="more-when" id="moreWhen" hidden></p>
+      <div class="more-body" id="moreBody"></div>
+      <a class="btn" id="moreNotify">
+        <span>Tell me when this opens</span>
+        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </section>
 
   <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
 </main>
@@ -313,6 +374,8 @@ setTimeout(function () {
 </section>
 
 <div class="page-arrive" id="pageArrive" aria-hidden="true"></div>
+<!-- the way down into a division: a circle swells out of its branch, then that site opens -->
+<div class="page-leave" id="pageLeave" aria-hidden="true"></div>
 <script>
 /* The shrink itself is a CSS animation that runs on its own; this only
    clears up after it. Deliberately not part of scene.js - if WebGL is

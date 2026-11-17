@@ -12,6 +12,7 @@
 
   /* accents */
   --cherry:    #E36FA0;
+  --wisteria:  #C9A0DC;
   --magenta:   #E8579F;
   --teal:      #4FD8CF;
   --sakura:    #FBD3E0;
@@ -139,6 +140,55 @@ h1,h2,h3{margin:0;font-weight:400;line-height:1.05;letter-spacing:-.015em}
 .topnav a:hover{color:var(--ink);background:rgba(255,255,255,.07)}
 .topnav a[aria-current="page"]{color:var(--ink);background:rgba(255,255,255,.09)}
 
+/* the divisions, by name, for anyone who would rather not hunt the tree for them */
+.divs{position:relative}
+.divs-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 13px 9px 15px;border-radius:var(--r-pill);
+  border:0;background:transparent;cursor:pointer;
+  font-family:var(--body);font-size:.82rem;font-weight:500;
+  color:var(--ink-soft);
+  transition:color .2s var(--ease), background-color .2s var(--ease);
+}
+.divs-btn:hover,.divs-btn[aria-expanded="true"]{color:var(--ink);background:rgba(255,255,255,.07)}
+.divs-btn svg{transition:transform .25s var(--ease)}
+.divs-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.divs-menu{
+  position:absolute;right:0;top:calc(100% + 14px);z-index:60;
+  min-width:250px;margin:0;padding:8px;list-style:none;
+  border-radius:var(--r-lg);
+  background:rgba(12,16,38,.94);
+  border:1px solid var(--line);
+  box-shadow:0 24px 50px -20px rgba(0,0,0,.7);
+  animation:divsIn .22s var(--ease);
+}
+.divs-menu[hidden]{display:none}
+@keyframes divsIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.divs-menu button{
+  display:flex;align-items:center;gap:10px;width:100%;
+  min-height:44px;padding:9px 14px;
+  border:0;border-radius:var(--r-md);background:transparent;
+  color:var(--ink-soft);cursor:pointer;text-align:left;
+  font-family:var(--body);font-size:.85rem;
+}
+.divs-menu button:hover,.divs-menu button:focus-visible,.divs-menu button[aria-current="true"]{color:var(--ink);background:rgba(255,255,255,.07)}
+.divs-menu .pip{flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--ink-faint)}
+.divs-menu [data-live="true"] .pip{background:var(--cherry);box-shadow:0 0 8px 1px rgba(227,111,160,.7)}
+.divs-menu .divs-stage{margin-left:auto;padding-left:14px;font-size:.72rem;color:var(--ink-faint);white-space:nowrap}
+.divs-menu [data-live="true"] .divs-stage{color:var(--cherry)}
+
+/* leaving for a division: the circle swells out of the branch in blossom pink,
+   then settles to the colour of the page it is about to become */
+.page-leave{
+  position:fixed;z-index:210;left:0;top:0;width:0;height:0;
+  border-radius:50%;background:var(--cherry);
+  transform:scale(0);visibility:hidden;pointer-events:none;
+}
+.page-leave[data-on="true"]{
+  visibility:visible;transform:scale(1);background:#fbf5ef;
+  transition:transform 900ms cubic-bezier(.6,0,.3,1), background-color 650ms ease 250ms;
+}
+
 /* ============================================================
    home — locked stage
    ============================================================ */
@@ -226,7 +276,7 @@ body[data-scene="on"] .hint{display:flex}
 
 .stage-meta{
   text-align:right;
-  font-size:.76rem;color:var(--ink-faint);
+  font-size:.76rem;color:var(--wisteria);
   line-height:1.7;white-space:nowrap;
 }
 .status{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:0}
@@ -254,6 +304,11 @@ body[data-scene="on"] .hint{display:flex}
   transition:opacity .5s var(--ease);
 }
 .hint[data-hidden="true"]{opacity:0;pointer-events:none}
+/* on a wide screen the middle of the bottom edge is where the trunk meets the ground,
+   so the hint sits to the right, above the corner details */
+@media (min-width:901px){
+  .hint{left:auto;right:clamp(18px,4vw,48px);transform:none;bottom:calc(clamp(22px,4vh,40px) + 168px)}
+}
 .hint .touch{display:none}
 @media (hover:none){
   .hint .hover{display:none}
@@ -363,6 +418,69 @@ body[data-scene="on"] .tag{display:flex}
 .btn-sm{min-height:38px;padding:9px 16px;font-size:.76rem;color:var(--ink-soft)}
 .btn-sm:hover{color:var(--ink)}
 .panel-alt{margin-top:9px}
+button.btn{font-family:var(--body);cursor:pointer}
+
+/* ============================================================
+   learn more
+   What is planned for one division. Opens beside the tree from the
+   button on that division's card, so the branch stays in view.
+   ============================================================ */
+.more{
+  position:fixed;z-index:45;
+  top:84px;right:16px;bottom:16px;
+  width:min(440px,calc(100vw - 32px));
+  display:flex;pointer-events:none;
+}
+.more[hidden]{display:none}
+.more-inner{
+  position:relative;pointer-events:auto;
+  width:100%;overflow:auto;
+  padding:30px 28px 30px;
+  border-radius:var(--r-lg);
+  background:linear-gradient(158deg, rgba(36,24,68,.92) 0%, rgba(12,16,38,.95) 100%);
+  border:1px solid rgba(244,238,246,.2);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.16), 0 26px 60px -22px rgba(0,0,0,.95);
+  transform:translateX(28px);opacity:0;
+  transition:transform .45s var(--ease), opacity .35s var(--ease);
+}
+.more[data-open="true"] .more-inner{transform:none;opacity:1}
+.more-close{
+  position:absolute;top:14px;right:14px;
+  width:40px;height:40px;display:grid;place-items:center;
+  border-radius:50%;border:1px solid var(--line);
+  background:transparent;color:var(--ink-soft);cursor:pointer;
+}
+.more-close:hover{color:var(--ink);background:rgba(255,255,255,.07)}
+.more .panel-status{margin-bottom:14px}
+.more[data-stage="In build"] .panel-status{color:var(--cherry)}
+.more h2{
+  font-family:var(--display);font-weight:500;
+  font-size:clamp(1.9rem,3.2vw,2.5rem);line-height:1.08;
+  margin:0 46px 14px 0;
+}
+.more-line{color:var(--ink);font-size:1rem;line-height:1.6;margin:0 0 12px}
+.more-when{color:var(--cherry);font-size:.85rem;margin:0 0 12px}
+.more-body{
+  margin:20px 0 24px;padding-top:20px;
+  border-top:1px solid var(--line);
+  color:var(--ink-soft);font-size:.94rem;line-height:1.7;
+}
+.more-body:empty{display:none}
+.more-body p{margin:0 0 14px}
+.more-body p:last-child{margin-bottom:0}
+.more-todo{padding:14px 16px;border:1px dashed var(--ink-faint);border-radius:var(--r-md);color:var(--ink-faint)}
+/* the card steps aside while its longer version is open */
+body[data-more="open"] .tag{opacity:0 !important}
+body[data-more="open"] .panel{pointer-events:none}
+@media (max-width:720px){
+  .more{top:auto;left:10px;right:10px;bottom:10px;width:auto;max-height:76vh}
+  .more-inner{padding:24px 20px 22px;transform:translateY(28px)}
+  body[data-more="open"] .stage-copy,
+  body[data-more="open"] .hint{opacity:0;pointer-events:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .more-inner{transition:none}
+}
 /* .btn sets display, and a class beats the browser's own
    [hidden]{display:none} — so hiding one needs saying explicitly */
 .btn[hidden]{display:none}
@@ -483,11 +601,11 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
 .stage-copy-line{
   margin-top:10px;padding-top:10px;
   border-top:1px solid var(--line);
-  font-size:.68rem;color:var(--ink-faint);opacity:.7;
+  font-size:.68rem;color:inherit;opacity:.7;
 }
 /* the address sits with the location it belongs to, above the credit */
 .stage-contact{margin-top:2px;font-size:.74rem}
-.stage-contact a{color:var(--ink-faint)}
+.stage-contact a{color:inherit}
 .stage-contact a:hover{color:var(--ink)}
 .fallback-contact{margin-top:40px;font-size:.85rem;color:var(--ink-faint)}
 
@@ -535,6 +653,13 @@ a.branch-card:hover{transform:translateY(-4px);border-color:rgba(227,111,160,.45
   .topbar-inner{padding:8px 8px 8px 16px}
   .wordmark{font-size:1.15rem}
   .topnav a{padding:9px 12px;font-size:.78rem}
+  .topnav{gap:0}
+  .topnav a{padding:9px 10px}
+  .divs-btn{padding:9px 6px 9px 10px;font-size:.78rem;gap:4px}
+  /* on a phone the menu hangs from the whole bar, not from its button */
+  .topbar-inner{position:relative}
+  .divs{position:static}
+  .divs-menu{left:0;right:0;top:calc(100% + 8px);background:rgba(12,16,38,.97)}
   .stage-copy{padding-bottom:26px}
   .stage-copy h1{font-size:clamp(1.8rem,7.6vw,2.4rem)}
   .lede{font-size:.88rem}
