@@ -53,7 +53,6 @@ window.SWZ_I18N["la"] = {
 "I'm a web designer building fast, clear websites for people who need one and don't want to overcomplicate it. You bring the business, I bring a place for it to live.": "Designatrix situum sum, quae situs celeres et claros fabrico iis qui situ egent neque rem nimis implicare volunt. Tu negotium affers, ego locum ubi habitet.",
 "See the work": "Opera vide",
 "Start a project": "Opus incipe",
-"Available! 7/10 spots left. BC, Canada - Remote worldwide": "Vaco! Loci 7/10 supersunt. BC, Canada - E longinquo per totum orbem",
 "Redesign": "Refectio",
 "Ground-up build": "Fabricatio a solo",
 "25+ languages": "25+ linguae",
@@ -120,8 +119,6 @@ window.SWZ_I18N["la"] = {
 "A chat assistant on your site, like the one on Computer U‑Teach, second direction. Costs a bit more than the other add-ons.": "Adiutor sermocinans in situ tuo, qualis est in Computer U‑Teach, forma altera. Paulo pluris constat quam cetera additamenta.",
 "A chatbot with an animated character, like the one on Computer U‑Teach, second direction, and Little Ace on the Ace Spaders website. Costs a bit more than the other add-ons, and the price changes with what you want from the animation.": "Automaton sermocinans cum persona animata, quale est in Computer U‑Teach, forma altera, et Little Ace in situ Ace Spaders. Paulo pluris constat quam cetera additamenta, et pretium mutatur prout quid ab animatione vis.",
 "3D effects": "Effectus tridimensionales",
-"These rates hold for my first 10 clients.": "Haec pretia primis 10 clientibus meis manent.",
-"After that, they go up. If you're reading this, the current pricing is still available.": "Postea crescent. Si haec legis, pretia praesentia adhuc patent.",
 "Hi, I'm Sophia (AKA Space Wize)": "Salve, Sophia sum (alias Space Wize)",
 "I'm a self-taught web designer based in BC. I build sites for small businesses, independent practices, and people launching something for the first time.": "Designatrix situum sum, a me ipsa docta, in BC sedem habens. Situs fabrico negotiis parvis, professionibus sui iuris, et iis qui aliquid primum in lucem edunt.",
 "I'm early in this, and I price accordingly. What you get in exchange is someone who builds quickly, responds accordingly, and gives you a real home for your brand.": "In hac re adhuc novicia sum, et pretia pro eo statuo. Quod vicissim accipis est aliqua quae celeriter fabricat, pariter respondet, et nomini tuo veram domum dat.",
@@ -130,8 +127,6 @@ window.SWZ_I18N["la"] = {
 "British Columbia, Canada": "Columbia Britannica, Canada",
 "Working since": "Initium operis",
 "Typical timeline": "Tempus solitum",
-"Clients so far": "Clientes adhuc",
-"3 of 10": "3 ex 10",
 "Reply time": "Tempus respondendi",
 "Within one business day": "Intra unum diem negotiosum",
 "Tell me what you're building": "Dic mihi quid struas",
@@ -278,5 +273,6 @@ window.SWZ_I18N["la"] = {
 "Books - Space Wize Enterprise": "Libri - Space Wize Enterprise",
 "Game Development opens in spring 2027, and 3D Printing in summer of the same year. The other three don't have dates yet because they're further off, and they open once the first three are live and stable. It's so I don't get overloaded and each one gets built properly.": "Ludorum Fabricatio vere anni 2027 aperietur, Impressio Tridimensionalis aestate eiusdem anni. Reliquae tres nondum dies habent quia longius absunt, et aperientur cum primae tres apertae et stabiles erunt. Ita fit ne nimis onerer et ut quaeque recte aedificetur.",
 "Real Estate Development is last for a purpose. It's the one that I want to do the most but can do the least: financially, legally, and with knowledge. So I'm building my stepping stones to get there. I love houses, and believe home is where your life is and where you build the most memories with people you love, so it's literally the most important part of your life.": "Praediorum Aedificatio consulto ultima est. Ea est quam maxime facere volo, sed minime possum: pecunia, lege, scientia. Itaque gradus mihi struo quibus eo perveniam. Domos amo, et credo domum esse ubi vita tua est et ubi plurimas memorias cum iis quos amas condis; quare re vera pars vitae tuae gravissima est.",
-"notify list": "indice exspectantium"
+"notify list": "indice exspectantium",
+"Available! BC, Canada - Remote worldwide": "Vaco! BC, Canada - E longinquo per totum orbem"
 };

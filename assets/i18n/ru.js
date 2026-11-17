@@ -53,7 +53,6 @@ window.SWZ_I18N["ru"] = {
 "I'm a web designer building fast, clear websites for people who need one and don't want to overcomplicate it. You bring the business, I bring a place for it to live.": "Я веб-дизайнер: делаю быстрые, понятные сайты для тех, кому нужен сайт и кто не хочет всё усложнять. Вы приносите бизнес, я приношу место, где ему жить.",
 "See the work": "Смотреть работы",
 "Start a project": "Начать проект",
-"Available! 7/10 spots left. BC, Canada - Remote worldwide": "Есть места! Осталось 7 из 10. BC, Канада — удалённо, по всему миру",
 "Redesign": "Редизайн",
 "Ground-up build": "Разработка с нуля",
 "25+ languages": "Более 25 языков",
@@ -120,8 +119,6 @@ window.SWZ_I18N["ru"] = {
 "A chat assistant on your site, like the one on Computer U‑Teach, second direction. Costs a bit more than the other add-ons.": "Чат-помощник на вашем сайте, как на Computer U‑Teach, второй вариант. Стоит немного дороже остальных дополнений.",
 "A chatbot with an animated character, like the one on Computer U‑Teach, second direction, and Little Ace on the Ace Spaders website. Costs a bit more than the other add-ons, and the price changes with what you want from the animation.": "Чат-бот с анимированным персонажем, как на Computer U‑Teach, второй вариант, и Little Ace на сайте Ace Spaders. Стоит немного дороже остальных дополнений, а цена зависит от того, что вы хотите от анимации.",
 "3D effects": "3D-эффекты",
-"These rates hold for my first 10 clients.": "Эти цены действуют для моих первых 10 клиентов.",
-"After that, they go up. If you're reading this, the current pricing is still available.": "Потом они вырастут. Если вы читаете это, нынешние цены ещё действуют.",
 "Hi, I'm Sophia (AKA Space Wize)": "Привет, я Sophia (она же Space Wize)",
 "I'm a self-taught web designer based in BC. I build sites for small businesses, independent practices, and people launching something for the first time.": "Я веб-дизайнер-самоучка из BC. Делаю сайты для малого бизнеса, независимых специалистов и тех, кто впервые что-то запускает.",
 "I'm early in this, and I price accordingly. What you get in exchange is someone who builds quickly, responds accordingly, and gives you a real home for your brand.": "Я пока в начале пути и назначаю цены соответственно. Взамен вы получаете человека, который работает быстро, отвечает как положено и даёт вашему бренду настоящий дом.",
@@ -130,8 +127,6 @@ window.SWZ_I18N["ru"] = {
 "British Columbia, Canada": "Британская Колумбия, Канада",
 "Working since": "Работаю с",
 "Typical timeline": "Обычные сроки",
-"Clients so far": "Клиентов пока",
-"3 of 10": "3 из 10",
 "Reply time": "Время ответа",
 "Within one business day": "В течение одного рабочего дня",
 "Tell me what you're building": "Расскажите, что вы создаёте",
@@ -278,5 +273,6 @@ window.SWZ_I18N["ru"] = {
 "Books - Space Wize Enterprise": "Книги — Space Wize Enterprise",
 "Game Development opens in spring 2027, and 3D Printing in summer of the same year. The other three don't have dates yet because they're further off, and they open once the first three are live and stable. It's so I don't get overloaded and each one gets built properly.": "Разработка игр откроется весной 2027 года, а 3D-печать — летом того же года. У остальных трёх пока нет дат, потому что до них ещё далеко: они откроются, когда первые три будут работать стабильно. Так я не перегружу себя, а каждое направление будет сделано как следует.",
 "Real Estate Development is last for a purpose. It's the one that I want to do the most but can do the least: financially, legally, and with knowledge. So I'm building my stepping stones to get there. I love houses, and believe home is where your life is and where you build the most memories with people you love, so it's literally the most important part of your life.": "Девелопмент недвижимости стоит последним не случайно. Этим я хочу заниматься больше всего, но могу меньше всего: и финансово, и юридически, и по знаниям. Поэтому я выстраиваю ступеньки, чтобы туда дойти. Я люблю дома и верю, что дом — это место, где проходит ваша жизнь и где вы создаёте больше всего воспоминаний с любимыми людьми, так что это буквально самая важная часть жизни.",
-"notify list": "списке ожидания"
+"notify list": "списке ожидания",
+"Available! BC, Canada - Remote worldwide": "Открыта для проектов! BC, Канада — удалённо, по всему миру"
 };
