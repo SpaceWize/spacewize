@@ -1046,3 +1046,10 @@ html[data-arrive="1"] .page-arrive[data-go="true"]{
   font-size:.84rem;line-height:1.6;
 }
 .aside-note .card-acts{margin-top:14px}
+/* two side projects, side by side where there is room */
+.aside-pair{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px;
+  max-width:1018px;margin:clamp(84px,14vh,150px) auto 0;
+}
+.aside-pair .aside-note{max-width:none;margin:0;display:flex;flex-direction:column}
+.aside-pair .card-acts{margin-top:auto;padding-top:14px}

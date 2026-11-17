@@ -274,5 +274,7 @@ window.SWZ_I18N["ko"] = {
 "Game Development opens in spring 2027, and 3D Printing in summer of the same year. The other three don't have dates yet because they're further off, and they open once the first three are live and stable. It's so I don't get overloaded and each one gets built properly.": "게임 개발은 2027년 봄에, 3D 프린팅은 같은 해 여름에 열려요. 나머지 세 곳은 아직 먼 이야기라 날짜가 없고, 처음 세 곳이 운영되고 안정되면 열 거예요. 제가 무리하지 않고 하나하나 제대로 만들기 위해서예요.",
 "Real Estate Development is last for a purpose. It's the one that I want to do the most but can do the least: financially, legally, and with knowledge. So I'm building my stepping stones to get there. I love houses, and believe home is where your life is and where you build the most memories with people you love, so it's literally the most important part of your life.": "부동산 개발이 마지막인 데에는 이유가 있어요. 가장 하고 싶지만 재정적으로도, 법적으로도, 지식 면에서도 가장 할 수 없는 일이거든요. 그래서 거기에 닿기 위한 디딤돌을 쌓고 있어요. 저는 집을 정말 좋아하고, 집은 삶이 있는 곳이자 사랑하는 사람들과 가장 많은 추억을 쌓는 곳이라고 믿어요. 그러니 말 그대로 삶에서 가장 중요한 부분이에요.",
 "notify list": "대기자 명단",
-"Available! BC, Canada - Remote worldwide": "가능해요! 캐나다 BC - 전 세계 원격 근무"
+"Available! BC, Canada - Remote worldwide": "가능해요! 캐나다 BC - 전 세계 원격 근무",
+"An AI coding club for ages 16 to 24. Zoom first, then in person once there are 8 members.": "16세부터 24세를 위한 AI 코딩 클럽이에요. 먼저 Zoom으로, 멤버가 8명이 되면 직접 만나요.",
+"Go to Clawd Club Main": "Clawd Club Main으로 가기"
 };
